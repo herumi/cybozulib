@@ -15,7 +15,7 @@ using namespace cybozu;
 
 CYBOZU_TEST_AUTO(string_iterator_test)
 {
-	/* String s("§≥§Ï§œUTF-8 1"); */
+	/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	String t;
 	std::copy(s.begin(), s.end(), std::back_inserter(t));
@@ -24,22 +24,22 @@ CYBOZU_TEST_AUTO(string_iterator_test)
 
 CYBOZU_TEST_AUTO(string_reverse_iterator_test)
 {
-	/* String s("§≥§Ï§œUTF-8 1"); */
+	/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	String t;
 	std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
-	/* String checked("1 8-FTU§œ§Ï§≥"); */
+	/* String checked("1 8-FTU„ÅØ„Çå„Åì"); */
 	String checked("1 8-FTU" "\xe3\x81\xaf\xe3\x82\x8c\xe3\x81\x93");
 	CYBOZU_TEST_EQUAL(t, checked);
 }
 
 CYBOZU_TEST_AUTO(string_iterater_test_push_back)
 {
-	/* String s("§≥§Ï§œUTF-8 1"); */
+	/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	Char t = '2';
 	s.push_back(t);
-	/* String checked("§≥§Ï§œUTF-8 12"); */
+	/* String checked("„Åì„Çå„ÅØUTF-8 12"); */
 	String checked("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 12");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -49,36 +49,36 @@ CYBOZU_TEST_AUTO(string_iterater_test_push_back)
 // copy [off, off + count) to [dest, dest + count)
 CYBOZU_TEST_AUTO(string_util_test_copy)
 {
-	/* String s("§¢§§ue§™"), t; */
+	/* String s("„ÅÇ„ÅÑue„Åä"), t; */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x8A"), t;
 	Char dest[100];
 	s.copy(dest, 3, 1);
 	dest[3] = '\0'; /* copy method does not terminate */
 	t = dest;
-	/* "§§ue" */
+	/* "„ÅÑue" */
 	CYBOZU_TEST_EQUAL(t, "\xe3\x81\x84\x75\x65");
 }
 
 // exchange contents with rhs
 CYBOZU_TEST_AUTO(string_util_test_swap)
 {
-	/* String s("§¢§§ue§™"), t("abc§¶§®f"); */
+	/* String s("„ÅÇ„ÅÑue„Åä"), t("abc„ÅÜ„Åàf"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x8A");
 	String t("\x61\x62\x63\xe3\x81\x86\xe3\x81\x88\x66");
 	s.swap(t);
-	/* CYBOZU_TEST_EQUAL(t, "§¢§§ue§™"); */
+	/* CYBOZU_TEST_EQUAL(t, "„ÅÇ„ÅÑue„Åä"); */
 	CYBOZU_TEST_EQUAL(t, "\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x8A");
-	/* CYBOZU_TEST_EQUAL(s, "abc§¶§®f"); */
+	/* CYBOZU_TEST_EQUAL(s, "abc„ÅÜ„Åàf"); */
 	CYBOZU_TEST_EQUAL(s, "\x61\x62\x63\xe3\x81\x86\xe3\x81\x88\x66");
 }
 
 // return [off, off + count) as new string
 CYBOZU_TEST_AUTO(string_util_test_substr)
 {
-	/* String s("§¢§§ue§™"); */
+	/* String s("„ÅÇ„ÅÑue„Åä"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x8A");
 	String t = s.substr(1, 3);
-	/* CYBOZU_TEST_EQUAL(t, "§§ue"); */
+	/* CYBOZU_TEST_EQUAL(t, "„ÅÑue"); */
 	CYBOZU_TEST_EQUAL(t, "\xe3\x81\x84\x75\x65");
 }
 /////////// compare //////////
@@ -86,11 +86,11 @@ CYBOZU_TEST_AUTO(string_util_test_substr)
 // compare [0, _Mysize) with rhs
 CYBOZU_TEST_AUTO(string_util_test_compare_cybozu_str)
 {
-	/* String s("§¶§§§Œ§™§Ø§‰§ﬁ"); */
+	/* String s("„ÅÜ„ÅÑ„ÅÆ„Åä„Åè„ÇÑ„Åæ"); */
 	String s("\xE3\x81\x86\xE3\x81\x84\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
-	/* String t("§¶§§§Œ§™§Ø§‰§ﬁ"); */
+	/* String t("„ÅÜ„ÅÑ„ÅÆ„Åä„Åè„ÇÑ„Åæ"); */
 	String t("\xE3\x81\x86\xE3\x81\x84\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
-	/* String t("§¶§§Œ§™§Ø§‰§ﬁ"); */
+	/* String t("„ÅÜ„Çê„ÅÆ„Åä„Åè„ÇÑ„Åæ"); */
 	String u("\xE3\x81\x86\xE3\x82\x90\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
 
 	CYBOZU_TEST_ASSERT(s.compare(t) == 0);
@@ -100,9 +100,9 @@ CYBOZU_TEST_AUTO(string_util_test_compare_cybozu_str)
 // compare [off, off + n) with rhs
 CYBOZU_TEST_AUTO(string_util_test_compare_cybozu_substring)
 {
-	/* String s("§¶§§§Œ§™§Ø§‰§ﬁ"); */
+	/* String s("„ÅÜ„ÅÑ„ÅÆ„Åä„Åè„ÇÑ„Åæ"); */
 	String s("\xE3\x81\x86\xE3\x81\x84\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
-	/* String t("§™§Ø§‰§ﬁ"); */
+	/* String t("„Åä„Åè„ÇÑ„Åæ"); */
 	String t("\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
 
 	CYBOZU_TEST_EQUAL(s.compare(3, 4, t), 0);
@@ -111,13 +111,13 @@ CYBOZU_TEST_AUTO(string_util_test_compare_cybozu_substring)
 // compare [off, off + n) with rhs [rhsOff, rhsOff + count)
 CYBOZU_TEST_AUTO(string_util_test_compare_cybozu_substring_substring)
 {
-	/* String s("§¢§§u §§ue §™§Ø"); */
+	/* String s("„ÅÇ„ÅÑu „ÅÑue „Åä„Åè"); */
 	String s("\xe3\x81\x82\xe3\x81\x84u"
 			 " "
 			 "\xe3\x81\x84\x75\x65"
 			 " "
 			 "\xE3\x81\x8A\xE3\x81\x8F");
-	/* "§¢§§ue§™" "§§ue" "abc" */
+	/* "„ÅÇ„ÅÑue„Åä" "„ÅÑue" "abc" */
 	String t("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x8A" "\xe3\x81\x84\x75\x65" "abc");
 	printf("size=%d, %d\n", (int)s.size(), (int)t.size());
 	CYBOZU_TEST_EQUAL(s.compare(4, 3, t, 5, 3), 0);
@@ -155,13 +155,13 @@ CYBOZU_TEST_AUTO(string_util_test_toUtf8string)
 
 	s.erase();
 	t.erase();
-	/* s = "§¢§§§¶§®§™"; */
+	/* s = "„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"; */
 	s = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* t = "§¢§§§¶§®§™"; */
+	/* t = "„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"; */
 	t = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 	CYBOZU_TEST_EQUAL(t.toUtf8(), s);
 
-	/* "§…abc§Ï" "(æÊ§À≈¿)" ∫«∏Â§Œ ∏ª˙§œ•µ•Ì•≤°º•»•⁄•¢§À§ §Î ∏ª˙ */
+	/* "„Å©abc„Çå" "(‰∏à„Å´ÁÇπ)" ÊúÄÂæå„ÅÆÊñáÂ≠ó„ÅØ„Çµ„É≠„Ç≤„Éº„Éà„Éö„Ç¢„Å´„Å™„ÇãÊñáÂ≠ó */
 	const Char cs[] = { 0x00003069, 0x00000061, 0x00000062, 0x00000063, 0x0000308c, 0x0002000b, 0 };
 	String ss(cs);
 	CYBOZU_TEST_EQUAL(ss, "\xe3\x81\xa9" "abc" "\xe3\x82\x8c" "\xf0\xa0\x80\x8b");
@@ -205,7 +205,7 @@ CYBOZU_TEST_AUTO(string_constructor_from_count_times_c)
 
 CYBOZU_TEST_AUTO(string_constructor_surrogate_pair_test)
 {
-	/* "§…abc§Ï" "(æÊ§À≈¿)" ∫«∏Â§Œ ∏ª˙§œ•µ•Ì•≤°º•»•⁄•¢§À§ §Î ∏ª˙ */
+	/* "„Å©abc„Çå" "(‰∏à„Å´ÁÇπ)" ÊúÄÂæå„ÅÆÊñáÂ≠ó„ÅØ„Çµ„É≠„Ç≤„Éº„Éà„Éö„Ç¢„Å´„Å™„ÇãÊñáÂ≠ó */
 	String a("\xe3\x81\xa9" "abc" "\xe3\x82\x8c" "\xf0\xa0\x80\x8b");
 	const Char s[] = { 0x00003069, 0x00000061, 0x00000062, 0x00000063, 0x0000308c, 0x0002000b, 0 };
 	std::stringstream ss;
@@ -217,18 +217,18 @@ CYBOZU_TEST_AUTO(string_constructor_surrogate_pair_test)
 // test iterator
 CYBOZU_TEST_AUTO(string_constructor_iterator_test)
 {
-	/* std::string a("What is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* std::string a("What is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	std::string a("What is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
 	String s(a.begin() + 5, a.end());
 	std::string b("is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
-	/* CYBOZU_TEST_EQUAL(s, "is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* CYBOZU_TEST_EQUAL(s, "is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	CYBOZU_TEST_EQUAL(s, b);
 }
 
 CYBOZU_TEST_AUTO(string_constructor_comp_test)
 {
 	const Char s[] = { 0x8868, 0 };
-	/* String a("…Ω"); */
+	/* String a("Ë°®"); */
 	String a("\xE8\xA1\xA8");
 	String b(s, 1);
 	CYBOZU_TEST_EQUAL(a, b);
@@ -237,11 +237,11 @@ CYBOZU_TEST_AUTO(string_constructor_comp_test)
 // pointer
 CYBOZU_TEST_AUTO(string_constructor_pointer_test)
 {
-	/* const char a[] = "What is º˜∏¬Ãµº˜∏¬Ãµ?"; */
+	/* const char a[] = "What is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"; */
 	const char a[] = "What is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?";
 	String s(a, a + CYBOZU_NUM_OF_ARRAY(a) - 1);
 	String x("What is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
-	/* CYBOZU_TEST_EQUAL(s, "What is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* CYBOZU_TEST_EQUAL(s, "What is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	CYBOZU_TEST_EQUAL(s, x);
 
 	String t(a + 3, a + 6);
@@ -282,7 +282,7 @@ CYBOZU_TEST_AUTO(string_constructor_char16_test)
 
 CYBOZU_TEST_AUTO(string_index_test_at)
 {
-	/* String s("§≥§Ï§œUTF-8 1"); */
+	/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	Char t = s.at(3);
 	Char c = 'U';
@@ -292,7 +292,7 @@ CYBOZU_TEST_AUTO(string_index_test_at)
 CYBOZU_TEST_AUTO(string_index_test_at_exception)
 {
 	try {
-		/* String s("§≥§Ï§œUTF-8 1"); */
+		/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 		String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 		s.at(200);
 		CYBOZU_TEST_FAIL("NEVER REACHED!");
@@ -305,7 +305,7 @@ CYBOZU_TEST_AUTO(string_index_test_at_exception)
 
 CYBOZU_TEST_AUTO(string_index_test_index)
 {
-	/* String s("§≥§Ï§œUTF-8 1"); */
+	/* String s("„Åì„Çå„ÅØUTF-8 1"); */
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	Char t = s[6];
 	Char c = '-';
@@ -315,38 +315,38 @@ CYBOZU_TEST_AUTO(string_index_test_index)
 //cybozu::String
 CYBOZU_TEST_AUTO(string_append_op_test_string)
 {
-	/* const char cs2[] = "§«§π"; */
+	/* const char cs2[] = "„Åß„Åô"; */
 	const char cs2[] = "\xE3\x81\xA7\xE3\x81\x99";
-	/* String s = "§≥§Ï§œUTF-8"; */
+	/* String s = "„Åì„Çå„ÅØUTF-8"; */
 	String s = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8";
 	s += cs2;
 	String checked = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8" "\xE3\x81\xA7\xE3\x81\x99";
-	/* CYBOZU_TEST_EQUAL(s, "§≥§Ï§œUTF-8§«§π"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Åì„Çå„ÅØUTF-8„Åß„Åô"); */
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 //Char [] Null Terminated
 CYBOZU_TEST_AUTO(string_append_op_test_char_array)
 {
-	/* "§≥UTF-8 3"; */
+	/* "„ÅìUTF-8 3"; */
 	const Char c[] = { 0x00003053, 0x00000055, 0x00000054, 0x00000046, 0x0000002d, 0x00000038, ' ', '3', 0 };
-	/* String s = "§¢§¢§¢"; */
+	/* String s = "„ÅÇ„ÅÇ„ÅÇ"; */
 	String s = "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82";
 	s += c;
 	String checked = "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82" "\xe3\x81\x93" "UTF-8 3";
-	/* CYBOZU_TEST_EQUAL(s, "§¢§¢§¢§≥UTF-8 3"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÇ„ÅÇ„ÅÇ„ÅìUTF-8 3"); */
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 //Char
 CYBOZU_TEST_AUTO(string_append_op_test_char)
 {
-	/* "§≥UTF-8 3"; */
+	/* "„ÅìUTF-8 3"; */
 	const Char c = '3';
-	/* String s = "§¢§¢§¢"; */
+	/* String s = "„ÅÇ„ÅÇ„ÅÇ"; */
 	String s = "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82";
 	s += c;
-	/* CYBOZU_TEST_EQUAL(s, "§¢§¢§¢3"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÇ„ÅÇ„ÅÇ3"); */
 	String checked = "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82\x33";
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -354,18 +354,18 @@ CYBOZU_TEST_AUTO(string_append_op_test_char)
 //cybozu::String
 CYBOZU_TEST_AUTO(string_append_test_string)
 {
-	/* String s = "§¢§¢§¢"; */
+	/* String s = "„ÅÇ„ÅÇ„ÅÇ"; */
 	String s = "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82";
 	String t;
 	t.append(s);
-	/* CYBOZU_TEST_EQUAL(t, "§¢§¢§¢"); */
+	/* CYBOZU_TEST_EQUAL(t, "„ÅÇ„ÅÇ„ÅÇ"); */
 	CYBOZU_TEST_EQUAL(t, "\xE3\x81\x82\xE3\x81\x82\xE3\x81\x82");
 }
 
 //cybozu::String
 CYBOZU_TEST_AUTO(string_append_test_sub_string)
 {
-	/* String s = "§¢I§¶"; */
+	/* String s = "„ÅÇI„ÅÜ"; */
 	String s = "\xE3\x81\x82\x49\xE3\x81\x86";
 	String t;
 	t.append(s, 1, 1);
@@ -375,11 +375,11 @@ CYBOZU_TEST_AUTO(string_append_test_sub_string)
 //Char[]
 CYBOZU_TEST_AUTO(string_append_test_char_array_off_z)
 {
-	/* "§≥UTF-8 3" */
+	/* "„ÅìUTF-8 3" */
 	const Char c[] = { 0x00003053, 0x00000055, 0x00000054, 0x00000046, 0x0000002d, 0x00000038, ' ', '3', 0 };
 	String t;
 	t.append(c,2);
-	/* CYBOZU_TEST_EQUAL(t, "§≥U"); */
+	/* CYBOZU_TEST_EQUAL(t, "„ÅìU"); */
 	const String checked = "\xE3\x81\x93\x55";
 	CYBOZU_TEST_EQUAL(t, checked);
 }
@@ -387,19 +387,19 @@ CYBOZU_TEST_AUTO(string_append_test_char_array_off_z)
 //Zero terminated Char array
 CYBOZU_TEST_AUTO(string_append_test_zero_terminated_char_array)
 {
-	/* "§≥UTF-8 3" */
+	/* "„ÅìUTF-8 3" */
 	const Char c[] = { 0x00003053, 0x00000055, 0x00000054, 0x00000046, 0x0000002d, 0x00000038, ' ', '3', 0 };
 	String t;
 	t.append(c);
 	String checked = "\xe3\x81\x93" "UTF-8 3";
-	/* CYBOZU_TEST_EQUAL(t, "§≥UTF-8 3"); */
+	/* CYBOZU_TEST_EQUAL(t, "„ÅìUTF-8 3"); */
 	CYBOZU_TEST_EQUAL(t, checked);
 }
 
 //count * Char
 CYBOZU_TEST_AUTO(string_append_test_multiple_char)
 {
-	/* String t = "§¢§§§¶§®§™"; */
+	/* String t = "„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"; */
 	String t = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 	Char x = 'w';
 	t.append(10, x);
@@ -410,12 +410,12 @@ CYBOZU_TEST_AUTO(string_append_test_multiple_char)
 // test iterator
 CYBOZU_TEST_AUTO(string_append_test_iterator)
 {
-	/* std::string a("What is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* std::string a("What is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	std::string a("What is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
 	String t;
 	t.append(a.begin() + 5, a.end());
 	std::string b("is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
-	/* CYBOZU_TEST_EQUAL(t, "is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* CYBOZU_TEST_EQUAL(t, "is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	CYBOZU_TEST_EQUAL(t, b);
 }
 
@@ -431,56 +431,56 @@ CYBOZU_TEST_AUTO(string_append_char_array)
 // append [str, str + count)
 CYBOZU_TEST_AUTO(string_append_char_array_null)
 {
-	/* const char cs[] = "§¢§§§¶§®§™"; */
+	/* const char cs[] = "„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"; */
 	const char cs[] = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 	String t;
 	t.append(cs);
 	const String checked = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* CYBOZU_TEST_EQUAL(t,"§¢§§§¶§®§™"); */
+	/* CYBOZU_TEST_EQUAL(t,"„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"); */
 	CYBOZU_TEST_EQUAL(t, checked);
 }
 
 // append str
 CYBOZU_TEST_AUTO(string_append_std_string)
 {
-	/* const std::string x = "•µ•§•‹•¶•∫"; */
+	/* const std::string x = "„Çµ„Ç§„Éú„Ç¶„Ç∫"; */
 	const std::string x("\xE3\x82\xB5\xE3\x82\xA4\xE3\x83\x9C\xE3\x82\xA6\xE3\x82\xBA");
 	String t;
 	t.append(x);
-	/* CYBOZU_TEST_EQUAL(t,"•µ•§•‹•¶•∫"); */
+	/* CYBOZU_TEST_EQUAL(t,"„Çµ„Ç§„Éú„Ç¶„Ç∫"); */
 	String checked = "\xE3\x82\xB5\xE3\x82\xA4\xE3\x83\x9C\xE3\x82\xA6\xE3\x82\xBA";
 	CYBOZU_TEST_EQUAL(t, checked);
 }
 
 CYBOZU_TEST_AUTO(string_assignment_test_char_array)
 {
-	/* const char cs[] = "§≥§Ï§œUTF-8 1"; */
+	/* const char cs[] = "„Åì„Çå„ÅØUTF-8 1"; */
 	const char cs[] = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1";
 	String s;
 	s = cs;
 	String checked = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1";
-	/* CYBOZU_TEST_EQUAL(s, "§≥§Ï§œUTF-8 1"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Åì„Çå„ÅØUTF-8 1"); */
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 CYBOZU_TEST_AUTO(string_assignment_test_std_string)
 {
-	/* const std::string ss = "§≥§Ï§œ 2"; */
+	/* const std::string ss = "„Åì„Çå„ÅØ 2"; */
 	const std::string ss = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" " 2";
 	String s;
 	s = ss;
 	String checked = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" " 2";
-	/* CYBOZU_TEST_EQUAL(s, "§≥§Ï§œ 2"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Åì„Çå„ÅØ 2"); */
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 CYBOZU_TEST_AUTO(string_assignment_test_uchar_32)
 {
-	/* "§≥UTF-8 3" */
+	/* "„ÅìUTF-8 3" */
 	const Char c[] = { 0x00003053, 0x00000055, 0x00000054, 0x00000046, 0x0000002d, 0x00000038, ' ', '3', 0 };
 	String s;
 	s = c;
-	/* CYBOZU_TEST_EQUAL(s, "§≥UTF-8 3"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅìUTF-8 3"); */
 	String checked = "\xe3\x81\x93" "UTF-8 3";
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -489,7 +489,7 @@ CYBOZU_TEST_AUTO(string_assignment_test_uchar_32)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_string)
 {
 	String s, ss;
-	/* s = "§≥§Ï§œUTF-8 1"; */
+	/* s = "„Åì„Çå„ÅØUTF-8 1"; */
 	s = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1";
 	ss = s;
 	CYBOZU_TEST_EQUAL(s, ss);
@@ -509,7 +509,7 @@ CYBOZU_TEST_AUTO(string_assignment_Char)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_string_assign)
 {
 	String s, ss;
-	/* s = "§≥§Ï§œUTF-8 1"; */
+	/* s = "„Åì„Çå„ÅØUTF-8 1"; */
 	s = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1";
 	ss.assign(s);
 	CYBOZU_TEST_EQUAL(ss, s);
@@ -518,7 +518,7 @@ CYBOZU_TEST_AUTO(string_assignment_cybozu_string_assign)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_substring_assign)
 {
 	String s, ss;
-	/* s = "§≥§Ï§œUTF-8 2"; */
+	/* s = "„Åì„Çå„ÅØUTF-8 2"; */
 	s = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 2";
 	ss.assign(s,3,4);
 	CYBOZU_TEST_EQUAL(ss, "UTF-");
@@ -555,7 +555,7 @@ CYBOZU_TEST_AUTO(string_assignment_cybozu_multiple_char)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_iterator)
 {
 	String ss;
-	/* std::string a("What is º˜∏¬Ãµº˜∏¬Ãµ?"); */
+	/* std::string a("What is ÂØøÈôêÁÑ°ÂØøÈôêÁÑ°?"); */
 	std::string a("What is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
 	ss.assign(a.begin()+3, a.end());
 	std::string b("t is " "\xE5\xAF\xBF\xE9\x99\x90\xE7\x84\xA1" "?");
@@ -575,7 +575,7 @@ CYBOZU_TEST_AUTO(string_assignment_cybozu_std_char_array)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_std_char_array_assign)
 {
 	String ss;
-	/* char c[] = "§¢§§§¶§®§™°º"; */
+	/* char c[] = "„ÅÇ„ÅÑ„ÅÜ„Åà„Åä„Éº"; */
 	char c[] = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A\xE3\x83\xBC";
 	ss.assign(c);
 	std::string checked = "\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A\xE3\x83\xBC";
@@ -586,11 +586,11 @@ CYBOZU_TEST_AUTO(string_assignment_cybozu_std_char_array_assign)
 CYBOZU_TEST_AUTO(string_assignment_cybozu_std_string_assign)
 {
 	String ss;
-	/* std::string a("•µ•§•‹•¶•∫"); */
+	/* std::string a("„Çµ„Ç§„Éú„Ç¶„Ç∫"); */
 	std::string a("\xE3\x82\xB5\xE3\x82\xA4\xE3\x83\x9C\xE3\x82\xA6\xE3\x82\xBA");
 	ss.assign(a);
 	String checked = "\xE3\x82\xB5\xE3\x82\xA4\xE3\x83\x9C\xE3\x82\xA6\xE3\x82\xBA";
-	/* CYBOZU_TEST_EQUAL(ss, "•µ•§•‹•¶•∫"); */
+	/* CYBOZU_TEST_EQUAL(ss, "„Çµ„Ç§„Éú„Ç¶„Ç∫"); */
 	CYBOZU_TEST_EQUAL(ss, checked);
 
 }
@@ -621,14 +621,14 @@ CYBOZU_TEST_AUTO(string_utility_test_data)
 // insert rhs at off
 CYBOZU_TEST_AUTO(string_erase_test_cybozu_string)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	s.erase(2, 3);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„Å∏„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xB8\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s,  checked);
 
-	/* String t("§´§≠§Ø§±§≥"); */
+	/* String t("„Åã„Åç„Åè„Åë„Åì"); */
 	String t("\xE3\x81\x8B\xE3\x81\x8D\xE3\x81\x8F\xE3\x81\x91\xE3\x81\x93");
 	t.erase();
 	CYBOZU_TEST_EQUAL(t, "");
@@ -637,10 +637,10 @@ CYBOZU_TEST_AUTO(string_erase_test_cybozu_string)
 // erase element at here
 CYBOZU_TEST_AUTO(string_erase_test_iterator)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	s.erase(s.begin() + 3);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œ§€§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØ„Åª„Å∏„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -648,10 +648,10 @@ CYBOZU_TEST_AUTO(string_erase_test_iterator)
 // erase substring [begin, end)
 CYBOZU_TEST_AUTO(string_erase_test_iterator_substr)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	s.erase(s.begin()+3, s.end()-1);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØ„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -659,7 +659,7 @@ CYBOZU_TEST_AUTO(string_erase_test_iterator_substr)
 //erase all
 CYBOZU_TEST_AUTO(string_erase_test_all)
 {
-	/* String s("§Ô§´§Ë§ø§Ï§Ω"); */
+	/* String s("„Çè„Åã„Çà„Åü„Çå„Åù"); */
 	String s("\xE3\x82\x8F\xE3\x81\x8B\xE3\x82\x88\xE3\x81\x9F\xE3\x82\x8C\xE3\x81\x9D");
 	s.clear();
 	CYBOZU_TEST_EQUAL(s, "");
@@ -670,9 +670,9 @@ CYBOZU_TEST_AUTO(string_erase_test_all)
 // look for rhs beginnng at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_cybozu_string)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
-	/* const String t("§§"); */
+	/* const String t("„ÅÑ"); */
 	const String t("\xe3\x81\x84");
 
 	CYBOZU_TEST_EQUAL(s.find(t), size_t(1));
@@ -682,7 +682,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_string)
 // look for [str, str + count) beginnng at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	const Char t[] = {'u','e'};
 	CYBOZU_TEST_EQUAL(s.find(t, 0, 2), size_t(2));
@@ -692,7 +692,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array)
 // look for [str, <null>) beginnng at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array_zero)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	const Char t[] = {'u','e', 0};
 	CYBOZU_TEST_EQUAL(s.find(t, 0), size_t(2));
@@ -702,7 +702,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array_zero)
 // look for c at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	CYBOZU_TEST_EQUAL(s.find('u', 0), size_t(2));
 	CYBOZU_TEST_EQUAL(s.find('u', 3), size_t(-1));
@@ -711,7 +711,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char)
 // look for rhs beginning before off
 CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_string)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84"), size_t(4));
 	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84", 3), size_t(1));
@@ -720,7 +720,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_string)
 // look for [str, str + count) beginning before off
 CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array)
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char cs[] = {'u', 'e'};
 	CYBOZU_TEST_EQUAL(s.rfind(cs,4,2), size_t(2));
@@ -729,7 +729,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array)
 CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array_zero)
 // look for [str, <null>) beginning before off
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char cs[] = {'u', 'e', 0};
 	CYBOZU_TEST_EQUAL(s.rfind(cs,4), size_t(2));
@@ -739,7 +739,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array_zero)
 CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char)
 // look for [str, <null>) beginning before off
 {
-	/* String s("§¢§§ue§§"); */
+	/* String s("„ÅÇ„ÅÑue„ÅÑ"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char c = 'u';
 	CYBOZU_TEST_EQUAL(s.rfind(c), size_t(2));
@@ -749,9 +749,9 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char)
 CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_string)
 // look for one of rhs at or after off
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
-	/* String c("§Ô§Ú§Û"); */
+	/* String c("„Çè„Çí„Çì"); */
 	String c("\xE3\x82\x8F\xE3\x82\x92\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL(s.find_first_of(c), size_t(7));
 	CYBOZU_TEST_EQUAL(s.find_first_of(c,8), size_t(10));
@@ -761,7 +761,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_string)
 // look for one of [str, str + count) at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char_array)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e'};
 	CYBOZU_TEST_EQUAL(s.find_first_of(c, 0, 2), size_t(-1));
@@ -771,7 +771,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char_array)
 // look for c at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c = 'e';
 	CYBOZU_TEST_EQUAL(s.find_first_of(c), size_t(3));
@@ -781,9 +781,9 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char)
 // look for one of rhs before off
 CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_string)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
-	/* String cs("§Ô§Ú§Û"); */
+	/* String cs("„Çè„Çí„Çì"); */
 	String cs("\xE3\x82\x8F\xE3\x82\x92\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL( s.find_last_of(cs), size_t(10));
 	CYBOZU_TEST_EQUAL( s.find_last_of(cs, 4), size_t(-1));
@@ -792,7 +792,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_string)
 // look for one of [str, str + count) before off
 CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e'};
 	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20, 3), size_t(3));
@@ -802,7 +802,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array)
 // look for one of [str, <null>) before off
 CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array_zero)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e', 0};
 	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20), size_t(3));
@@ -812,11 +812,11 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array_zero)
 // look for none of rhs at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_string)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
-	/* String t("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String t("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String t("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
-	/* String u("§®§Û"); */
+	/* String u("„Åà„Çì"); */
 	String u ("\xE3\x81\x88\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL( s.find_first_not_of(t), size_t(-1));
 	CYBOZU_TEST_EQUAL( s.find_first_not_of(u, 3), size_t(3));
@@ -826,7 +826,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_string)
 // look for none of [str, str + count) at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char_array)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o'};
 	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0, 4), size_t(0));
@@ -836,7 +836,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char_array)
 // look for one of [str, <null>) at or after off
 CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char_array_zero)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o', 0};
 	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0), size_t(0));
@@ -855,7 +855,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char)
 // look for none of rhs before off
 CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_string)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	String t("eimo");
 	CYBOZU_TEST_EQUAL( s.find_last_not_of(t), size_t(10));
@@ -865,7 +865,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_string)
 // look for none of [str, str + count) before off
 CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_char_array)
 {
-	/* String s("§®§§§‚eimo§Û§ª§π§Û"); */
+	/* String s("„Åà„ÅÑ„ÇÇeimo„Çì„Åõ„Åô„Çì"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o'};
 	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4, 2), size_t(2));
@@ -894,11 +894,11 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_char)
 // insert rhs at off
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_string)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	const String t("abc");
 	s.insert(3, t);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œabc§À§€§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØabc„Å´„Åª„Å∏„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF" "abc" "\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -906,11 +906,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_string)
 // insert rhs [off, off + count) at off
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_substring)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	const String t("abc");
 	s.insert(3, t, 1, 1);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œb§À§€§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØb„Å´„Åª„Å∏„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF" "b" "\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -918,11 +918,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_substring)
 // insert [str, str + count) at off
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_char_array)
 {
-	/* String s("§¡§Í§Ã§Î§Ú"); */
+	/* String s("„Å°„Çä„Å¨„Çã„Çí"); */
 	String s("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	const Char c[]={'v', 'w', 'x', 'y', 'z', 0};
 	s.insert(4, c, 3);
-	/* CYBOZU_TEST_EQUAL(s, "§¡§Í§Ã§Îvwx§Ú"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Å°„Çä„Å¨„Çãvwx„Çí"); */
 	String checked("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B" "vwx" "\xE3\x82\x92");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -930,11 +930,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_char_array)
 // insert [str, <null>) at off
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_char_array_zero)
 {
-	/* String s("§¡§Í§Ã§Î§Ú"); */
+	/* String s("„Å°„Çä„Å¨„Çã„Çí"); */
 	String s("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	const Char c[]={'v', 'w', 'x', 'y', 'z', 0};
 	s.insert(4, c);
-	/* CYBOZU_TEST_EQUAL(s, "§¡§Í§Ã§Îvwxyz§Ú"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Å°„Çä„Å¨„Çãvwxyz„Çí"); */
 	String checked("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B" "vwxyz" "\xE3\x82\x92");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -942,11 +942,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_char_array_zero)
 // insert count * c at off
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_multi_char)
 {
-	/* String s("§¡§Í§Ã§Î§Ú"); */
+	/* String s("„Å°„Çä„Å¨„Çã„Çí"); */
 	String s("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	const Char c ='X';
 	s.insert(2, 4, c);
-	/* CYBOZU_TEST_EQUAL(s, "§¡§ÍXXXX§Ã§Î§Ú"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Å°„ÇäXXXX„Å¨„Çã„Çí"); */
 	String checked("\xE3\x81\xA1\xE3\x82\x8A" "XXXX"
 				   "\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	CYBOZU_TEST_EQUAL(s, checked);
@@ -955,11 +955,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_multi_char)
 // insert c at here
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_iterator_char)
 {
-	/* String s("§¡§Í§Ã§Î§Ú"); */
+	/* String s("„Å°„Çä„Å¨„Çã„Çí"); */
 	String s("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	const Char c ='X';
 	s.insert(s.begin()+1, c);
-	/* CYBOZU_TEST_EQUAL(s, "§¡X§Í§Ã§Î§Ú"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Å°X„Çä„Å¨„Çã„Çí"); */
 	String checked("\xE3\x81\xA1" "X"
 				   "\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	CYBOZU_TEST_EQUAL(s, checked);
@@ -969,11 +969,11 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_iterator_char)
 // insert count * Char at here
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_iterator_multi_chars)
 {
-	/* String s("§¡§Í§Ã§Î§Ú"); */
+	/* String s("„Å°„Çä„Å¨„Çã„Çí"); */
 	String s("\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	const Char c ='Y';
 	s.insert(s.begin(), 5, c);
-	/* CYBOZU_TEST_EQUAL(s, "YYYYY§¡§Í§Ã§Î§Ú"); */
+	/* CYBOZU_TEST_EQUAL(s, "YYYYY„Å°„Çä„Å¨„Çã„Çí"); */
 	String checked("YYYYY" "\xE3\x81\xA1\xE3\x82\x8A\xE3\x81\xAC\xE3\x82\x8B\xE3\x82\x92");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -981,12 +981,12 @@ CYBOZU_TEST_AUTO(string_insert_test_cybozu_iterator_multi_chars)
 // insert [begin, end) at here
 CYBOZU_TEST_AUTO(string_insert_test_cybozu_iterator_iterator)
 {
-	/* String s("§¢§§§¶§®§™"); */
+	/* String s("„ÅÇ„ÅÑ„ÅÜ„Åà„Åä"); */
 	String s("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 	String t("abcdef");
 	s.insert(s.begin()+2, t.begin()+1, t.begin()+3);
 
-	/* CYBOZU_TEST_EQUAL(s, "§¢§§bc§¶§®§™"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÇ„ÅÑbc„ÅÜ„Åà„Åä"); */
 	String checked("\xE3\x81\x82\xE3\x81\x84" "bc" "\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1030,9 +1030,9 @@ CYBOZU_TEST_AUTO(string_util_test_not_equal_sc2)
 // < CASE
 CYBOZU_TEST_AUTO(string_util_test_less_than_cc)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1040,9 +1040,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_cc)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_cs)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1050,9 +1050,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_cs)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_cs2)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92";
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1060,9 +1060,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_cs2)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_sc)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1070,9 +1070,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_sc)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_sc2)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1081,9 +1081,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_sc2)
 // <= CASE
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cc)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1091,9 +1091,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cc)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1101,9 +1101,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs2)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92";
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1111,9 +1111,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs2)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1121,9 +1121,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc2)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1133,9 +1133,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc2)
 // <= CASE
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cc_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1143,9 +1143,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cc_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1153,9 +1153,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs2_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1163,9 +1163,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_cs2_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1173,9 +1173,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc2_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 <= t2);
@@ -1188,9 +1188,9 @@ CYBOZU_TEST_AUTO(string_util_test_less_than_or_equal_sc2_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_cc)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 > t2);
@@ -1198,9 +1198,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_cc)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_cs)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
 
 	CYBOZU_TEST_ASSERT(t1 < t2);
@@ -1208,9 +1208,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_cs)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_cs2)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92";
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 > t2);
@@ -1218,9 +1218,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_cs2)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_sc)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 > t2);
@@ -1228,9 +1228,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_sc)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_sc2)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 
 	CYBOZU_TEST_ASSERT(t1 > t2);
@@ -1239,9 +1239,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_sc2)
 // >= CASE
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cc)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1250,9 +1250,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cc)
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs)
 {
 
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	std::string t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1260,9 +1260,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs2)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92";
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1270,9 +1270,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs2)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1280,9 +1280,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc2)
 {
-	/* §¢§§§¶§®§Ú */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Çí */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x82\x92");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1292,9 +1292,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc2)
 // >= CASE
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cc_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1302,9 +1302,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cc_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1312,9 +1312,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs2_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t2[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1322,9 +1322,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_cs2_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	std::string t1("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1332,9 +1332,9 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc_equal)
 
 CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc2_equal)
 {
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	const char t1[] ="\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A";
-	/* §¢§§§¶§®§™ */
+	/* „ÅÇ„ÅÑ„ÅÜ„Åà„Åä */
 	String t2("\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A");
 
 	CYBOZU_TEST_ASSERT(t1 >= t2);
@@ -1346,23 +1346,23 @@ CYBOZU_TEST_AUTO(string_util_test_greater_than_or_equal_sc2_equal)
 // replace [off, off + n) with rhs
 CYBOZU_TEST_AUTO(string_replace_test_cybozu_string)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	String t("ABCDEFGHIJ");
 	s.replace(2, 3, t);
 	String checked("\xE3\x81\x84\xE3\x82\x8D" "ABCDEFGHIJ" "\xE3\x81\xB8\xE3\x81\xA8");
-	/* CYBOZU_TEST_EQUAL(s, "§§§ÌABCDEFGHIJ§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„ÇçABCDEFGHIJ„Å∏„Å®"); */
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 // replace [off, off + n) with rhs [rhsOff, rhsOff + count)
 CYBOZU_TEST_AUTO(string_replace_test_cybozu_substring)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	String t("ABCDEFGHIJ");
 	s.replace(2, 3, t, 3, 2);
-	/* CYBOZU_TEST_EQUAL(s, "§§§ÌDE§ÿ§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„ÇçDE„Å∏„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D" "DE" "\xE3\x81\xB8\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1370,11 +1370,11 @@ CYBOZU_TEST_AUTO(string_replace_test_cybozu_substring)
 /////// Char[]
 CYBOZU_TEST_AUTO(string_replace_test_cybozu_char_array)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	Char c[]={'A','B','C','D','E','F', 0};
 	s.replace(3, 3, c, 4);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œABCD§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØABCD„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF" "ABCD" "\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1382,11 +1382,11 @@ CYBOZU_TEST_AUTO(string_replace_test_cybozu_char_array)
 // replace [off, off + n) with [str, <null>)
 CYBOZU_TEST_AUTO(string_replace_test_cybozu_char_array_zero)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	Char c[]={'A','B','C','D','E','F', 0};
 	s.replace(3, 3, c);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œABCDEF§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØABCDEF„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF" "ABCDEF" "\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1394,11 +1394,11 @@ CYBOZU_TEST_AUTO(string_replace_test_cybozu_char_array_zero)
 // replace [off, off + n) with count * c
 CYBOZU_TEST_AUTO(string_replace_test_cybozu_multiple_chars)
 {
-	/* String s("§§§Ì§œ§À§€§ÿ§»"); */
+	/* String s("„ÅÑ„Çç„ÅØ„Å´„Åª„Å∏„Å®"); */
 	String s("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB\xE3\x81\xBB\xE3\x81\xB8\xE3\x81\xA8");
 	Char c = 'W';
 	s.replace(4, 2, 3, c);
-	/* CYBOZU_TEST_EQUAL(s, "§§§Ì§œ§ÀWWW§»"); */
+	/* CYBOZU_TEST_EQUAL(s, "„ÅÑ„Çç„ÅØ„Å´WWW„Å®"); */
 	String checked("\xE3\x81\x84\xE3\x82\x8D\xE3\x81\xAF\xE3\x81\xAB"
 				   "WWW" "\xE3\x81\xA8");
 	CYBOZU_TEST_EQUAL(s, checked);
@@ -1409,11 +1409,11 @@ CYBOZU_TEST_AUTO(string_replace_test_cybozu_multiple_chars)
 // replace [begin, end) with rhs
 CYBOZU_TEST_AUTO(string_replace_iterator)
 {
-	/* String s("§Ô§´§Ë§ø§Ï§Ω"); */
+	/* String s("„Çè„Åã„Çà„Åü„Çå„Åù"); */
 	String s("\xE3\x82\x8F\xE3\x81\x8B\xE3\x82\x88\xE3\x81\x9F\xE3\x82\x8C\xE3\x81\x9D");
 	String t("abcdef");
 	s.replace(s.begin()+1, s.end()-1, t);
-	/* CYBOZU_TEST_EQUAL(s, "§Ôabcdef§Ω"); */
+	/* CYBOZU_TEST_EQUAL(s, "„Çèabcdef„Åù"); */
 	String checked("\xE3\x82\x8F" "abcdef" "\xE3\x81\x9D");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1421,22 +1421,22 @@ CYBOZU_TEST_AUTO(string_replace_iterator)
 // replace [begin, end) with [str, str + count)
 CYBOZU_TEST_AUTO(string_replace_iterator_cybozu_char_array)
 {
-	/* String s("§Ô§´§Ë§ø§Ï§Ω"); */
+	/* String s("„Çè„Åã„Çà„Åü„Çå„Åù"); */
 	String s("\xE3\x82\x8F\xE3\x81\x8B\xE3\x82\x88\xE3\x81\x9F\xE3\x82\x8C\xE3\x81\x9D");
 	const Char t[] = {'A','B','C','D','E'};
 	s.replace(s.begin()+1, s.end()-1, t, 3);
-	/* CYBOZU_TEST_EQUAL( s, "§ÔABC§Ω"); */
+	/* CYBOZU_TEST_EQUAL( s, "„ÇèABC„Åù"); */
 	String checked("\xE3\x82\x8F" "ABC" "\xE3\x81\x9D");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
 
 CYBOZU_TEST_AUTO(string_replace_iterator_cybozu_char_array_zero)
 {
-	/* String s("§Ô§´§Ë§ø§Ï§Ω"); */
+	/* String s("„Çè„Åã„Çà„Åü„Çå„Åù"); */
 	String s("\xE3\x82\x8F\xE3\x81\x8B\xE3\x82\x88\xE3\x81\x9F\xE3\x82\x8C\xE3\x81\x9D");
 	const Char t[] = {'A','B','C','D','E', 0};
 	s.replace(s.begin()+1, s.end()-1, t);
-	/* CYBOZU_TEST_EQUAL( s, "§ÔABCDE§Ω"); */
+	/* CYBOZU_TEST_EQUAL( s, "„ÇèABCDE„Åù"); */
 	String checked("\xE3\x82\x8F" "ABCDE" "\xE3\x81\x9D");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1444,11 +1444,11 @@ CYBOZU_TEST_AUTO(string_replace_iterator_cybozu_char_array_zero)
 //replace [begin, end) with count * c
 CYBOZU_TEST_AUTO(string_replace_iterator_cybozu_multiple_chars)
 {
-	/* String s("§ƒ§Õ§ §È§Û"); */
+	/* String s("„Å§„Å≠„Å™„Çâ„Çì"); */
 	String s("\xE3\x81\xA4\xE3\x81\xAD\xE3\x81\xAA\xE3\x82\x89\xE3\x82\x93");
 	const Char c = 'N';
 	s.replace(s.begin()+2, s.end()-2, 3, c);
-	/* "§ƒ§ÕNNN§È§Û" */
+	/* "„Å§„Å≠NNN„Çâ„Çì" */
 	String checked("\xE3\x81\xA4\xE3\x81\xAD" "NNN" "\xE3\x82\x89\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
@@ -1456,13 +1456,13 @@ CYBOZU_TEST_AUTO(string_replace_iterator_cybozu_multiple_chars)
 // replace [begin, end) with [begin2, end2)
 CYBOZU_TEST_AUTO(string_replace_iterator_iterator)
 {
-	/* String s("§ƒ§Õ§ §È§Û"); */
+	/* String s("„Å§„Å≠„Å™„Çâ„Çì"); */
 	String s("\xE3\x81\xA4\xE3\x81\xAD\xE3\x81\xAA\xE3\x82\x89\xE3\x82\x93");
-	/* String t("§ §È§Œ§™§Ø§‰§ﬁ"); */
+	/* String t("„Å™„Çâ„ÅÆ„Åä„Åè„ÇÑ„Åæ"); */
 	String t("\xE3\x81\xAA\xE3\x82\x89\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x81\xBE");
 
 	s.replace(s.begin()+2, s.end()-2, t.begin()+1, t.end()-1);
-	/* CYBOZU_TEST_EQUAL( s, "§ƒ§Õ§È§Œ§™§Ø§‰§È§Û"); */
+	/* CYBOZU_TEST_EQUAL( s, "„Å§„Å≠„Çâ„ÅÆ„Åä„Åè„ÇÑ„Çâ„Çì"); */
 	String checked("\xE3\x81\xA4\xE3\x81\xAD\xE3\x82\x89\xE3\x81\xAE\xE3\x81\x8A\xE3\x81\x8F\xE3\x82\x84\xE3\x82\x89\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL(s, checked);
 }
