@@ -1,6 +1,7 @@
-#include <cybozu/test.hpp>
-#include <sstream>
 #include <stdio.h>
+#include <vector>
+#include <sstream>
+#include <cybozu/test.hpp>
 #include <cybozu/string.hpp>
 #include <cybozu/string_operation.hpp>
 
@@ -258,6 +259,38 @@ CYBOZU_TEST_AUTO(CaseFind)
 			CYBOZU_TEST_EQUAL_POINTER(p, 0);
 		} else {
 			CYBOZU_TEST_EQUAL_POINTER(p, in.c_str() + pos);
+		}
+	}
+}
+
+CYBOZU_TEST_AUTO(split)
+{
+	typedef std::vector<std::string> StrVec;
+	const struct {
+		const char *in;
+		char splitChar;
+		size_t maxNum;
+		const char *out[5];
+		size_t splitNum;
+	} tbl [] = {
+		{ "abc,def", ',', 3, { "abc", "def" }, 2 },
+		{ "abc,def,ghi,jkl", ',', 3, { "abc", "def", "ghi,jkl" }, 3 },
+		{ "abc,def,ghi,jkl", ',', 5, { "abc", "def", "ghi", "jkl" }, 4},
+		{ "abc,def,ghi,jkl", ',', 2, { "abc", "def,ghi,jkl" }, 2},
+		{ "abc,def,ghi,jkl", ',', 1, { "abc,def,ghi,jkl" }, 1},
+
+		{ "abc=def", '=', 2, { "abc", "def" }, 2 },
+		{ ",", ',', 5, { "", "" }, 2 },
+		{ "xyz", ',', 5, { "xyz" }, 1 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		StrVec out;
+		size_t splitNum = cybozu::Split(out, std::string(tbl[i].in), tbl[i].splitChar, tbl[i].maxNum);
+		CYBOZU_TEST_EQUAL(splitNum, tbl[i].splitNum);
+		if (splitNum == tbl[i].splitNum) {
+			for (size_t j = 0; j < splitNum; j++) {
+				CYBOZU_TEST_EQUAL(out[j], tbl[i].out[j]);
+			}
 		}
 	}
 }
