@@ -4,7 +4,7 @@
 	@brief unicode string class like std::string
 	support char*, std::string with UTF-8
 
-	Copyright (C) 2008-2012 Cybozu Inc., all rights reserved.
+	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
 */
 
 #include <string>

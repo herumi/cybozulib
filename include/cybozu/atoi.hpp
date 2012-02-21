@@ -3,7 +3,7 @@
 	@file
 	@brief converter between integer and string
 
-	Copyright (C) 2008-2012 Cybozu Inc., all rights reserved.
+	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
 */
 
 #include <memory.h>

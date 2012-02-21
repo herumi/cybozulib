@@ -3,7 +3,7 @@
 	@file
 	@brief sparse vector
 
-	Copyright (C) 2010-2012 Cybozu Inc., all rights reserved.
+	Copyright (C) 2010-2012 Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
 */
 #include <vector>

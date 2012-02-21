@@ -3,7 +3,7 @@
 	@file
 	@brief tiny wrapper of openssl class
 
-	Copyright (C) 2007-2012 Cybozu Inc., all rights reserved.
+	Copyright (C) 2007-2012 Cybozu Labs, Inc., all rights reserved.
 */
 #include <cybozu/socket.hpp>
 #include <cybozu/exception.hpp>
