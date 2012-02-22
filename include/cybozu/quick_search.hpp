@@ -40,7 +40,13 @@ public:
 	const char *find(const char *begin, const char *end) const
 	{
 		while (begin <= end - len_) {
-			if (memcmp(&str_[0], begin, len_) == 0) return begin;
+			for (size_t i = 0; i < len_; i++) {
+				if (str_[i] != begin[i]) {
+					goto NEXT;
+				}
+			}
+			return begin;
+		NEXT:
 			begin += tbl_[static_cast<unsigned char>(begin[len_])];
 		}
 		return 0;
