@@ -32,7 +32,7 @@ EXTDIR=$(TOPDIR)../cybozulib_ext/
 #CFLAGS+= -I$(TOPDIR)include -I$(EXTDIR)icu4c/icu/include -I$(EXTDIR)openssl/openssl/include
 #LDFLAGS+= -L$(TOPDIR)lib -lssl -lcrypto -ldl -licuuc -licudata -licui18n -lz -Wl,-rpath,'$$ORIGIN/../lib'
 CFLAGS+= -I$(TOPDIR)include 
-LDFLAGS+= -L$(TOPDIR)lib -lz -lpthread -lssl -Wl,-rpath,'$$ORIGIN/../lib'
+LDFLAGS+= -L$(TOPDIR)lib -lz -lrt -lpthread -lssl -lmecab -Wl,-rpath,'$$ORIGIN/../lib'
 
 MKDEP = sh -ec '$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@' 
 

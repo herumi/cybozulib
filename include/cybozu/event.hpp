@@ -9,10 +9,15 @@
 #ifdef _WIN32
 	#include <windows.h>
 #else
-	#include <cybozu/condition_variable.hpp>
+	#include <unistd.h>
 #endif
+#include <cybozu/exception.hpp>
 
 namespace cybozu {
+
+struct EventException : cybozu::Exception {
+	EventException() : cybozu::Exception("event") { }
+};
 
 #ifdef _WIN32
 class Event {
@@ -21,45 +26,60 @@ public:
 	Event()
 	{
 		event_ = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+		if (event_ == 0) {
+			cybozu::EventException e;
+			e << "CreateEvent";
+			throw e;
+		}
 	}
 	~Event()
 	{
-		if (event_) ::CloseHandle(event_);
+		::CloseHandle(event_);
 	}
 	void wakeup()
 	{
-		if (event_) SetEvent(event_);
+		::SetEvent(event_);
 	}
-	bool wait()
+	void wait()
 	{
-		const DWORD msec = INFINITE;
-		if (event_) {
-			return WaitForSingleObject(event_, msec) == WAIT_OBJECT_0;
+		DWORD msec = INFINITE;
+		if (WaitForSingleObject(event_, msec) != WAIT_OBJECT_0) {
+			cybozu::EventException e;
+			e << "wait";
+			throw e;
 		}
-		return false;
 	}
 };
 #else
 class Event {
-	cybozu::Mutex mutex_;
-	cybozu::ConditionVariable cv_;
+	int pipefd_[2];
+	template<class T>
+	void disable_warning_ignore_var(T&) {}
 public:
 	Event()
 	{
-		mutex_.lock();
+		if (::pipe(pipefd_) < 0) {
+			cybozu::EventException e;
+			e << "pipe";
+			throw e;
+		}
 	}
 	~Event()
 	{
-		mutex_.unlock();
+		::close(pipefd_[0]);
+		::close(pipefd_[1]);
 	}
 	void wakeup()
 	{
-		cv_.notifyOne();
+		char c = 'a';
+		ssize_t size = ::write(pipefd_[1], &c, 1);
+		disable_warning_ignore_var(size);
 	}
-	bool wait()
+	void wait()
 	{
-		cv_.wait(mutex_);
-		return true;
+		char c;
+		ssize_t size = ::read(pipefd_[0], &c, 1);
+		disable_warning_ignore_var(size);
 	}
 };
 #endif

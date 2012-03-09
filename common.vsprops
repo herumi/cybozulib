@@ -10,7 +10,7 @@
 		EnableIntrinsicFunctions="true"
 		FavorSizeOrSpeed="1"
 		OmitFramePointers="true"
-		AdditionalIncludeDirectories="$(SolutionDir)../cybozulib/include;$(SolutionDir)../cybozulib_ext/openssl/include;$(SolutionDir)../cybozulib_ext/zlib/include"
+		AdditionalIncludeDirectories="$(SolutionDir)../cybozulib/include;$(SolutionDir)../cybozulib_ext/openssl/include;$(SolutionDir)../cybozulib_ext/zlib/include;$(SolutionDir)../cybozulib_ext/mecab/include"
 		PreprocessorDefinitions="WIN32;WINVER=0x501;_WIN32_WINNT=0x0501;NOMINMAX;WIN32_LEAN_AND_MEAN"
 		RuntimeLibrary="3"
 		BufferSecurityCheck="false"

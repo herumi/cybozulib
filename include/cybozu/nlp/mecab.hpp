@@ -62,6 +62,10 @@ struct Mecab {
 		}
 		node_ = tagger_->parseToNode(str, strLen);
 	}
+	void set(const std::string& str)
+	{
+		set(&str[0], str.size());
+	}
 	bool isEnd() const { return node_->stat == MECAB_EOS_NODE; }
 	const char *getPos() const { return node_->surface; }
 	size_t getSize() const { return node_->length; }

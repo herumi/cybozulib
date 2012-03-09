@@ -27,6 +27,47 @@ public:
 	}
 };
 
+class A : public cybozu::ThreadBase {
+	cybozu::Mutex& mutex_;
+public:
+	A(cybozu::Mutex& mutex)
+		: mutex_(mutex)
+	{
+	}
+	void threadEntry()
+	{
+		puts("start A");
+		puts("lock mutex");
+		mutex_.lock();
+		puts("wait 100msec");
+		cybozu::Sleep(100);
+		mutex_.unlock();
+		cybozu::Sleep(100);
+		CYBOZU_TEST_ASSERT(!mutex_.lockTimeout(10));
+		CYBOZU_TEST_ASSERT(mutex_.lockTimeout(10));
+		mutex_.unlock();
+	}
+};
+
+class B : public cybozu::ThreadBase {
+	cybozu::Mutex& mutex_;
+public:
+	B(cybozu::Mutex& mutex)
+		: mutex_(mutex)
+	{
+	}
+	void threadEntry()
+	{
+		puts("start B");
+		puts("lock mutex");
+		CYBOZU_TEST_ASSERT(!mutex_.lockTimeout(10));
+		cybozu::Sleep(100);
+		CYBOZU_TEST_ASSERT(mutex_.lockTimeout(10));
+		cybozu::Sleep(100);
+		mutex_.unlock();
+	}
+};
+
 CYBOZU_TEST_AUTO(autoLock)
 {
 	cybozu::Mutex mutex_;
@@ -47,4 +88,15 @@ CYBOZU_TEST_AUTO(autoLock)
 
 	test.joinThread();
 	CYBOZU_TEST_EQUAL(s_count, N * 2);
+}
+
+CYBOZU_TEST_AUTO(lockTimeout)
+{
+	cybozu::Mutex mutex_;
+	A a(mutex_);
+	B b(mutex_);
+	a.beginThread();
+	b.beginThread();
+	a.joinThread();
+	b.joinThread();
 }

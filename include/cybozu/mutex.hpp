@@ -11,8 +11,10 @@
 	#include <windows.h>
 #else
 	#include <pthread.h>
+	#include <time.h>
 #endif
 #include <assert.h>
+#include <stdlib.h>
 
 namespace cybozu {
 
@@ -24,7 +26,8 @@ namespace thread {
 	typedef HANDLE MutexHandle;
 	inline void MutexInit(MutexHandle& mutex)
 	{
-		mutex = CreateSemaphore(NULL /* no security */, 1 /* init */, 0x7FFFFFFF /* max */, NULL /* no name */);
+//		mutex = CreateSemaphore(NULL /* no security */, 1 /* init */, 0x7FFFFFFF /* max */, NULL /* no name */);
+		mutex = CreateMutex(NULL /* no security */, FALSE /* no owner */, NULL /* no name */);
 	}
 	inline void MutexLock(MutexHandle& mutex) { WaitForSingleObject(mutex, INFINITE); }
 	/*
@@ -46,14 +49,22 @@ namespace thread {
 	}
 	inline void MutexUnlock(MutexHandle& mutex)
 	{
-		ReleaseSemaphore(mutex, 1, NULL);
+//		ReleaseSemaphore(mutex, 1, NULL);
+		ReleaseMutex(mutex);
 	}
 	inline void MutexTerm(MutexHandle& mutex) { CloseHandle(mutex); }
 #else
 	typedef pthread_mutex_t MutexHandle;
 	inline void MutexInit(MutexHandle& mutex)
 	{
-		pthread_mutex_init(&mutex, NULL);
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init(&attr);
+		if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_TIMED_NP)) {
+			perror("pthread_mutexattr_settype");
+			exit(1);
+		}
+		pthread_mutex_init(&mutex, &attr);
+		pthread_mutexattr_destroy(&attr);
 	}
 	inline void MutexLock(MutexHandle& mutex) { pthread_mutex_lock(&mutex); }
 	inline bool MutexLockTimeout(MutexHandle& mutex, int msec)

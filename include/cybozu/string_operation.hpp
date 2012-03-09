@@ -291,7 +291,7 @@ bool CaseEqualStartWith(const StringT<CharT, Traits, Alloc>& lhs, const char (&r
 /**
 	split inStr into out at splitChar
 	maxNum is maximum number of split str
-	out must have push_back
+	out must have clear() and push_back()
 */
 template<class Out, class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
 size_t Split(Out& out, const StringT<CharT, Traits, Alloc>& inStr, CharT splitChar = ',', size_t maxNum = 0x7fffffff)
@@ -299,6 +299,7 @@ size_t Split(Out& out, const StringT<CharT, Traits, Alloc>& inStr, CharT splitCh
 	typedef StringT<CharT, Traits, Alloc> String;
 	size_t splitNum = 0;
 	size_t cur = 0;
+	out.clear();
 	for (;;) {
 		size_t pos = inStr.find_first_of(splitChar, cur);
 		if (pos == String::npos || splitNum == maxNum - 1) {

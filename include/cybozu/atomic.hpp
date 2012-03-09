@@ -119,4 +119,13 @@ inline size_t AtomicExchangeSize_t(size_t *p, size_t newValue)
 #endif
 }
 
+inline void mfence()
+{
+#ifdef _WIN32
+	_mm_mfence();
+#else
+	__asm__ volatile("mfence");
+#endif
+}
 } // cybozu
+
