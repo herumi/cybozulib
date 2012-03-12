@@ -10,6 +10,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <intrin.h>
+#else
+#include <x86intrin.h>
 #endif
 
 namespace cybozu {
@@ -121,11 +123,7 @@ inline size_t AtomicExchangeSize_t(size_t *p, size_t newValue)
 
 inline void mfence()
 {
-#ifdef _WIN32
 	_mm_mfence();
-#else
-	__asm__ volatile("mfence");
-#endif
 }
 } // cybozu
 
