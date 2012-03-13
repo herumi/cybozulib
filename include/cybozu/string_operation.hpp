@@ -123,7 +123,7 @@ inline CharT ToUpperC(CharT c)
 	trim space
 	@param str [inout] string to be trimed
 */
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 inline void Trim(StringT<CharT, Traits, Alloc>& str)
 {
 	if (str.empty()) return;
@@ -139,7 +139,7 @@ inline void Trim(StringT<CharT, Traits, Alloc>& str)
 	str.resize(size);
 }
 
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 inline StringT<CharT, Traits, Alloc> TrimCopy(const StringT<CharT, Traits, Alloc>& str)
 {
 	if (str.empty()) return "";
@@ -212,7 +212,7 @@ bool CaseEqual(const CharT1 *lhs, size_t lhsSize, const CharT2 *rhs, size_t rhsS
 	@retval  0 if lhs == rhs
 	@retval -1 if lhs < rhs
 */
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 int CaseCompare(const StringT<CharT, Traits, Alloc>& lhs, const StringT<CharT, Traits, Alloc>& rhs)
 {
 	return cybozu::CaseCompare(&lhs[0], lhs.size(), &rhs[0], rhs.size());
@@ -223,13 +223,13 @@ int CaseCompare(const StringT<CharT, Traits, Alloc>& lhs, const StringT<CharT, T
 	@param lhs [in] left side string
 	@param rhs [in] right side string
 */
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 bool CaseEqual(const StringT<CharT, Traits, Alloc>& lhs, const StringT<CharT, Traits, Alloc>& rhs)
 {
 	return cybozu::CaseEqual(&lhs[0], lhs.size(), &rhs[0], rhs.size());
 }
 
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 bool CaseEqual(const StringT<CharT, Traits, Alloc>& lhs, const char *rhs)
 {
 	return cybozu::CaseEqual(&lhs[0], lhs.size(), rhs, strlen(rhs));
@@ -264,7 +264,7 @@ const CharT *CaseFind(const CharT *begin, const CharT *end, const char *targetBe
 	return 0;
 }
 
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 size_t CaseFind(const StringT<CharT, Traits, Alloc>& str, const char *targetBegin, const char *targetEnd = 0)
 {
 	if (!str.empty()) {
@@ -281,7 +281,7 @@ size_t CaseFind(const StringT<CharT, Traits, Alloc>& str, const char *targetBegi
 	@param lhs [in] left side string
 	@param rhs [in] right side string
 */
-template<class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT, size_t N>
+template<class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT, size_t N>
 bool CaseEqualStartWith(const StringT<CharT, Traits, Alloc>& lhs, const char (&rhs)[N])
 {
 	if (lhs.size() < N - 1) return false;
@@ -293,7 +293,7 @@ bool CaseEqualStartWith(const StringT<CharT, Traits, Alloc>& lhs, const char (&r
 	maxNum is maximum number of split str
 	out must have clear() and push_back()
 */
-template<class Out, class CharT, class Traits, class Alloc, template<class CharT, class Traits, class Alloc>class StringT>
+template<class Out, class CharT, class Traits, class Alloc, template<class CharT_, class Traits_, class Alloc_>class StringT>
 size_t Split(Out& out, const StringT<CharT, Traits, Alloc>& inStr, CharT splitChar = ',', size_t maxNum = 0x7fffffff)
 {
 	typedef StringT<CharT, Traits, Alloc> String;

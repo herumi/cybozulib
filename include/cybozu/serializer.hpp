@@ -256,7 +256,7 @@ void deserialize(InputStream& is, std::string& str)
 }
 
 // for vector, list
-template<class OutputStream, class T, class Alloc, template<class T, class Alloc>class Container>
+template<class OutputStream, class T, class Alloc, template<class T_, class Alloc_>class Container>
 void serialize(OutputStream& os, const Container<T, Alloc>& x)
 {
 	typedef Container<T, Alloc> V;
@@ -266,7 +266,7 @@ void serialize(OutputStream& os, const Container<T, Alloc>& x)
 	}
 }
 
-template<class InputStream, class T, class Alloc, template<class T, class Alloc>class Container>
+template<class InputStream, class T, class Alloc, template<class T_, class Alloc_>class Container>
 void deserialize(InputStream& is, Container<T, Alloc>& x)
 {
 	size_t len;
@@ -279,7 +279,7 @@ void deserialize(InputStream& is, Container<T, Alloc>& x)
 }
 
 // set
-template<class OutputStream, class K, class Pred, class Alloc, template<class K, class Pred, class Alloc>class Container>
+template<class OutputStream, class K, class Pred, class Alloc, template<class K_, class Pred_, class Alloc_>class Container>
 void serialize(OutputStream& os, const Container<K, Pred, Alloc>& x)
 {
 	typedef Container<K, Pred, Alloc> Set;
@@ -289,7 +289,7 @@ void serialize(OutputStream& os, const Container<K, Pred, Alloc>& x)
 	}
 }
 
-template<class InputStream, class K, class Pred, class Alloc, template<class K, class Pred, class Alloc>class Container>
+template<class InputStream, class K, class Pred, class Alloc, template<class K_, class Pred_, class Alloc_>class Container>
 void deserialize(InputStream& is, Container<K, Pred, Alloc>& x)
 {
 	size_t len;
@@ -302,7 +302,7 @@ void deserialize(InputStream& is, Container<K, Pred, Alloc>& x)
 }
 
 // map
-template<class OutputStream, class K, class V, class Pred, class Alloc, template<class K, class V, class Pred, class Alloc>class Container>
+template<class OutputStream, class K, class V, class Pred, class Alloc, template<class K_, class V_, class Pred_, class Alloc_>class Container>
 void serialize(OutputStream& os, const Container<K, V, Pred, Alloc>& x)
 {
 	typedef Container<K, V, Pred, Alloc> Map;
@@ -313,7 +313,7 @@ void serialize(OutputStream& os, const Container<K, V, Pred, Alloc>& x)
 	}
 }
 
-template<class InputStream, class K, class V, class Pred, class Alloc, template<class K, class V, class Pred, class Alloc>class Container>
+template<class InputStream, class K, class V, class Pred, class Alloc, template<class K_, class V_, class Pred_, class Alloc_>class Container>
 void deserialize(InputStream& is, Container<K, V, Pred, Alloc>& x)
 {
 	typedef Container<K, V, Pred, Alloc> Map;
@@ -328,7 +328,7 @@ void deserialize(InputStream& is, Container<K, V, Pred, Alloc>& x)
 }
 
 // unordered_map
-template<class OutputStream, class K, class V, class Hash, class Pred, class Alloc, template<class K, class V, class Hash, class Pred, class Alloc>class Container>
+template<class OutputStream, class K, class V, class Hash, class Pred, class Alloc, template<class K_, class V_, class Hash_, class Pred_, class Alloc_>class Container>
 void serialize(OutputStream& os, const Container<K, V, Hash, Pred, Alloc>& x)
 {
 	typedef Container<K, V, Hash, Pred, Alloc> Map;
@@ -339,7 +339,7 @@ void serialize(OutputStream& os, const Container<K, V, Hash, Pred, Alloc>& x)
 	}
 }
 
-template<class InputStream, class K, class V, class Hash, class Pred, class Alloc, template<class K, class V, class Hash, class Pred, class Alloc>class Container>
+template<class InputStream, class K, class V, class Hash, class Pred, class Alloc, template<class K_, class V_, class Hash_, class Pred_, class Alloc_>class Container>
 void deserialize(InputStream& is, Container<K, V, Hash, Pred, Alloc>& x)
 {
 	typedef Container<K, V, Hash, Pred, Alloc> Map;

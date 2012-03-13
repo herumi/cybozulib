@@ -119,7 +119,7 @@ public:
 	SocketAddr()
 	{
 	}
-	SocketAddr(const std::string& address, int port)
+	SocketAddr(const std::string& address, unsigned short port)
 	{
 		set(address, port);
 	}
@@ -168,16 +168,17 @@ public:
 #endif
 		return true;
 	}
-	void setPort(int port)
+	void setPort(unsigned short port)
 	{
-		addr_.sin_port = htons((unsigned short)port);
+		addr_.sin_port = htons(port);
 	}
-	bool set(const std::string& address, int port)
+	bool set(const std::string& address, unsigned short port)
 	{
 		if (!setName(address)) {
 			return false;
 		}
 		setPort(port);
+		return true;
 	}
 	const struct sockaddr *get() const { return (const struct sockaddr*)&addr_; }
 };
@@ -350,7 +351,7 @@ public:
 		@param address [in] address
 		@param port [in] port
 	*/
-	bool connect(const std::string& address, int port)
+	bool connect(const std::string& address, unsigned short port)
 	{
 		SocketAddr addr;
 		if (!addr.setName(address)) {
@@ -382,7 +383,7 @@ public:
 		init for server
 		@param port [in] port number
 	*/
-	bool bind(int port)
+	bool bind(unsigned short port)
 	{
 		sd_ = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
@@ -394,7 +395,7 @@ public:
 		struct sockaddr_in addr;
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons((unsigned short)port);
+		addr.sin_port = htons(port);
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		if (::bind(sd_, (struct sockaddr *)&addr, sizeof(addr)) == 0) {

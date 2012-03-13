@@ -46,3 +46,9 @@
 #else
 	#define CYBOZU_SNPRINTF snprintf
 #endif
+
+namespace cybozu {
+template<class T>
+void disable_warning_unused_variable(const T&) { }
+} // cybozu
+

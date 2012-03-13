@@ -53,8 +53,6 @@ public:
 #else
 class Event {
 	int pipefd_[2];
-	template<class T>
-	void disable_warning_ignore_var(T&) {}
 public:
 	Event()
 	{
@@ -73,13 +71,13 @@ public:
 	{
 		char c = 'a';
 		ssize_t size = ::write(pipefd_[1], &c, 1);
-		disable_warning_ignore_var(size);
+		cybozu::disable_warning_unused_variable(size);
 	}
 	void wait()
 	{
 		char c;
 		ssize_t size = ::read(pipefd_[0], &c, 1);
-		disable_warning_ignore_var(size);
+		cybozu::disable_warning_unused_variable(size);
 	}
 };
 #endif

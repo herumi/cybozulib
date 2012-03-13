@@ -62,7 +62,7 @@ public:
 
 /**
 	16byte aligment array
-	+16 for SSE4.2 string operation overrun
+	+16 to avoid overrunning by SSE4.2 string operation
 */
 template<class T>
 class AlignedArray {
@@ -87,7 +87,7 @@ public:
 				initSize++;
 			}
 		} catch (...) {
-			init = false;	
+			init = false;
 		}
 		if (!init) {
 			for (size_t i = 0; i < initSize; i++) {

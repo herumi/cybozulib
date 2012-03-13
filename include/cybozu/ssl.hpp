@@ -107,7 +107,7 @@ public:
 			throw e;
 		}
 	}
-	bool connect(const std::string& address, int port)
+	bool connect(const std::string& address, unsigned short port)
 	{
 		SocketAddr addr;
 		if (!addr.setName(address)) {
