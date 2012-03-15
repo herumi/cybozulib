@@ -157,8 +157,10 @@ public:
 		if (!isOpen()) return true;
 #ifdef _WIN32
 		bool isOK = FlushFileBuffers(hdl_) != 0;
-#else
+#elif defined(__linux__)
 		bool isOK = fdatasync(hdl_) == 0;
+#else
+		bool isOK = fcntl(hdl_, F_FULLFSYNC) == 0;
 #endif
 		if (!dontThrow && !isOK) {
 			cybozu::FileException e;
