@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <intrin.h>
 #else
-#include <x86intrin.h>
+#include <emmintrin.h>
 #endif
 
 namespace cybozu {
