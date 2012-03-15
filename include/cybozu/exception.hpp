@@ -43,8 +43,14 @@ inline std::string ConvertErrorNoToString(int err)
 #ifdef _WIN32
 	strerror_s(errBuf, sizeof(errBuf), err);
 	return errBuf;
-#else
+#elif defined(_GNU_SOURCE)
 	return ::strerror_r(err, errBuf, sizeof(errBuf));
+#else
+	if (strerror_r(err, errBuf, sizeof(errBuf)) == 0) {
+		return errBuf;
+	} else {
+		return "strerror_r error";
+	}
 #endif
 }
 
