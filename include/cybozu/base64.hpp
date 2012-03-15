@@ -44,7 +44,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
 		cybozu::Base64Exception e;
-		e << "EncodeToBase64" << "bad line size" << maxLineSize;
+		e << "EncodeToBase64" << "bad line size" << (int)maxLineSize;
 		throw e;
 	}
 
