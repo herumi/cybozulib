@@ -293,22 +293,22 @@ CYBOZU_TEST_AUTO(innerProduct)
 		}
 		{
 			int a;
-			cybozu::nlp::GetInnerProduct(&a, lhs, lhs);
+			cybozu::nlp::InnerProduct(&a, lhs, lhs);
 			CYBOZU_TEST_EQUAL(a, 10000 + 25 + 4 + 16);
 		}
 		{
 			double b;
-			cybozu::nlp::GetInnerProduct(&b, rhs, rhs);
+			cybozu::nlp::InnerProduct(&b, rhs, rhs);
 			CYBOZU_TEST_EQUAL(b, 2.25 + 0.01 + 9 + 4 + 1);
 		}
 		{
 			double c;
-			cybozu::nlp::GetInnerProduct(&c, lhs, rhs);
+			cybozu::nlp::InnerProduct(&c, lhs, rhs);
 			CYBOZU_TEST_EQUAL(c, 8.5);
 		}
 		{
 			double d;
-			cybozu::nlp::GetInnerProduct(&d, rhs, lhs);
+			cybozu::nlp::InnerProduct(&d, rhs, lhs);
 			CYBOZU_TEST_EQUAL(d, 8.5);
 		}
 	}
@@ -327,22 +327,22 @@ CYBOZU_TEST_AUTO(innerProduct)
 		}
 		{
 			int a;
-			cybozu::nlp::GetInnerProduct(&a, lhs, lhs);
+			cybozu::nlp::InnerProduct(&a, lhs, lhs);
 			CYBOZU_TEST_EQUAL(a, 10000 + 25 + 4 + 16);
 		}
 		{
 			double b;
-			cybozu::nlp::GetInnerProduct(&b, rhs, rhs);
+			cybozu::nlp::InnerProduct(&b, rhs, rhs);
 			CYBOZU_TEST_EQUAL(b, 2.25 + 0.01 + 9 + 4 + 1);
 		}
 		{
 			double c;
-			cybozu::nlp::GetInnerProduct(&c, lhs, rhs);
+			cybozu::nlp::InnerProduct(&c, lhs, rhs);
 			CYBOZU_TEST_EQUAL(c, 8.5);
 		}
 		{
 			double d;
-			cybozu::nlp::GetInnerProduct(&d, rhs, lhs);
+			cybozu::nlp::InnerProduct(&d, rhs, lhs);
 			CYBOZU_TEST_EQUAL(d, 8.5);
 		}
 	}

@@ -17,6 +17,7 @@ if /i "%PROCESSOR_ARCHITECTURE%" == "AMD64" (
 @echo.
 @echo ******** Building project(%mode%) ********
 @echo.
+mkdir bin lib include
 devenv cybozulib.sln /Build %mode%
 @rem for /F "usebackq" %%p in (`"dir /S /B *.vcproj"`) do devenv %%p /Build %mode%
 @echo.

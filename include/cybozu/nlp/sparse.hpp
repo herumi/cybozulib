@@ -297,6 +297,15 @@ public:
 		posTbl_.swap(rhs.posTbl_);
 		vec_.swap(rhs.vec_);
 	}
+	double norm() const
+	{
+		double ret = 0;
+		for (const_iterator i = begin(), ie = end(); i != ie; ++i) {
+			double v = i->val();
+			ret += v * v;
+		}
+		return ret;
+	}
 };
 
 template<class V1, class V2>
@@ -507,7 +516,7 @@ public:
 	retval is the type of lhs::value_type or rhs::value_type
 */
 template<class Ret, class L, class Ltbl, class R, class Rtbl>
-void GetInnerProduct(Ret *pret, const SparseVector<L, Ltbl>& lhs, const SparseVector<R, Rtbl>& rhs)
+void InnerProduct(Ret *pret, const SparseVector<L, Ltbl>& lhs, const SparseVector<R, Rtbl>& rhs)
 {
 	typedef SparseVector<L, Ltbl> Lvec;
 	typedef SparseVector<R, Rtbl> Rvec;

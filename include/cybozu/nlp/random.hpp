@@ -12,10 +12,15 @@ namespace cybozu { namespace nlp {
 /*
 	xor shift
 */
-class RandomGenerator {
+class UniformRandomGenerator {
+	double a_;
+	double b_;
 	unsigned int x_, y_, z_, w_;
 public:
-	RandomGenerator(int seed = 0)
+	/* generate uniform random value in [a, b) */
+	explicit UniformRandomGenerator(double a = 0, double b = 1, int seed = 0)
+		: a_(a)
+		, b_(b)
 	{
 		init(seed);
 	}
@@ -33,23 +38,24 @@ public:
 		x_ = y_; y_ = z_; z_ = w_;
 		return w_ = (w_ ^ (w_ >> 19)) ^ (t ^ (t >> 8));
 	}
-	/* [0, 1) random number */
+	/* [a, b) random number */
 	double getDouble()
 	{
-		unsigned int a = get() >> 5;
-		unsigned int b = get() >> 6;
-		return (a * double(1U << 26) + b) * (1.0 / double(1LL << 53));
+		unsigned int x = get() >> 5;
+		unsigned int y = get() >> 6;
+		double z = (x * double(1U << 26) + y) * (1.0 / double(1LL << 53));
+		return (b_ - a_) * z + a_;
 	}
 };
 /*
 	normal random generator
 */
 class NormalRandomGenerator {
-	RandomGenerator gen_;
+	UniformRandomGenerator gen_;
 	double u_;
 	double s_;
 public:
-	NormalRandomGenerator(double u = 0, double s = 1, int seed = 0)
+	explicit NormalRandomGenerator(double u = 0, double s = 1, int seed = 0)
 		: gen_(seed)
 		, u_(u)
 		, s_(s)
