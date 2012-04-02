@@ -57,6 +57,9 @@ namespace thread {
 	typedef pthread_mutex_t MutexHandle;
 	inline void MutexInit(MutexHandle& mutex)
 	{
+#if 1
+		pthread_mutex_init(&mutex, NULL);
+#else
 		pthread_mutexattr_t attr;
 		pthread_mutexattr_init(&attr);
 		if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_TIMED_NP)) {
@@ -65,6 +68,7 @@ namespace thread {
 		}
 		pthread_mutex_init(&mutex, &attr);
 		pthread_mutexattr_destroy(&attr);
+#endif
 	}
 	inline void MutexLock(MutexHandle& mutex) { pthread_mutex_lock(&mutex); }
 	inline bool MutexLockTimeout(MutexHandle& mutex, int msec)
@@ -114,10 +118,12 @@ public:
 	{
 		thread::MutexLock(hdl_);
 	}
+#if 0
 	bool lockTimeout(int msec)
 	{
 		return thread::MutexLockTimeout(hdl_, msec);
 	}
+#endif
 	void unlock()
 	{
 		thread::MutexUnlock(hdl_);
