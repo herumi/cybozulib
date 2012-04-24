@@ -5,7 +5,7 @@
 
 CYBOZU_TEST_AUTO(test_int)
 {
-    struct {
+    const struct {
         const char *str;
         int x;
     } okTbl[] = {
@@ -113,7 +113,7 @@ CYBOZU_TEST_AUTO(test_int)
 
 CYBOZU_TEST_AUTO(test_short)
 {
-    struct {
+    const struct {
         const char *str;
         short x;
     } okTbl[] = {
@@ -198,7 +198,7 @@ CYBOZU_TEST_AUTO(test_short)
 
 CYBOZU_TEST_AUTO(test_unsigned_short)
 {
-    struct {
+    const struct {
         const char *str;
         unsigned short x;
     } okTbl[] = {
@@ -271,7 +271,7 @@ CYBOZU_TEST_AUTO(test_unsigned_short)
 
 CYBOZU_TEST_AUTO(test_uint)
 {
-    struct {
+    const struct {
         const char *str;
         unsigned int x;
     } okTbl[] = {
@@ -372,7 +372,7 @@ CYBOZU_TEST_AUTO(test_uint)
 
 CYBOZU_TEST_AUTO(test_int64)
 {
-    struct {
+    const struct {
         const char *str;
         int64_t x;
     } okTbl[] = {
@@ -506,7 +506,7 @@ CYBOZU_TEST_AUTO(test_int64)
 
 CYBOZU_TEST_AUTO(test_uint64)
 {
-    struct {
+    const struct {
         const char *str;
         uint64_t x;
     } okTbl[] = {
