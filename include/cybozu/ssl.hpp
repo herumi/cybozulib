@@ -131,7 +131,10 @@ public:
 	}
 	ssize_t read(char *buf, size_t bufSize)
 	{
-		ssize_t ret = SSL_read(ssl_, buf, bufSize);
+		if (bufSize > 0x7fffffffU) {
+			return -1;
+		}
+		ssize_t ret = SSL_read(ssl_, buf, static_cast<int>(bufSize));
 		if (ret < 0) {
 			Engine::getInstance().putError();
 		}
@@ -139,7 +142,10 @@ public:
 	}
 	ssize_t write(const char *buf, size_t bufSize)
 	{
-		ssize_t ret = SSL_write(ssl_, buf, bufSize);
+		if (bufSize > 0x7fffffffU) {
+			return -1;
+		}
+		ssize_t ret = SSL_write(ssl_, buf, static_cast<int>(bufSize));
 		if (ret < 1) {
 			Engine::getInstance().putError();
 		}

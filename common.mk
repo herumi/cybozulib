@@ -5,11 +5,9 @@ endif
 ifeq ($(shell uname -s),Linux)
   LDFLAGS += -lrt
 endif
-CXX = g++ -x c++ -c
-LD = g++
+CXX = g++
 #CXX = clang++ -x c++ -c
-#LD = clang++
-CC = gcc -c
+CC = gcc
 CP = cp -f
 AR = ar r
 MKDIR=mkdir -p
@@ -59,13 +57,13 @@ endef
 .SUFFIXES: .cpp .d .exe
 
 $(OBJDIR)/%.o: %.cpp
-	$(CXX) $< -o $@ $(CFLAGS)
+	$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(OBJDIR)/%.d: %.cpp $(OBJDIR)
 	@$(MKDEP)
 
 $(TOPDIR)bin/%$(OBJSUF).exe: $(OBJDIR)/%.o $(LIBS)
-	$(LD) $< -o $@ $(LIBS) $(LDFLAGS)
+	$(CXX) $< -o $@ $(LIBS) $(LDFLAGS)
 
 OBJS=$(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
 
