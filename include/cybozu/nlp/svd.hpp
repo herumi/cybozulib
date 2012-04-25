@@ -176,7 +176,7 @@ bool LoadMatrix(Matrix& A, const std::string& input)
 }
 
 template<class Matrix>
-void SaveMatrix(const std::string& outName, const Matrix& M)
+bool SaveMatrix(const std::string& outName, const Matrix& M)
 {
 	std::ofstream ofs(outName.c_str(), std::ios::binary);
 	ofs << std::setprecision(8);
@@ -189,10 +189,11 @@ void SaveMatrix(const std::string& outName, const Matrix& M)
 		}
 		ofs << std::endl;
 	}
+	return ofs.good();
 }
 
 template<class Vector>
-void SaveVector(const std::string& outName, const Vector& V)
+bool SaveVector(const std::string& outName, const Vector& V)
 {
 	std::ofstream ofs(outName.c_str(), std::ios::binary);
 	ofs << std::setprecision(8);
@@ -200,6 +201,7 @@ void SaveVector(const std::string& outName, const Vector& V)
 	for (int i = 0; i < V.rows(); i++) {
 		ofs << V(i) << std::endl;
 	}
+	return ofs.good();
 }
 
 } // svd

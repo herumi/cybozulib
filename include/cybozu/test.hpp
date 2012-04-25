@@ -189,6 +189,19 @@ int main(int argc, char *argv[])
 		std::cout << "ctest:  rhs=" << (y) << std::endl; \
 	} \
 }
+/**
+	alert if fabs(x, y) >= eps
+	@param x [in]
+	@param y [in]
+*/
+#define CYBOZU_TEST_NEAR(x, y, eps) { \
+	bool isNear = fabs((x) - (y)) < eps; \
+	cybozu::test::test(isNear, "CYBOZU_TEST_NEAR", #x ", " #y, __FILE__, __LINE__); \
+	if (!isNear) { \
+		std::cout << "ctest:  lhs=" << (x) << std::endl; \
+		std::cout << "ctest:  rhs=" << (y) << std::endl; \
+	} \
+}
 
 #define CYBOZU_TEST_EQUAL_POINTER(x, y) { \
 	bool eq = x == y; \
