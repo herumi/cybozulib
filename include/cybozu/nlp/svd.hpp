@@ -1,10 +1,9 @@
 #pragma once
 /**
 	@file
-	@brief psudo SVD
+	@brief probabilistic SVD
 
 	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
-	see http://code.google.com/p/redsvd/
 */
 #include <assert.h>
 #include <vector>
@@ -227,6 +226,25 @@ void SaveVector(const std::string& outName, const Vector& V)
 	 = Z U' S t(V') t(Y)
 	 = (Z U') S t(YV')
 	 = U S V
+
+	see http://code.google.com/p/redsvd/
+
+	Copyright (c) 2010 Daisuke Okanohara
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions
+	are met:
+
+	1. Redistributions of source code must retain the above Copyright
+	   notice, this list of conditions and the following disclaimer.
+
+	2. Redistributions in binary form must reproduce the above Copyright
+	   notice, this list of conditions and the following disclaimer in the
+	   documentation and/or other materials provided with the distribution.
+
+	3. Neither the name of the authors nor the names of its contributors
+	   may be used to endorse or promote products derived from this
+	   software without specific prior written permission.
 */
 template<class Matrix, class Vector>
 bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix& A, int rank)
