@@ -256,16 +256,23 @@ bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix& A, int rank)
 
 	Matrix R1(A.rows(), r);
 	svd::InitRandomMatrix(R1);
+fprintf(stderr, "generate R1\n");
 	Matrix Y = A.transpose() * R1;
 	svd::OrthonormalizeMatrix(Y);
+fprintf(stderr, "normalize Y\n");
 	const Matrix B = A * Y;
+fprintf(stderr, "calc B\n");
 	Matrix R2(B.cols(), r);
 	svd::InitRandomMatrix(R2);
+fprintf(stderr, "generate R2\n");
 	Matrix Z = B * R2;
 	svd::OrthonormalizeMatrix(Z);
+fprintf(stderr, "normalize Z\n");
 	Matrix C = Z.transpose() * B;
+fprintf(stderr, "computing SVD\n");
 	Eigen::JacobiSVD<Matrix> svd(C, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	U = Z * svd.matrixU();
+fprintf(stderr, "end of SVD\n");
 	S = svd.singularValues();
 	V = Y * svd.matrixV();
 	return true;

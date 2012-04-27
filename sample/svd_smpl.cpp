@@ -45,6 +45,7 @@ bool Run(const std::string& input, const std::string& output, int rank)
 	if (!cybozu::nlp::svd::LoadMatrix(A, input)) {
 		return false;
 	}
+	fprintf(stderr, "load matrix file %s\n", input.c_str());
 	cybozu::nlp::ComputeSVD(U, S, V, A, rank);
 	cybozu::nlp::svd::SaveMatrix(output + ".U", U);
 	cybozu::nlp::svd::SaveVector(output + ".S", S);
@@ -74,6 +75,9 @@ int main(int argc, char *argv[])
 			usage();
 		}
 		argc--, argv++;
+	}
+	if (input.empty()) {
+		usage();
 	}
 	if (output.empty()) {
 		output = input;
