@@ -1,7 +1,7 @@
 #pragma once
 /**
 	@file
-	@brief probabilistic SVD
+	@brief fast non-probabilistic SVD
 
 	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
