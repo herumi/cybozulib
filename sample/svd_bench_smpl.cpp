@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <cybozu/inttype.hpp>
+#define CYBOZU_NLP_SVD_USE_RANDOM
 #include <cybozu/nlp/svd.hpp>
 #include <cybozu/time.hpp>
 

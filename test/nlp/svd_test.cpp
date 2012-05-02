@@ -4,6 +4,7 @@
 	t(V) V = I
 */
 #include <cybozu/test.hpp>
+#define CYBOZU_NLP_SVD_USE_RANDOM
 #include <cybozu/nlp/svd.hpp>
 #include <cybozu/file.hpp>
 

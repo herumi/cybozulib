@@ -12,7 +12,10 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+//#define CYBOZU_NLP_SVD_USE_RANDOM
+#ifdef CYBOZU_NLP_SVD_USE_RANDOM
 #include <cybozu/nlp/random.hpp>
+#endif
 #ifdef _MSC_VER
 	#pragma warning(push)
 	#pragma warning(disable : 4714) // force inline
@@ -63,6 +66,7 @@ namespace cybozu { namespace nlp {
 
 namespace svd {
 
+#ifdef CYBOZU_NLP_SVD_USE_RANDOM
 template<class Matrix>
 void InitRandomMatrix(Matrix& M)
 {
@@ -73,6 +77,7 @@ void InitRandomMatrix(Matrix& M)
 		}
 	}
 }
+#endif
 
 template<class Matrix>
 void InitUnitMatrix(Matrix& M)
