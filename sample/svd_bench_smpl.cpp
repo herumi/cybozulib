@@ -1,3 +1,7 @@
+//#define USE_REDSVD
+#ifdef USE_REDSVD
+#include <../redsvd-read-only/src/redsvd.hpp>
+#endif
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
@@ -22,7 +26,7 @@ double getTime()
 template<class Matrix, class Vector>
 void test(int row, int col, int rank, int tryRank)
 {
-	printf("row=%d, col=%d, rank=%d, tryRank=%d ", row, col, rank, tryRank);
+	printf("(%5d, %5d, %5d, %3d) ", row, col, rank, tryRank);
 	typedef typename Matrix::Scalar Double;
 	Matrix U(row, rank);
 	Vector S(rank);
@@ -36,12 +40,24 @@ void test(int row, int col, int rank, int tryRank)
 	Matrix UO, VO;
 	Vector SO;
 	{
+#ifdef USE_REDSVD
+		double b = getTime();
+		REDSVD::RedSVD redsvd;
+		redsvd.run(A, tryRank);
+		double e = getTime();
+		printf("%6.1fmsec ", (e - b) * 1e3);
+		UO = redsvd.matrixU();
+		SO = redsvd.singularValues();
+		VO = redsvd.matrixV();
+#else
 		double b = getTime();
 		cybozu::nlp::ComputeSVD(UO, SO, VO, A, tryRank);
 		double e = getTime();
-		printf("%.2fmsec ", (e - b) * 1e3);
+		printf("%6.1fmsec ", (e - b) * 1e3);
+#endif
 	}
-	if (row * col <= 400000) {
+#if 0
+	if (row * col <= 10000) {
 		double b = getTime();
 		Eigen::JacobiSVD<Matrix> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 		double e = getTime();
@@ -49,6 +65,7 @@ void test(int row, int col, int rank, int tryRank)
 	} else {
 		printf("---msec ");
 	}
+#endif
 
 	double sum_s = 0;
 	double sum_v1 = 0;
@@ -92,8 +109,10 @@ int main()
 		{ 1000, 1000, 100, 99 },
 		{ 1000, 1000, 100, 90 },
 		{ 10000, 10000, 100, 100 },
-		{ 10000, 10000, 100, 90 },
+		{ 10000, 10000, 100, 91 },
+//		{ 10000, 10000, 100, 90 },
 	};
+	printf("(  row,   col,  rank,   r)       msec eigen    U        V\n");
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		test<Eigen::MatrixXd, Eigen::VectorXd>(tbl[i].row, tbl[i].col, tbl[i].rank, tbl[i].tryRank);
 	}

@@ -4,6 +4,7 @@
 	@brief probabilistic SVD
 
 	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo
 */
 #include <assert.h>
 #include <vector>
@@ -70,6 +71,42 @@ void InitRandomMatrix(Matrix& M)
 		for (int j = 0; j < M.cols(); j++) {
 			M(i, j) = typename Matrix::Scalar(r.get());
 		}
+	}
+}
+
+template<class Matrix>
+void InitUnitMatrix(Matrix& M)
+{
+	M.setZero();
+	const int row = M.rows();
+	const int col = M.cols();
+	const int adj = 0;//(col & 1) ? row/2 : 0;
+	for (int i = 0; i < row; i++) {
+		M(i, (i * col + adj) / row) = 1;
+	}
+}
+/*
+	m(row, col) => M(row, r)
+*/
+template<class Matrix1, class Matrix2>
+void CompressCol(Matrix1& out, const Matrix2& m, int r)
+{
+	typedef typename Matrix1::Scalar Double;
+	const int row = m.rows();
+	const int col = m.cols();
+	out.resize(row, r);
+	int begin = 0;
+	for (int j = 0; j < r; j++) {
+		int end = std::min(((j + 1) * col + r - 1) / r, col);
+//		printf("%d [%d, %d)\n", j, begin, end);
+		for (int i = 0; i < row; i++) {
+			double x = 0;
+			for (int k = begin; k < end; k++) {
+				x += m(i, k);
+			}
+			out(i, j) = Double(x);
+		}
+		begin = end;
 	}
 }
 
@@ -211,14 +248,14 @@ bool SaveVector(const std::string& outName, const Vector& V)
 	A = U S t(V) with rank r
 
 	t(M) : transpose of M
+	t(U) U = I
+	t(V) V = I
 
-	R1 : random
+	R1 : compressed unit matrix
 	Y = t(A) R1
 	Y = orthonormalize(Y) ; t(Y) Y = I
 	B = A Y
-	R2 : random
-	Z = B R2
-	Z = orthonormalize(Z) ; t(Z) Z = I
+	Z = orthonormalize(B) ; t(Z) Z = I
 	C = t(Z) B
 	C = U' S t(V')
 	A \simeq A Y t(Y)
@@ -228,43 +265,30 @@ bool SaveVector(const std::string& outName, const Vector& V)
 	 = Z U' S t(V') t(Y)
 	 = (Z U') S t(YV')
 	 = U S V
-
-	see http://code.google.com/p/redsvd/
-
-	Copyright (c) 2010 Daisuke Okanohara
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions
-	are met:
-
-	1. Redistributions of source code must retain the above Copyright
-	   notice, this list of conditions and the following disclaimer.
-
-	2. Redistributions in binary form must reproduce the above Copyright
-	   notice, this list of conditions and the following disclaimer in the
-	   documentation and/or other materials provided with the distribution.
-
-	3. Neither the name of the authors nor the names of its contributors
-	   may be used to endorse or promote products derived from this
-	   software without specific prior written permission.
 */
 template<class Matrix, class Vector>
 bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix& A, int rank)
 {
-	const int r = std::min<int>(std::min(A.cols(), A.rows()), rank);
+	const int row = A.rows();
+	const int col = A.cols();
+	const int r = std::min(std::min(col, row), rank);
 	if (r <= 0) return false;
 
-	Matrix R1(A.rows(), r);
+#if 0
+	Matrix R1(row, r);
 	svd::InitRandomMatrix(R1);
+//	svd::InitUnitMatrix(R1);
 	Matrix Y = A.transpose() * R1;
+#else
+	Matrix Y;
+	svd::CompressCol(Y, A.transpose(), r);
+#endif
 	svd::OrthonormalizeMatrix(Y);
 	const Matrix B = A * Y;
-	Matrix R2(B.cols(), r);
-	svd::InitRandomMatrix(R2);
-	Matrix Z = B * R2;
+	Matrix Z = B;
 	svd::OrthonormalizeMatrix(Z);
-	Matrix C = Z.transpose() * B;
-	Eigen::JacobiSVD<Matrix> svd(C, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	const Matrix C = Z.transpose() * B;
+	const Eigen::JacobiSVD<Matrix> svd(C, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	U = Z * svd.matrixU();
 	S = svd.singularValues();
 	V = Y * svd.matrixV();
