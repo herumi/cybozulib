@@ -25,17 +25,24 @@ double getTime()
 }
 
 template<class Matrix, class Vector>
-void test(int row, int col, int rank, int tryRank)
+void test(int row, int col, int rank, int tryRank, bool isFull)
 {
-	printf("(%5d, %5d, %5d, %3d) ", row, col, rank, tryRank);
+	printf("(%5d, %5d, %5d, %3d, %c) ", row, col, rank, tryRank, isFull ? 'F' : '-');
 	typedef typename Matrix::Scalar Double;
-	Matrix U(row, rank);
-	Vector S(rank);
-	Matrix V(col, rank);
+	int s_rank = isFull ? std::min(row, col) : rank;
+	Matrix U(row, s_rank);
+	Vector S(s_rank);
+	Matrix V(col, s_rank);
 	SetUnitary(U);
 	SetUnitary(V);
+	S.setZero();
 	for (int i = 0; i < rank; i++) {
-		S(i) = (Double)(3 * pow(0.9, i));
+		S(i) = (Double)((s_rank - i) * 0.5);
+	}
+	if (isFull) {
+		for (int i = rank; i < s_rank; i++) {
+			S(i) = (Double)(0.04 * (s_rank - i));
+		}
 	}
 	Matrix A = U * S.asDiagonal() * V.transpose();
 	Matrix UO, VO;
@@ -68,20 +75,26 @@ void test(int row, int col, int rank, int tryRank)
 	}
 #endif
 
-	double sum_s = 0;
-	double sum_v1 = 0;
-	double sum_v2 = 0;
+	double diff = 0;
 	for (int i = 0; i < tryRank; ++i) {
-		double v1 = fabs(U.col(i).dot(UO.col(i)));
-		double v2 = fabs(V.col(i).dot(VO.col(i)));
-		sum_s += fabs(S(i) - SO(i));
-		sum_v1 += v1;
-		sum_v2 += v2;
+		double v = fabs(S(i) - SO(i));
+		if (S(i) > 0) {
+			v /= S(i);
+		}
+		diff += v;
 	}
-	sum_s /= tryRank;
-	sum_v1 /= tryRank;
-	sum_v2 /= tryRank;
-	printf("%f %f %f\n", sum_s, sum_v1, sum_v2);
+	diff /= tryRank;
+	printf("%6.2f %6.2f %7.4f ", S(0), S(rank - 1), diff);
+	printf("%f ", (A - UO * SO.asDiagonal() * VO.transpose()).norm());
+	int nearNum = 0;
+	int orthNum = 0;
+	for (int i = 0; i < tryRank; i++) {
+		double u = fabs(U.col(i).dot(UO.col(i)));
+		if (u > 0.85) nearNum++;
+		if (u < 0.1) orthNum++;
+	}
+	printf("%d %d", nearNum, orthNum);
+	printf("\n");
 }
 
 int main()
@@ -94,11 +107,17 @@ int main()
 	} tbl[] = {
 		{ 100, 100, 10, 10 },
 		{ 100, 100, 10, 9 },
+		{ 100, 100, 10, 9 },
 		{ 100, 100, 10, 8 },
+		{ 100, 100, 10, 8 },
+		{ 100, 100, 50, 50 },
 		{ 100, 100, 50, 50 },
 		{ 100, 100, 50, 49 },
 		{ 100, 100, 50, 48 },
+		{ 100, 100, 50, 10 },
 		{ 300, 300, 50, 48 },
+		{ 300, 300, 50, 48 },
+		{ 600, 600, 100, 95 },
 		{ 600, 600, 100, 95 },
 		{ 1000, 1000, 10, 10 },
 		{ 1000, 1000, 10, 9 },
@@ -111,15 +130,14 @@ int main()
 		{ 1000, 1000, 100, 90 },
 		{ 10000, 10000, 100, 100 },
 		{ 10000, 10000, 100, 91 },
-//		{ 10000, 10000, 100, 90 },
+		{ 10000, 10000, 300, 100 },
+		{ 10000, 10000, 1000, 100 },
 	};
-	printf("(  row,   col,  rank,   r)       msec eigen    U        V\n");
+	printf("(  row,   col,  rank,   r, f)       msec eigen-max min  diff\n");
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		test<Eigen::MatrixXd, Eigen::VectorXd>(tbl[i].row, tbl[i].col, tbl[i].rank, tbl[i].tryRank);
+		test<Eigen::MatrixXd, Eigen::VectorXd>(tbl[i].row, tbl[i].col, tbl[i].rank, tbl[i].tryRank, false);
+		if (tbl[i].row <= 1000) {
+			test<Eigen::MatrixXd, Eigen::VectorXd>(tbl[i].row, tbl[i].col, tbl[i].rank, tbl[i].tryRank, true);
+		}
 	}
-#if 0
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		test<Eigen::MatrixXf, Eigen::VectorXf>(tbl[i].row, tbl[i].col, tbl[i].rank, tbl[i].tryRank);
-	}
-#endif
 }
