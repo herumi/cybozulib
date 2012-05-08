@@ -80,18 +80,56 @@ void InitRandomMatrix(Matrix& M)
 #endif
 
 template<class Matrix>
-void InitUnitMatrix(Matrix& M)
+void InitUnitMatrix(Matrix& m)
 {
-	M.setZero();
-	const int row = M.rows();
-	const int col = M.cols();
+	typedef typename Matrix::Scalar Double;
+	m.setZero();
+	const int row = m.rows();
+	const int col = m.cols();
+	assert(col <= row);
+#if 1
 	const int adj = 0;//(col & 1) ? row/2 : 0;
 	for (int i = 0; i < row; i++) {
-		M(i, (i * col + adj) / row) = 1;
+		m(i, (i * col + adj) / row) = 1;
 	}
+#else
+	const int q0 = row / col;
+	const int r0 = row % col;
+	const double rcol = 1.0 / col;
+	int b = 0;
+	int q = q0;
+	int e = r0;
+	int rowIdx = 0;
+	int colIdx = 0;
+	for (;;) {
+		if (b > 0) {
+			m(rowIdx, colIdx) = Double(b * rcol);
+			rowIdx++;
+		}
+		for (int j = 0; j < q; j++) {
+			m(rowIdx, colIdx) = 1;
+			rowIdx++;
+		}
+		if (e > 0) {
+			m(rowIdx, colIdx) = Double(e * rcol);
+		}
+		if (colIdx == col - 1) break;
+		b = e == 0 ? 0 : col - e;
+		e = r0 - b;
+		if (e < 0) {
+			q = q0 - 1;
+			e += col;
+		} else {
+			q = q0;
+		}
+		colIdx++;
+	}
+	assert(rowIdx == row);
+#endif
 }
 /*
 	m(row, col) => M(row, r)
+	r <= col
 */
 template<class Matrix1, class Matrix2>
 void CompressCol(Matrix1& out, const Matrix2& m, int r)
@@ -99,7 +137,9 @@ void CompressCol(Matrix1& out, const Matrix2& m, int r)
 	typedef typename Matrix1::Scalar Double;
 	const int row = m.rows();
 	const int col = m.cols();
+	assert(r <= col);
 	out.resize(row, r);
+#if 1
 	int begin = 0;
 	for (int j = 0; j < r; j++) {
 		int end = std::min(((j + 1) * col + r - 1) / r, col);
@@ -113,6 +153,47 @@ void CompressCol(Matrix1& out, const Matrix2& m, int r)
 		}
 		begin = end;
 	}
+#else
+	const int q0 = col / r;
+	const int r0 = col % r;
+	const double rr = 1.0 / r;
+	int b = 0;
+	int q = q0;
+	int e = r0;
+	int colIdx = 0;
+	int rIdx = 0;
+	for (;;) {
+		for (int i = 0; i < row; i++) {
+			double x = 0;
+			int k = colIdx;
+			if (b > 0) {
+				x += m(i, k) * b * rr;
+				k++;
+			}
+			for (int j = 0; j < q; j++) {
+				x += m(i, k);
+				k++;
+			}
+			if (e > 0) {
+				x += m(i, k) * e * rr;
+			}
+			out(i, rIdx) = Double(x);
+		}
+		if (b > 0) colIdx++;
+		colIdx += q;
+		if (rIdx == r - 1) break;
+		b = e == 0 ? 0 : r - e;
+		e = r0 - b;
+		if (e < 0) {
+			q = q0 - 1;
+			e += r;
+		} else {
+			q = q0;
+		}
+		rIdx++;
+	}
+	assert(colIdx == col);
+#endif
 }
 
 template<class Matrix>

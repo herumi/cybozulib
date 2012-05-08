@@ -150,3 +150,18 @@ CYBOZU_TEST_AUTO(multiUnitMatrix)
 	double diff = ((A * R) - B).norm();
 	CYBOZU_TEST_NEAR(diff, 0, defaultEPS);
 }
+
+CYBOZU_TEST_AUTO(multiUnitMatrix2)
+{
+	int row = 13;
+	int col = 15;
+	int r = 5;
+	Eigen::MatrixXd R(col, r);
+	cybozu::nlp::svd::InitUnitMatrix(R);
+	Eigen::MatrixXd A(row, col), B;
+	cybozu::nlp::svd::InitRandomMatrix(A);
+	cybozu::nlp::svd::CompressCol(B, A, r);
+	double diff = ((A * R) - B).norm();
+	CYBOZU_TEST_NEAR(diff, 0, defaultEPS);
+}
+
