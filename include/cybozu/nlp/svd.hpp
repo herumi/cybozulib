@@ -337,8 +337,8 @@ bool SaveVector(const std::string& outName, const Vector& V)
 	t(U) U = I
 	t(V) V = I
 
-	R1 : compressed unit matrix
-	Y = t(A) R1
+	R : compressed unit matrix
+	Y = t(A) R
 	Y = orthonormalize(Y) ; t(Y) Y = I
 	B = A Y
 	Z = orthonormalize(B) ; t(Z) Z = I
@@ -361,10 +361,10 @@ bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix& A, int rank)
 	if (r <= 0) return false;
 
 #if 0
-	Matrix R1(row, r);
-	svd::InitRandomMatrix(R1);
-//	svd::InitUnitMatrix(R1);
-	Matrix Y = A.transpose() * R1;
+	Matrix R(row, r);
+	svd::InitRandomMatrix(R);
+//	svd::InitUnitMatrix(R);
+	Matrix Y = A.transpose() * R;
 #else
 	Matrix Y;
 	svd::CompressCol(Y, A.transpose(), r);
