@@ -169,49 +169,63 @@ bool GetCharFromUtf16(Char& c, Iterator& begin, const Iterator& end)
 	return false;
 }
 
-inline bool AppendUtf8(std::string& out, Char c)
+inline int toUtf8(char out[4], Char c)
 {
 	if (c <= 0x7f) {
-		out += static_cast<char>(c);
-		return true;
+		out[0] = static_cast<char>(c);
+		return 1;
 	} else if (c <= 0x7ff) {
-		char buf[2];
-		buf[0] = static_cast<char>((c >> 6) | 0xc0);
-		buf[1] = static_cast<char>((c & 0x3f) | 0x80);
-		out.append(buf, 2);
-		return true;
+		out[0] = static_cast<char>((c >> 6) | 0xc0);
+		out[1] = static_cast<char>((c & 0x3f) | 0x80);
+		return 2;
 	} else if (c <= 0xffff) {
 		if (0xd7ff < c && c <= 0xdfff) {
-			return false;
+			return 0;
 		}
-		char buf[3];
-		buf[0] = static_cast<char>((c >> 12) | 0xe0);
-		buf[1] = static_cast<char>(((c >> 6) & 0x3f) | 0x80);
-		buf[2] = static_cast<char>((c & 0x3f) | 0x80);
-		out.append(buf, 3);
-		return true;
+		out[0] = static_cast<char>((c >> 12) | 0xe0);
+		out[1] = static_cast<char>(((c >> 6) & 0x3f) | 0x80);
+		out[2] = static_cast<char>((c & 0x3f) | 0x80);
+		return 3;
 	} else if (c <= 0x10ffff) {
-		char buf[4];
-		buf[0] = static_cast<char>((c >> 18) | 0xf0);
-		buf[1] = static_cast<char>(((c >> 12) & 0x3f) | 0x80);
-		buf[2] = static_cast<char>(((c >> 6) & 0x3f) | 0x80);
-		buf[3] = static_cast<char>((c & 0x3f) | 0x80);
-		out.append(buf, 4);
+		out[0] = static_cast<char>((c >> 18) | 0xf0);
+		out[1] = static_cast<char>(((c >> 12) & 0x3f) | 0x80);
+		out[2] = static_cast<char>(((c >> 6) & 0x3f) | 0x80);
+		out[3] = static_cast<char>((c & 0x3f) | 0x80);
+		return 4;
+	}
+	return 0;
+}
+
+inline int toUtf16(Char16 out[2], Char c)
+{
+	if (c <= 0xffff) {
+		out[0] = static_cast<Char16>(c);
+		return 1;
+	} else if (c <= 0x0010ffff) {
+		out[0] = static_cast<Char16>((c >> 10) + 0xd7c0);
+		out[1] = static_cast<Char16>((c & 0x3ff) | 0xdc00);
+		return 2;
+	}
+	return 0;
+}
+
+inline bool AppendUtf8(std::string& out, Char c)
+{
+	char buf[4];
+	int len = toUtf8(buf, c);
+	if (len > 0) {
+		out.append(buf, len);
 		return true;
 	}
 	return false;
 }
 
-inline bool AppendUtf16(String16 *out, Char c)
+inline bool AppendUtf16(String16& out, Char c)
 {
-	if (c <= 0xffff) {
-		*out += static_cast<Char16>(c);
-		return true;
-	} else if (c <= 0x0010ffff) {
-		Char16 buf[2];
-		buf[0] = static_cast<Char16>((c >> 10) + 0xd7c0);
-		buf[1] = static_cast<Char16>((c & 0x3ff) | 0xdc00);
-		out->append(buf, 2);
+	Char16 buf[2];
+	int len = toUtf16(buf, c);
+	if (len > 0) {
+		out.append(buf, len);
 		return true;
 	}
 	return false;
@@ -1384,7 +1398,7 @@ public:
 	void toUtf16(String16& str) const
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
-			if (!string::AppendUtf16(&str, str_[i])) {
+			if (!string::AppendUtf16(str, str_[i])) {
 				cybozu::StringException e;
 				e << "toUtf16";
 				throw e;
@@ -1572,7 +1586,7 @@ inline bool ConvertUtf8ToUtf16(cybozu::String16 *out, const char *begin, const c
 	while (begin != end) {
 		cybozu::Char c;
 		if (!string::GetCharFromUtf8(&c, begin, end)) return false;
-		if (!string::AppendUtf16(out, c)) return false;
+		if (!string::AppendUtf16(*out, c)) return false;
 	}
 	return true;
 }
