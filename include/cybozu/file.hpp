@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <sys/stat.h> // for stat
 #include <cybozu/exception.hpp>
+#include <vector>
 #include <ios>
 #ifdef _WIN32
 	#include <shlwapi.h>
@@ -415,6 +416,8 @@ struct FileInfo {
 	std::string name;
 	bool isFile;
 };
+
+typedef std::vector<FileInfo> FileInfoVec;
 /**
 	get file name in dir
 	@param list [out] list must be able to push_back(FileInfo)

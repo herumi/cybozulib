@@ -123,8 +123,7 @@ bool findIn(const std::string& name, const char (&tbl)[N][16])
 CYBOZU_TEST_AUTO(GetFilesInDir)
 {
 	std::string path = cybozu::file::GetExePath() + "../include/cybozu/";
-	typedef std::vector<cybozu::file::FileInfo> List;
-	List list;
+	cybozu::file::FileInfoVec list;
 	CYBOZU_TEST_ASSERT(cybozu::file::GetFilesInDir(list, path));
 
 	const char fileTbl[][16] = {
