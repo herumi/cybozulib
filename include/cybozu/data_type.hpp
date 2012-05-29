@@ -7,6 +7,7 @@
 */
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 
 namespace cybozu {
@@ -17,5 +18,7 @@ typedef std::map<int, int> Int2Int;
 typedef std::map<int, std::string> Int2Str;
 typedef std::map<std::string, int> Str2Int;
 typedef std::map<std::string, std::string> Str2Str;
+typedef std::set<int> IntSet;
+typedef std::set<std::string> StrSet;
 
 } // cybozu
