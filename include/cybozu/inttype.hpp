@@ -32,6 +32,14 @@
 	#include <unistd.h> // for ssize_t
 #endif
 
+#ifndef CYBOZU_ALIGN
+	#ifdef _MSC_VER
+		#define CYBOZU_ALIGN(x) __declspec(align(x))
+	#else
+		#define CYBOZU_ALIGN(x) __attribute__((aligned(x)))
+	#endif
+#endif
+
 // std::vector<int> v; CYBOZU_FOREACH(auto x, v) {...}
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 	#define CYBOZU_FOREACH(type_x, xs) for each (type_x in xs)
