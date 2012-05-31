@@ -26,19 +26,21 @@ struct MmapException : public cybozu::Exception {
 
 class Mmap {
 	const char *map_;
-	int64_t size_;
 #ifdef _WIN32
 	HANDLE hFile_;
 	HANDLE hMap_;
 #endif
+	int64_t size_;
 public:
 	explicit Mmap(const std::string& fileName)
-		: map_(0)
-		, size_(0)
 #ifdef _WIN32
+		: map_(0)
 		, hFile_(INVALID_HANDLE_VALUE)
 		, hMap_(0)
+#else
+		: map_(static_cast<const char*>(MAP_FAILED))
 #endif
+		, size_(0)
 	{
 		MmapException e;
 #ifdef _WIN32
@@ -55,6 +57,10 @@ public:
 				goto ERR_EXIT;
 			}
 			size_ = size.QuadPart;
+		}
+		if (size_ == 0) {
+			CloseHandle(hFile_); hFile_ = INVALID_HANDLE_VALUE;
+			return;
 		}
 
 		hMap_ = CreateFileMapping(hFile_, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -91,6 +97,10 @@ public:
 			throw e;
 		}
 		size_ = st.st_size;
+		if (size_ == 0) {
+			close(fd);
+			return;
+		}
 
 		map_ = (const char*)mmap(NULL, size_, PROT_READ, MAP_SHARED, fd, 0);
 		close(fd);
@@ -104,11 +114,11 @@ public:
 	~Mmap()
 	{
 #ifdef _WIN32
-		UnmapViewOfFile(map_);
-		CloseHandle(hMap_);
-		CloseHandle(hFile_);
+		if (map_) UnmapViewOfFile(map_);
+		if (hMap_) CloseHandle(hMap_);
+		if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
 #else
-		munmap(const_cast<char*>(map_), size_);
+		if (map_ != MAP_FAILED) munmap(const_cast<char*>(map_), size_);
 #endif
 	}
 	int64_t size() const { return size_; }
