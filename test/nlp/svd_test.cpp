@@ -36,6 +36,45 @@ void testUnitary(const Matrix& A)
 }
 
 template<class Matrix>
+double innerProductRow(const Matrix& A, int s, int t)
+{
+	double ret = 0;
+	for (int i = 0; i < A.cols(); i++) {
+		ret += A(s, i) * A(t, i);
+	}
+	return ret;
+}
+
+template<class Matrix, class Vector>
+double innerProductUS(const Matrix& U, const Vector& S, int s, int t)
+{
+	double ret = 0;
+	for (int i = 0; i < U.cols(); i++) {
+		double v = S(i);
+		ret += v * v * U(s, i) * U(t, i);
+	}
+	return ret;
+}
+
+/*
+	A = U S trans(V)
+	m = A.rows()
+	A = trans(a_1, ..., a_m), U = trans(u_1, ..., u_m)
+	product(a_s, a_t) = sum_{i=0}^{U.cols()} S(i)^2 * (u_s)_i (u_t)_i
+*/
+template<class Matrix, class Vector>
+void testProduct(const Matrix& A, const Matrix& U, const Vector& S)
+{
+	for (int s = 0; s < U.rows(); s++) {
+		for (int t = s; t < U.rows(); t++) {
+			double x = innerProductRow(A, s, t);
+			double y = innerProductUS(U, S, s, t);
+			CYBOZU_TEST_NEAR(x, y, defaultEPS);
+		}
+	}
+}
+
+template<class Matrix>
 void testSVD(const Matrix& A, int m, int n, int r)
 {
 	Matrix U, V;
@@ -53,6 +92,7 @@ void testSVD(const Matrix& A, int m, int n, int r)
 	testUnitary(V);
 
 	testUSV(U, S, V, A);
+	testProduct(A, U, S);
 }
 
 CYBOZU_TEST_AUTO(rank2)
