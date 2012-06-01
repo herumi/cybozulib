@@ -216,8 +216,13 @@ void OrthonormalizeMatrix(Matrix& M)
 	}
 }
 
-inline bool LoadHeader(bool *isMatrix, bool *isSparse, int *row, int *col, std::istream& ifs)
+inline bool LoadHeader(bool *isMatrix, bool *isSparse, int *row, int *col, std::ifstream& ifs, const std::string& input)
 {
+	ifs.open(input.c_str(), std::ios::binary);
+	if (!ifs) {
+		fprintf(stderr, "can't open %s\n", input.c_str());
+		return false;
+	}
 	std::string line;
 	if (std::getline(ifs, line)) {
 		std::istringstream is(line);
@@ -227,18 +232,29 @@ inline bool LoadHeader(bool *isMatrix, bool *isSparse, int *row, int *col, std::
 			fprintf(stderr, "top char is #(%c)\n", c);
 			goto ERR;
 		}
-		if (vec != 'M' && vec != 'V') {
-			fprintf(stderr, "vec is M(matrix) or V(vector) (%c)\n", vec);
+		if (*row <= 0) {
+			fprintf(stderr, "row(%d) should be positive\n", *row);
 			goto ERR;
 		}
-		*isMatrix = vec == 'M';
 		if (type != 'S' && type != 'D') {
 			fprintf(stderr, "type is D(dense) or S(sparse) (%c)\n", type);
 			goto ERR;
 		}
 		*isSparse = type == 'S';
-		if (*row <= 0 || *col <= 0) {
-			fprintf(stderr, "row(%d) and col(%d) should be positive\n", *row, *col);
+		switch (vec) {
+		case 'M':
+			if (*col <= 0) {
+				fprintf(stderr, "col(%d) should be positive\n", *col);
+				goto ERR;
+			}
+			*isMatrix = true;
+			break;
+		case 'V':
+			*col = 1;
+			*isMatrix = false;
+			break;
+		default:
+			fprintf(stderr, "vec is M(matrix) or V(vector) (%c)\n", vec);
 			goto ERR;
 		}
 		fprintf(stderr, "input (%c, %c, %d, %d)\n", vec, type, *row, *col);
@@ -252,11 +268,11 @@ ERR:
 template<class Matrix>
 bool LoadMatrix(Matrix& A, const std::string& input)
 {
-	std::ifstream ifs(input.c_str(), std::ios::binary);
+	std::ifstream ifs;
 	bool isMatrix = false;
 	bool isSparse = false;
 	int row = 0, col = 0;
-	if (!LoadHeader(&isMatrix, &isSparse, &row, &col, ifs) || !isMatrix) {
+	if (!LoadHeader(&isMatrix, &isSparse, &row, &col, ifs, input) || !isMatrix) {
 		return false;
 	}
 	A.resize(row, col);
@@ -294,6 +310,29 @@ bool LoadMatrix(Matrix& A, const std::string& input)
 				A(i, j) = typename Matrix::Scalar(v);
 			}
 		}
+	}
+	return true;
+}
+
+template<class Vector>
+bool LoadVector(Vector& V, const std::string& input)
+{
+	std::ifstream ifs;
+	bool isMatrix = false;
+	bool isSparse = false;
+	int row = 0, col = 0;
+	if (!LoadHeader(&isMatrix, &isSparse, &row, &col, ifs, input) || isMatrix) {
+		return false;
+	}
+	V.resize(row, 1);
+	for (int i = 0; i < row; i++) {
+		double v;
+		ifs >> v;
+		if (!ifs) {
+			fprintf(stderr, "can't read (%d)\n", i);
+			return false;
+		}
+		V(i) = typename Vector::Scalar(v);
 	}
 	return true;
 }
