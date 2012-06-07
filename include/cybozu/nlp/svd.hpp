@@ -20,6 +20,8 @@
 	#pragma warning(push)
 	#pragma warning(disable : 4714) // force inline
 #endif
+#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+#include <eigen3/Eigen/Sparse>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
 #ifdef _MSC_VER
@@ -80,17 +82,17 @@ void InitRandomMatrix(Matrix& M)
 #endif
 
 template<class Matrix>
-void InitUnitMatrix(Matrix& m)
+void InitUnitMatrix(Matrix& M)
 {
 	typedef typename Matrix::Scalar Double;
-	m.setZero();
-	const int row = m.rows();
-	const int col = m.cols();
+	M.setZero();
+	const int row = M.rows();
+	const int col = M.cols();
 	assert(col <= row);
 #if 1
 	const int adj = 0;//(col & 1) ? row/2 : 0;
 	for (int i = 0; i < row; i++) {
-		m(i, (i * col + adj) / row) = 1;
+		M(i, (i * col + adj) / row) = 1;
 	}
 #else
 	const int q0 = row / col;
@@ -103,15 +105,15 @@ void InitUnitMatrix(Matrix& m)
 	int colIdx = 0;
 	for (;;) {
 		if (b > 0) {
-			m(rowIdx, colIdx) = Double(b * rcol);
+			M(rowIdx, colIdx) = Double(b * rcol);
 			rowIdx++;
 		}
 		for (int j = 0; j < q; j++) {
-			m(rowIdx, colIdx) = 1;
+			M(rowIdx, colIdx) = 1;
 			rowIdx++;
 		}
 		if (e > 0) {
-			m(rowIdx, colIdx) = Double(e * rcol);
+			M(rowIdx, colIdx) = Double(e * rcol);
 		}
 		if (colIdx == col - 1) break;
 		b = e == 0 ? 0 : col - e;
@@ -266,7 +268,7 @@ ERR:
 }
 
 template<class Matrix>
-bool LoadMatrix(Matrix& A, const std::string& input)
+bool LoadMatrix(Matrix& M, const std::string& input)
 {
 	std::ifstream ifs;
 	bool isMatrix = false;
@@ -275,10 +277,10 @@ bool LoadMatrix(Matrix& A, const std::string& input)
 	if (!LoadHeader(&isMatrix, &isSparse, &row, &col, ifs, input) || !isMatrix) {
 		return false;
 	}
-	A.resize(row, col);
+	M.resize(row, col);
 	if (isSparse) {
 		for (int i = 0; i < row; i++) {
-			A.row(i).setZero();
+			M.row(i).setZero();
 			std::string line;
 			if (!std::getline(ifs, line)) {
 				fprintf(stderr, "can't read %d line\n", i);
@@ -295,7 +297,7 @@ bool LoadMatrix(Matrix& A, const std::string& input)
 					fprintf(stderr, "can't read %s\n", line.c_str());
 					return false;
 				}
-				A(i, idx) = typename Matrix::Scalar(v);
+				M(i, idx) = typename Matrix::Scalar(v);
 			}
 		}
 	} else {
@@ -307,9 +309,49 @@ bool LoadMatrix(Matrix& A, const std::string& input)
 					fprintf(stderr, "can't read (%d,%d)\n", i, j);
 					return false;
 				}
-				A(i, j) = typename Matrix::Scalar(v);
+				M(i, j) = typename Matrix::Scalar(v);
 			}
 		}
+	}
+	return true;
+}
+
+template<class Matrix>
+bool LoadSparseMatrix(Matrix& M, const std::string& input)
+{
+	std::ifstream ifs;
+	bool isMatrix = false;
+	bool isSparse = false;
+	int row = 0, col = 0;
+	if (!LoadHeader(&isMatrix, &isSparse, &row, &col, ifs, input) || !isMatrix) {
+		return false;
+	}
+	if (!isSparse) {
+		fprintf(stderr, "ERR not sparse\n");
+		return false;
+	}
+	M.resize(row, col);
+	for (int i = 0; i < row; i++) {
+		M.startVec(i);
+		std::string line;
+		if (!std::getline(ifs, line)) {
+			fprintf(stderr, "can't read %d line\n", i);
+			return false;
+		}
+		std::istringstream is(line);
+		for (;;) {
+			int idx;
+			char sep;
+			double v;
+			is >> idx >> sep >> v;
+			if (!is) break;
+			if (sep != ':' || idx < 0 || idx >= col) {
+				fprintf(stderr, "can't read %s\n", line.c_str());
+				return false;
+			}
+			M.insertBack(i, idx) = typename Matrix::Scalar(v);
+		}
+		M.finalize();
 	}
 	return true;
 }
@@ -391,18 +433,16 @@ bool SaveVector(const std::string& outName, const Vector& V)
 	 = (Z U') S t(YV')
 	 = U S V
 */
-template<class Matrix, class Vector>
-bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix& A, int rank)
+template<class Matrix, class Matrix2, class Vector>
+bool ComputeSVD(Matrix& U, Vector& S, Matrix& V, const Matrix2& A, int rank)
 {
-	const int row = A.rows();
-	const int col = A.cols();
-	const int r = std::min(std::min(col, row), rank);
+	const int r = std::min<int>(static_cast<int>(std::min(A.cols(), A.rows())), rank);
 	if (r <= 0) return false;
 
-#if 0
-	Matrix R(row, r);
-	svd::InitRandomMatrix(R);
-//	svd::InitUnitMatrix(R);
+#if 1
+	Matrix R(A.rows(), r);
+//	svd::InitRandomMatrix(R);
+	svd::InitUnitMatrix(R);
 	Matrix Y = A.transpose() * R;
 #else
 	Matrix Y;

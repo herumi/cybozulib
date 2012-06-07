@@ -32,21 +32,28 @@ void usage()
 bool Run(const std::string& input, const std::string& output, int rank)
 {
 #ifdef USE_DOUBLE
+	Eigen::SparseMatrix<double, Eigen::RowMajor> SA;
 	Eigen::MatrixXd A;
 	Eigen::MatrixXd U;
 	Eigen::VectorXd S;
 	Eigen::MatrixXd V;
 #else
+	Eigen::SparseMatrix<float, Eigen::RowMajor> SA;
 	Eigen::MatrixXf A;
 	Eigen::MatrixXf U;
 	Eigen::VectorXf S;
 	Eigen::MatrixXf V;
 #endif
-	if (!cybozu::nlp::svd::LoadMatrix(A, input)) {
+	fprintf(stderr, "loading matrix %s\n", input.c_str());
+	if (cybozu::nlp::svd::LoadSparseMatrix(SA, input)) {
+		fprintf(stderr, "computing SVD\n");
+		cybozu::nlp::ComputeSVD(U, S, V, SA, rank);
+	} else if (cybozu::nlp::svd::LoadMatrix(A, input)) {
+		fprintf(stderr, "computing SVD\n");
+		cybozu::nlp::ComputeSVD(U, S, V, A, rank);
+	} else {
 		return false;
 	}
-	fprintf(stderr, "load matrix file %s\n", input.c_str());
-	cybozu::nlp::ComputeSVD(U, S, V, A, rank);
 	cybozu::nlp::svd::SaveMatrix(output + ".U", U);
 	cybozu::nlp::svd::SaveVector(output + ".S", S);
 	cybozu::nlp::svd::SaveMatrix(output + ".V", V);
