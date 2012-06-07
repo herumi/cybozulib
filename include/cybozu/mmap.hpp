@@ -116,7 +116,7 @@ public:
 #ifdef _WIN32
 		if (map_) UnmapViewOfFile(map_);
 		if (hMap_) CloseHandle(hMap_);
-		if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
+		if (hFile_ != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
 #else
 		if (map_ != MAP_FAILED) munmap(const_cast<char*>(map_), size_);
 #endif
