@@ -167,7 +167,7 @@ struct FileInputStream : public stream_local::Readable<FileInputStream> {
 	cybozu::File ifs_;
 	FileInputStream(const std::string& name)
 	{
-		ifs_.openR(name);
+		ifs_.openR(name, !cybozu::DontThrow);
 	}
 	ssize_t read(char *buf, size_t size)
 	{
@@ -182,7 +182,7 @@ struct FileOutputStream : public stream_local::Writable<FileOutputStream> {
 	cybozu::File ofs_;
 	FileOutputStream(const std::string& name)
 	{
-		ofs_.openW(name);
+		ofs_.openW(name, !cybozu::DontThrow);
 	}
 	ssize_t write(const char *buf, size_t size)
 	{
