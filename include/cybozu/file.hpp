@@ -3,7 +3,7 @@
 	@file
 	@brief file class and operations
 
-	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
 #include <assert.h>

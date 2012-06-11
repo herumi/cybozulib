@@ -3,7 +3,7 @@
 	@file
 	@brief condition variable cs(for Windows Vista or later)
 
-	Copyright (C) 2007-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
 	@note wrapper for condition variable for Windows Vista or lator
 	cybozu::CriticalSection is same as cybozu::Mutex on Linux
 */

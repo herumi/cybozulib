@@ -3,7 +3,7 @@
 	@file
 	@brief tiny time class
 
-	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <ctime>
 #include <cybozu/exception.hpp>

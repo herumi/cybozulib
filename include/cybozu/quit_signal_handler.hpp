@@ -3,7 +3,7 @@
 	@file
 	@brief quit signal handler
 
-	Copyright (C) 2009-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
 */
 #ifdef _WIN32
 #include <windows.h>

@@ -3,7 +3,7 @@
 	@file
 	@brief int type definition and macros
 
-	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
 #if defined(_MSC_VER) && (MSC_VER <= 1500)
