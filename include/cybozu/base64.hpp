@@ -3,7 +3,7 @@
 	@file
 	@brief base64 encoder and decoder
 
-	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
 #include <iostream>

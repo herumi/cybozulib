@@ -3,7 +3,7 @@
 	@file
 	@brief critical section
 
-	Copyright (C) 2007-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
 */
 #include <cybozu/mutex.hpp>

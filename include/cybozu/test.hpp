@@ -3,7 +3,7 @@
 	@file
 	@brief unit test class
 
-	Copyright (C) 2008-2012 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
 #include <stdio.h>
