@@ -332,13 +332,13 @@ bool LoadSparseMatrix(Matrix& M, const std::string& input)
 	}
 	M.resize(row, col);
 	for (int i = 0; i < row; i++) {
-		M.startVec(i);
 		std::string line;
 		if (!std::getline(ifs, line)) {
 			fprintf(stderr, "can't read %d line\n", i);
 			return false;
 		}
 		std::istringstream is(line);
+		M.startVec(i);
 		for (;;) {
 			int idx;
 			char sep;
@@ -351,8 +351,8 @@ bool LoadSparseMatrix(Matrix& M, const std::string& input)
 			}
 			M.insertBack(i, idx) = typename Matrix::Scalar(v);
 		}
-		M.finalize();
 	}
+	M.finalize();
 	return true;
 }
 
@@ -390,6 +390,28 @@ bool SaveMatrix(const std::string& outName, const Matrix& M)
 		for (int j = 0; j < M.cols(); j++) {
 			if (j > 0) ofs << ' ';
 			ofs << M(i, j);
+		}
+		ofs << std::endl;
+	}
+	return ofs.good();
+}
+
+template<class Matrix>
+bool SaveSparseMatrix(const std::string& outName, const Matrix& M)
+{
+	std::ofstream ofs(outName.c_str(), std::ios::binary);
+	ofs << std::setprecision(8);
+
+	ofs << "# M S " << M.rows() << " " << M.cols() << std::endl;
+	for (int i = 0; i < M.outerSize(); i++) {
+		bool isFirst = true;
+		for (typename Matrix::InnerIterator j(M, i); j; ++j) {
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				ofs << ' ';
+			}
+			ofs << j.col() << ':' << j.value();
 		}
 		ofs << std::endl;
 	}

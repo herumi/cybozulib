@@ -9,6 +9,7 @@
 #include <cybozu/file.hpp>
 
 const double defaultEPS = 1e-5;
+const std::string testName = cybozu::file::GetExePath() + "svd_test.txt";
 
 template<class Matrix>
 void testSame(const Matrix& A, const Matrix& B)
@@ -125,7 +126,6 @@ CYBOZU_TEST_AUTO(file)
 {
 	const int m = 3;
 	const int n = 4;
-	const std::string testName = cybozu::file::GetExePath() + "svd_test.txt";
 	Eigen::MatrixXd A(m, n);
 	cybozu::nlp::svd::InitRandomMatrix(A);
 	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::SaveMatrix(testName, A));
@@ -136,11 +136,22 @@ CYBOZU_TEST_AUTO(file)
 
 CYBOZU_TEST_AUTO(file2)
 {
-	std::string path = cybozu::file::GetExePath() + "../sample/data/svd/";
+	const std::string path = cybozu::file::GetExePath() + "../sample/data/svd/";
 	Eigen::MatrixXd A;
 	Eigen::MatrixXd B;
 	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::LoadMatrix(A, path + "test1"));
 	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::LoadMatrix(B, path + "test2"));
+	testSame(A, B);
+}
+
+CYBOZU_TEST_AUTO(sparse)
+{
+	const std::string path = cybozu::file::GetExePath() + "../sample/data/svd/";
+	Eigen::SparseMatrix<float, Eigen::RowMajor> A;
+	Eigen::SparseMatrix<float, Eigen::RowMajor> B;
+	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::LoadSparseMatrix(A, path + "test2"));
+	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::SaveSparseMatrix(testName, A));
+	CYBOZU_TEST_ASSERT(cybozu::nlp::svd::LoadSparseMatrix(B, testName));
 	testSame(A, B);
 }
 
