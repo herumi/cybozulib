@@ -33,6 +33,12 @@ public:
 	{
 		tbl_.resize(maxSize_);
 	}
+	void setSize(size_t maxSize)
+	{
+		maxSize_ = maxSize;
+		size_ = 0;
+		tbl_.clear();
+	}
 	void add(Double score, T idx)
 	{
 		// short cut
