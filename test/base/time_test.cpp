@@ -92,3 +92,24 @@ CYBOZU_TEST_AUTO(fromString2)
 		CYBOZU_TEST_EQUAL(tm.getMsec(), d.msec);
 	}
 }
+
+#ifdef _WIN32
+#include <sstream>
+
+CYBOZU_TEST_AUTO(filetime)
+{
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+	// 2009-01-23 02:53:44.078
+	char buf[256];
+	CYBOZU_SNPRINTF(buf, sizeof(buf) - 1, "%04d-%02d-%02d %02d:%02d:%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	std::string t1 = buf;
+
+	FILETIME ft;
+	SystemTimeToFileTime(&st, &ft);
+	cybozu::Time time;
+	time.setTimeFromFILETIME(ft.dwLowDateTime, ft.dwHighDateTime);
+	std::string t2 = time.toString();
+	CYBOZU_TEST_EQUAL(t1, t2);
+}
+#endif
