@@ -23,7 +23,6 @@ struct TimeException : public cybozu::Exception {
 /**
 	time struct with time_t and msec
 	@note time MUST be latesr than 1970/1/1
-	Convert function is defined in log/loggerfactory.hpp
 */
 class Time {
 	std::time_t time_;
@@ -40,6 +39,21 @@ public:
 		time_ = time;
 		msec_ = msec;
 		return *this;
+	}
+	/*
+		Windows FILETIME is defined as
+		struct FILETILME {
+			DWORD dwLowDateTime;
+			DWORD dwHighDateTime;
+		};
+		the value represents the number of 100-nanosecond intervals since January 1, 1601 (UTC).
+	*/
+	void setTimeFromFILETIME(uint32_t low, uint32_t high)
+	{
+		const uint64_t epochBias = 116444736000000000ull;
+		const uint64_t fileTime = (((uint64_t(high) << 32) | low) - epochBias) / 10000;
+		time_ = fileTime / 1000;
+		msec_ = fileTime % 1000;
 	}
 	explicit Time(const std::string& in)
 	{
