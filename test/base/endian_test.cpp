@@ -27,16 +27,16 @@ CYBOZU_TEST_AUTO(endian_test)
 		CYBOZU_TEST_EQUAL(x, 0x12345678U);
 	}
 	char buf2[8];
-	cybozu::Put32bitAsLE(buf2, 0x78563412);
+	cybozu::Set32bitAsLE(buf2, 0x78563412);
 	CYBOZU_TEST_ASSERT(memcmp(buf2, buf, 4) == 0);
 
-	cybozu::Put32bitAsBE(buf2, 0x12345678);
+	cybozu::Set32bitAsBE(buf2, 0x12345678);
 	CYBOZU_TEST_ASSERT(memcmp(buf2, buf, 4) == 0);
 
-	cybozu::Put64bitAsLE(buf2, uint64_t(0xffdebc9a78563412LL));
+	cybozu::Set64bitAsLE(buf2, uint64_t(0xffdebc9a78563412LL));
 	CYBOZU_TEST_ASSERT(memcmp(buf2, buf, 8) == 0);
 
-	cybozu::Put64bitAsBE(buf2, uint64_t(0x123456789abcdeffLL));
+	cybozu::Set64bitAsBE(buf2, uint64_t(0x123456789abcdeffLL));
 	CYBOZU_TEST_ASSERT(memcmp(buf2, buf, 8) == 0);
 
 	{
@@ -48,9 +48,9 @@ CYBOZU_TEST_AUTO(endian_test)
 	}
 	{
 		char buf2[2];
-		cybozu::Put16bitAsLE(buf2, 0x3456);
+		cybozu::Set16bitAsLE(buf2, 0x3456);
 		CYBOZU_TEST_ASSERT(memcmp(buf2, "\x56\x34", 2) == 0);
-		cybozu::Put16bitAsBE(buf2, 0x3456);
+		cybozu::Set16bitAsBE(buf2, 0x3456);
 		CYBOZU_TEST_ASSERT(memcmp(buf2, "\x34\x56", 2) == 0);
 	}
 }

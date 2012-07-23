@@ -71,22 +71,22 @@ inline uint64_t Get64bitAsBE(const void *src)
 }
 
 /**
-	put 16bit integer as little endian
+	set 16bit integer as little endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put16bitAsLE(void *src, uint16_t x)
+inline void Set16bitAsLE(void *src, uint16_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
 	p[0] = (uint8_t)x;
 	p[1] = (uint8_t)(x >> 8);
 }
 /**
-	put 32bit integer as little endian
+	set 32bit integer as little endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put32bitAsLE(void *src, uint32_t x)
+inline void Set32bitAsLE(void *src, uint32_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
 	p[0] = (uint8_t)x;
@@ -95,33 +95,33 @@ inline void Put32bitAsLE(void *src, uint32_t x)
 	p[3] = (uint8_t)(x >> 24);
 }
 /**
-	put 64bit integer as little endian
+	set 64bit integer as little endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put64bitAsLE(void *src, uint64_t x)
+inline void Set64bitAsLE(void *src, uint64_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
-	Put32bitAsLE(p, (uint32_t)x);
-	Put32bitAsLE(p + 4, (uint32_t)(x >> 32));
+	Set32bitAsLE(p, (uint32_t)x);
+	Set32bitAsLE(p + 4, (uint32_t)(x >> 32));
 }
 /**
-	put 16bit integer as big endian
+	set 16bit integer as big endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put16bitAsBE(void *src, uint16_t x)
+inline void Set16bitAsBE(void *src, uint16_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
 	p[0] = (uint8_t)(x >> 8);
 	p[1] = (uint8_t)x;
 }
 /**
-	put 32bit integer as big endian
+	set 32bit integer as big endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put32bitAsBE(void *src, uint32_t x)
+inline void Set32bitAsBE(void *src, uint32_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
 	p[0] = (uint8_t)(x >> 24);
@@ -130,15 +130,15 @@ inline void Put32bitAsBE(void *src, uint32_t x)
 	p[3] = (uint8_t)x;
 }
 /**
-	put 64bit integer as big endian
+	set 64bit integer as big endian
 	@param src [out] pointer
 	@param x [in] integer
 */
-inline void Put64bitAsBE(void *src, uint64_t x)
+inline void Set64bitAsBE(void *src, uint64_t x)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(src);
-	Put32bitAsBE(p, (uint32_t)(x >> 32));
-	Put32bitAsBE(p + 4, (uint32_t)x);
+	Set32bitAsBE(p, (uint32_t)(x >> 32));
+	Set32bitAsBE(p + 4, (uint32_t)x);
 }
 
 } // cybozu

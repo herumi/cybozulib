@@ -129,8 +129,8 @@ public:
 		}
 		if (useGzip_) {
 			char tail[8];
-			cybozu::Put32bitAsLE(&tail[0], crc_);
-			cybozu::Put32bitAsLE(&tail[4], totalSize_);
+			cybozu::Set32bitAsLE(&tail[0], crc_);
+			cybozu::Set32bitAsLE(&tail[4], totalSize_);
 			write(tail, sizeof(tail));
 		}
 	}
