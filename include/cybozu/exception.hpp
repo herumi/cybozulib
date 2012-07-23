@@ -26,7 +26,7 @@ inline std::string makeString(const char *p, size_t size = -1)
 	const size_t maxSize = 32;
 	size_t pos = 0;
 	if (p) {
-		for (pos = 0; pos < std::min(size, maxSize); pos++) {
+		for (pos = 0; pos < (std::min)(size, maxSize); pos++) {
 			if (p[pos] == 0) break;
 		}
 	}
