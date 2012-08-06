@@ -1596,6 +1596,24 @@ inline bool ConvertUtf8ToUtf16(cybozu::String16 *out, const std::string& in)
 	return ConvertUtf8ToUtf16(out, &in[0], &in[0] + in.size());
 }
 
+inline cybozu::String16 ToUtf16(const std::string& in)
+{
+	cybozu::String16 out;
+	if (ConvertUtf8ToUtf16(&out, in)) return out;
+	StringException e;
+	e << "bad utf8" << in;
+	throw e;
+}
+
+inline std::string ToUtf8(const cybozu::String16& in)
+{
+	std::string out;
+	if (ConvertUtf16ToUtf8(&out, in)) return out;
+	StringException e;
+	e << "bad utf16";
+	throw e;
+}
+
 } // cybozu
 
 // specialization for boost::hash
