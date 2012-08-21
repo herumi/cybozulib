@@ -145,6 +145,10 @@ def createProj(target, src, topDir, outDir):
 	f.write(proj)
 	f.close()
 
+"""
+ex.
+test\src>python ..\..\cybozulib\tool\create_vcproj.py test.exe test.cpp -d test -o ..\..\cybozulib
+"""
 def main():
 	parser = optparse.OptionParser(usage = 'usage: %prog [-d top dir] [-o outdir] prog.exe file1.cpp file2.cpp ...')
 	parser.add_option('-d', '--dir', help = 'top directory', dest = 'dir')

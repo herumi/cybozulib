@@ -1,12 +1,12 @@
 
 all:
-	make -C base
-	make -C nlp
+	$(MAKE) -C base
+	$(MAKE) -C nlp
 
 test:
-	make -C base test
-	make -C nlp test
+	$(MAKE) -C base test
+	$(MAKE) -C nlp test
 clean:
-	make -C base clean
-	make -C nlp clean
+	$(MAKE) -C base clean
+	$(MAKE) -C nlp clean
 

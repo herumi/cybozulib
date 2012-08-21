@@ -1,8 +1,8 @@
 
 all:
-	make -C base
+	$(MAKE) -C base
 
 clean:
-	make -C base clean
+	$(MAKE) -C base clean
 
 

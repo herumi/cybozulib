@@ -2,15 +2,15 @@ include common.mk
 
 all:
 	$(MKDIR) lib bin
-	make -C src
-	make -C test
-	make -C sample
+	$(MAKE) -C src
+	$(MAKE) -C test
+	$(MAKE) -C sample
 
 test:
-	make -C test test
+	$(MAKE) -C test test
 
 clean:
-	make -C src clean
-	make -C test clean
-	make -C sample clean
+	$(MAKE) -C src clean
+	$(MAKE) -C test clean
+	$(MAKE) -C sample clean
 
