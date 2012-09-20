@@ -18,7 +18,7 @@ clean:
 	$(CLEAN)
 
 $(LIBS):
-	make -C ../../src
+	$(MAKE) -C ../../src
 
 -include $(DEPEND_FILE)
 
