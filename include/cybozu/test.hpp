@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 		statement; \
 		ret = 1; \
 	} catch (const Exception& e) { \
-		errMsg = e.toString(); \
+		errMsg = e.what(); \
 		if (errMsg.find(msg) == std::string::npos) { \
 			ret = 2; \
 		} \
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 	} \
 	if (ret) { \
 		cybozu::test::autoRun.set(false); \
-		cybozu::test::test(false, "CYBOZU_TEST_EXCEPTION_MESSAGE", #statement ", " #Exception, __FILE__, __LINE__); \
+		cybozu::test::test(false, "CYBOZU_TEST_EXCEPTION_MESSAGE", #statement ", " #Exception ", " #msg, __FILE__, __LINE__); \
 		if (ret == 1) { \
 			std::cout << "ctest:  no exception" << std::endl; \
 		} else if (ret == 2) { \
