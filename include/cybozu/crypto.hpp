@@ -16,24 +16,124 @@
 namespace cybozu {
 
 struct cryptoException : public cybozu::Exception {
-	cryptoException() : cybozu::Exception("crypt") { }
+	cryptoException() : cybozu::Exception("crypto") { }
 };
 
 namespace crypto {
 
+class Hash {
+public:
+	enum Name {
+		N_SHA1,
+		N_SHA224,
+		N_SHA256,
+		N_SHA384,
+		N_SHA512
+	};
+private:
+	Name name_;
+	union {
+		SHA_CTX sha1;
+		SHA256_CTX sha256;
+		SHA512_CTX sha512;
+	} ctx_;
+public:
+	static inline size_t getSize(Name name)
+	{
+		switch (name) {
+		case N_SHA1:   return SHA_DIGEST_LENGTH;
+		case N_SHA224: return SHA224_DIGEST_LENGTH;
+		case N_SHA256: return SHA256_DIGEST_LENGTH;
+		case N_SHA384: return SHA384_DIGEST_LENGTH;
+		case N_SHA512: return SHA512_DIGEST_LENGTH;
+		default:
+			cryptoException e; e << "Hash::getSize" << name;
+			throw e;
+		}
+	}
+	explicit Hash(Name name = N_SHA1)
+		: name_(name)
+	{
+		switch (name) {
+		case N_SHA1:   SHA1_Init(&ctx_.sha1);     break;
+		case N_SHA224: SHA224_Init(&ctx_.sha256); break;
+		case N_SHA256: SHA256_Init(&ctx_.sha256); break;
+		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
+		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
+		default:
+			cryptoException e; e << "Hash" << name;
+			throw e;
+		}
+	}
+	void update(const char *buf, size_t bufSize)
+	{
+		switch (name_) {
+		case N_SHA1:   SHA1_Update(&ctx_.sha1, buf, bufSize);     break;
+		case N_SHA224: SHA224_Update(&ctx_.sha256, buf, bufSize); break;
+		case N_SHA256: SHA256_Update(&ctx_.sha256, buf, bufSize); break;
+		case N_SHA384: SHA384_Update(&ctx_.sha512, buf, bufSize); break;
+		case N_SHA512: SHA512_Update(&ctx_.sha512, buf, bufSize); break;
+		}
+	}
+	void update(const std::string& buf)
+	{
+		update(buf.c_str(), buf.size());
+	}
+	std::string digest(const char *buf, size_t bufSize)
+	{
+		update(buf, bufSize);
+		unsigned char md[128];
+		switch (name_) {
+		case N_SHA1:   SHA1_Final(md, &ctx_.sha1);     break;
+		case N_SHA224: SHA224_Final(md, &ctx_.sha256); break;
+		case N_SHA256: SHA256_Final(md, &ctx_.sha256); break;
+		case N_SHA384: SHA384_Final(md, &ctx_.sha512); break;
+		case N_SHA512: SHA512_Final(md, &ctx_.sha512); break;
+		default:
+			cryptoException e; e << "Sha::digest" << name_;
+			throw e;
+		}
+		return std::string(reinterpret_cast<const char*>(md), getSize(name_));
+	}
+	std::string digest(const std::string& buf)
+	{
+		return digest(buf.c_str(), buf.size());
+	}
+	static inline std::string digest(Name name, const char *buf, size_t bufSize)
+	{
+		unsigned char md[128];
+		const unsigned char *src = reinterpret_cast<const unsigned char *>(buf);
+		switch (name) {
+		case N_SHA1:   SHA1(src, bufSize, md);   break;
+		case N_SHA224: SHA224(src, bufSize, md); break;
+		case N_SHA256: SHA256(src, bufSize, md); break;
+		case N_SHA384: SHA384(src, bufSize, md); break;
+		case N_SHA512: SHA512(src, bufSize, md); break;
+		default:
+			cryptoException e; e << "Sha::digest" << name;
+			throw e;
+		}
+		return std::string(reinterpret_cast<const char*>(md), getSize(name));
+	}
+	static inline std::string digest(Name name, const std::string& buf)
+	{
+		return digest(name, buf.c_str(), buf.size());
+	}
+};
+
 class Hmac {
 	const EVP_MD *evp_;
 public:
-	explicit Hmac(int mode = 1)
+	explicit Hmac(Hash::Name name = Hash::N_SHA1)
 	{
-		switch (mode) {
-		case 1: evp_ = EVP_sha1(); break;
-		case 224: evp_ = EVP_sha224(); break;
-		case 256: evp_ = EVP_sha256(); break;
-		case 384: evp_ = EVP_sha384(); break;
-		case 512: evp_ = EVP_sha512(); break;
+		switch (name) {
+		case Hash::N_SHA1: evp_ = EVP_sha1(); break;
+		case Hash::N_SHA224: evp_ = EVP_sha224(); break;
+		case Hash::N_SHA256: evp_ = EVP_sha256(); break;
+		case Hash::N_SHA384: evp_ = EVP_sha384(); break;
+		case Hash::N_SHA512: evp_ = EVP_sha512(); break;
 		default:
-			cryptoException e; e << "Hmac" << mode;
+			cryptoException e; e << "Hmac" << name;
 			throw e;
 		}
 	}
@@ -51,131 +151,53 @@ public:
 	}
 };
 
-class Sha {
-	enum {
-		M_SHA1,
-		M_SHA224,
-		M_SHA256,
-		M_SHA384,
-		M_SHA512
-	} sel_;
-	union {
-		SHA_CTX sha1;
-		SHA256_CTX sha256;
-		SHA512_CTX sha512;
-	} ctx_;
-public:
-	explicit Sha(int mode = 1)
-	{
-		switch (mode) {
-		case 1:
-			sel_ = M_SHA1;
-			SHA1_Init(&ctx_.sha1);
-			break;
-		case 224:
-			sel_ = M_SHA224;
-			SHA224_Init(&ctx_.sha256);
-			break;
-		case 256:
-			sel_ = M_SHA256;
-			SHA256_Init(&ctx_.sha256);
-			break;
-		case 384:
-			sel_ = M_SHA384;
-			SHA384_Init(&ctx_.sha512);
-			break;
-		case 512:
-			sel_ = M_SHA512;
-			SHA512_Init(&ctx_.sha512);
-			break;
-		default:
-			cryptoException e; e << "Sha" << mode;
-			throw e;
-		}
-	}
-	void update(const char *buf, size_t bufSize)
-	{
-		switch (sel_) {
-		case M_SHA1:   SHA1_Update(&ctx_.sha1, buf, bufSize);     break;
-		case M_SHA224: SHA224_Update(&ctx_.sha256, buf, bufSize); break;
-		case M_SHA256: SHA256_Update(&ctx_.sha256, buf, bufSize); break;
-		case M_SHA384: SHA384_Update(&ctx_.sha512, buf, bufSize); break;
-		case M_SHA512: SHA512_Update(&ctx_.sha512, buf, bufSize); break;
-		}
-	}
-	void update(const std::string& buf)
-	{
-		update(&buf[0], buf.size());
-	}
-	std::string digest(const char *buf, size_t bufSize)
-	{
-		update(buf, bufSize);
-		unsigned char md[128];
-		const char *p = reinterpret_cast<const char*>(md);
-		switch (sel_) {
-		case M_SHA1:   SHA1_Final(md, &ctx_.sha1);     return std::string(p, SHA_DIGEST_LENGTH);
-		case M_SHA224: SHA224_Final(md, &ctx_.sha256); return std::string(p, SHA224_DIGEST_LENGTH);
-		case M_SHA256: SHA256_Final(md, &ctx_.sha256); return std::string(p, SHA256_DIGEST_LENGTH);
-		case M_SHA384: SHA384_Final(md, &ctx_.sha512); return std::string(p, SHA384_DIGEST_LENGTH);
-		case M_SHA512: SHA512_Final(md, &ctx_.sha512); return std::string(p, SHA512_DIGEST_LENGTH);
-		}
-		cryptoException e; e << "Sha::digest";
-		throw e;
-	}
-	std::string digest(const std::string& str)
-	{
-		return digest(&str[0], str.size());
-	}
-};
-
 class Cipher {
+	const EVP_CIPHER *cipher_;
 	EVP_CIPHER_CTX ctx_;
 public:
+	enum Name {
+		N_AES128_CBC,
+		N_AES256_CBC
+	};
 	enum Mode {
 		Decoding,
 		Encoding
-	} mode_;
-	Cipher()
-		: mode_(Encoding)
+	};
+	explicit Cipher(Name name = N_AES128_CBC)
+		: cipher_(0)
 	{
 		EVP_CIPHER_CTX_init(&ctx_);
+		switch (name) {
+		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
+		case N_AES256_CBC: cipher_ = EVP_aes_256_cbc(); break;
+		default:
+			cryptoException e; e << "Cipher:name" << name;
+			throw e;
+		}
 	}
 	~Cipher()
 	{
 		EVP_CIPHER_CTX_cleanup(&ctx_);
 	}
 	/*
-		don't use padding = true
+		@note don't use padding = true
 	*/
 	void setup(Mode mode, const std::string& key, const std::string& iv, bool padding = false)
 	{
-		mode_ = mode;
-		const EVP_CIPHER *cipher = 0;
 		const int keyLen = static_cast<int>(key.size());
-		switch (keyLen) {
-		case 128/8:
-			cipher = EVP_aes_128_cbc();
-			break;
-		case 256/8:
-			cipher = EVP_aes_256_cbc();
-			break;
-		default:
-			cryptoException e; e << "Aes::setup:keyLen" << keyLen;
-			throw e;
-		}
-		const int expectedKeyLen = EVP_CIPHER_key_length(cipher);
+		const int expectedKeyLen = EVP_CIPHER_key_length(cipher_);
 		if (keyLen != expectedKeyLen) {
-			cryptoException e; e << "Aes::setup::keyLen" << keyLen << expectedKeyLen;
+			cryptoException e; e << "Cipher::setup::keyLen" << keyLen << expectedKeyLen;
 			throw e;
 		}
 
-		int ret = EVP_CipherInit_ex(&ctx_, cipher, NULL, (const uint8_t*)&key[0], (const uint8_t*)&iv[0], mode == Encoding ? 1 : 0);
+		int ret = EVP_CipherInit_ex(&ctx_, cipher_, NULL, (const uint8_t*)&key[0], (const uint8_t*)&iv[0], mode == Encoding ? 1 : 0);
 		if (ret != 1) {
-			cryptoException e; e << "Aes::setup:init" << ret;
+			cryptoException e; e << "Cipher::setup:init" << ret;
 		}
 		ret = EVP_CIPHER_CTX_set_padding(&ctx_, padding ? 1 : 0);
 		if (ret != 1) {
-			cryptoException e; e << "Aes::setup:padding" << ret;
+			cryptoException e; e << "Cipher::setup:padding" << ret;
 		}
 	}
 	/*
