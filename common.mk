@@ -5,9 +5,9 @@ endif
 ifeq ($(shell uname -s),Linux)
   LDFLAGS += -lrt
 endif
-CXX = g++
+#CXX = g++
 #CXX = clang++ -x c++ -c
-CC = gcc
+#CC = gcc
 CP = cp -f
 AR = ar r
 MKDIR=mkdir -p
