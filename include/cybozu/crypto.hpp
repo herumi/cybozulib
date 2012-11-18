@@ -54,16 +54,7 @@ public:
 	explicit Hash(Name name = N_SHA1)
 		: name_(name)
 	{
-		switch (name) {
-		case N_SHA1:   SHA1_Init(&ctx_.sha1);     break;
-		case N_SHA224: SHA224_Init(&ctx_.sha256); break;
-		case N_SHA256: SHA256_Init(&ctx_.sha256); break;
-		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
-		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
-		default:
-			cryptoException e; e << "Hash" << name;
-			throw e;
-		}
+		reset();
 	}
 	void update(const char *buf, size_t bufSize)
 	{
@@ -79,6 +70,22 @@ public:
 	{
 		update(buf.c_str(), buf.size());
 	}
+	void reset()
+	{
+		switch (name_) {
+		case N_SHA1:   SHA1_Init(&ctx_.sha1);     break;
+		case N_SHA224: SHA224_Init(&ctx_.sha256); break;
+		case N_SHA256: SHA256_Init(&ctx_.sha256); break;
+		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
+		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
+		default:
+			cryptoException e; e << "Hash" << name_;
+			throw e;
+		}
+	}
+	/*
+		@note clear inner buffer after calling digest
+	*/
 	std::string digest(const char *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
@@ -93,9 +100,10 @@ public:
 			cryptoException e; e << "Sha::digest" << name_;
 			throw e;
 		}
+		reset();
 		return std::string(reinterpret_cast<const char*>(md), getSize(name_));
 	}
-	std::string digest(const std::string& buf)
+	std::string digest(const std::string& buf = "")
 	{
 		return digest(buf.c_str(), buf.size());
 	}
