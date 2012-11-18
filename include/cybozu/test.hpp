@@ -108,7 +108,7 @@ private:
 
 AutoRun autoRun;
 
-void test(bool ret, const std::string& msg, const char *param, const char *file, int line)
+void test(bool ret, const std::string& msg, const std::string& param, const char *file, int line)
 {
 	autoRun.set(ret);
 	if (!ret) {
