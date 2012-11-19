@@ -14,6 +14,10 @@
 //#include <openssl/crypto.h>
 //#include <openssl/conf.h>
 #ifdef _WIN32
+	#pragma warning(push)
+	#pragma warning(disable : 4996)
+	#include <openssl/applink.c>
+	#pragma warning(pop)
 	#pragma comment(lib, "ssleay32.lib")
 	#pragma comment(lib, "libeay32.lib")
 #endif
@@ -120,7 +124,14 @@ public:
 	{
 		if (!soc_.connect(addr)) return false;
 		bool isOK;
-		isOK = SSL_set_fd(ssl_, soc_.sd_) != 0;
+#ifdef _WIN32
+		if (soc_.sd_ > INT_MAX) {
+			cybozu::SslException e;
+			e << "large socket" << soc_.sd_;
+			throw e;
+		}
+#endif
+		isOK = SSL_set_fd(ssl_, static_cast<int>(soc_.sd_)) != 0;
 		if (!isOK) goto ERR_EXIT;
 		isOK = SSL_connect(ssl_) == 1;
 		if (!isOK) goto ERR_EXIT;
