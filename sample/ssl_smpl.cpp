@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 		argc--, argv++;
 		if (argc < 2) {
 			fprintf(stderr, "ssl-smpl host dir\n");
-			fprintf(stderr, " ex ssl-smpl twitter.com /herumi\n");
+			fprintf(stderr, " ex ssl-smpl www.cybozu.com /\n");
 			return 1;
 		}
 		const std::string host = argv[0];
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 			total += readSize;
-//			printf("%s", std::string(buf, readSize).c_str());
+			printf("%s", std::string(buf, readSize).c_str());
 		}
 		printf("\ntotal=%d\n", (int)total);
 	} catch (cybozu::Exception& e) {

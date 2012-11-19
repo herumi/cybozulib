@@ -14,10 +14,10 @@
 //#include <openssl/crypto.h>
 //#include <openssl/conf.h>
 #ifdef _WIN32
-	#pragma warning(push)
-	#pragma warning(disable : 4996)
-	#include <openssl/applink.c>
-	#pragma warning(pop)
+//	#pragma warning(push)
+//	#pragma warning(disable : 4996)
+//	#include <openssl/applink.c>
+//	#pragma warning(pop)
 	#pragma comment(lib, "ssleay32.lib")
 	#pragma comment(lib, "libeay32.lib")
 #endif

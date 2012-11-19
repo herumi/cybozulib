@@ -1,6 +1,6 @@
 þ½Ž¿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio Express 2012 for Windows Desktop
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endian_test", "test\base\proj\endian_test\endian_test.vcxproj", "{46B6E88E-739A-406B-9F68-BC46C5950FA3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "minixml_test", "test\base\proj\minixml_test\minixml_test.vcxproj", "{C2C77756-6703-477D-B3B5-29B61797C9BA}"
