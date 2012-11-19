@@ -14,15 +14,18 @@ int main(int argc, char *argv[])
 		const std::string host = argv[0];
 		const std::string path = argv[1];
 		cybozu::ssl::ClientSocket s;
+		printf("connect %s\n", host.c_str());
 		if (!s.connect(host, 443)) {
 			puts("can't connect in main");
 			return 1;
 		}
 		const std::string http = "GET " + path + " HTTP/1.0\r\n\r\n";
+		printf("cmd=%s\n", http.c_str());
 		if (!s.write(http.c_str(), http.size())) {
 			puts("can't write");
 			return 1;
 		}
+		puts("write end");
 		ssize_t total = 0;
 		for (;;) {
 			char buf[1024];
