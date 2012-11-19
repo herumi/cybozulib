@@ -1,74 +1,76 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_int_test", "test\base\proj\convert_int_test.vcproj", "{50DB3714-94E8-4D91-A438-F782918A65D1}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_test", "test\base\proj\string_test.vcproj", "{E74BF314-768B-42F9-9B80-2B11E4BA49F9}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{56636765-83D3-486D-B32D-AF9BBCAEDD24}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{75FC3DD2-6007-4A5A-9768-0166608AB2CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exception_smpl", "sample\proj\exception_smpl.vcproj", "{A652D071-3DCC-4C40-8046-D629D960690B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_test", "test\base\proj\file_test.vcproj", "{A6702B91-0DB3-44FE-AD10-1BF462F2CBAB}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "time_test", "test\base\proj\time_test.vcproj", "{E5C319EE-2E49-4B9A-8AE5-6826A82408E0}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endian_test", "test\base\proj\endian_test.vcproj", "{35A35B48-5769-40D3-9A0E-5800F4F549E4}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base64_test", "test\base\proj\base64_test.vcproj", "{F2EC5BE0-9269-4C81-AADF-A43FA81525CC}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{589DDC04-EFD7-44A2-BCAC-8C40874BF621}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_operation_test", "test\base\proj\string_operation_test.vcproj", "{09B74583-C00F-48C2-9857-AC901A568AF6}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "config_test", "test\base\proj\config_test.vcproj", "{BFCE8477-DC88-4ED9-A823-3E32977928B5}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stream_test", "test\base\proj\stream_test.vcproj", "{FDB6F109-B322-4114-A0EF-2997B997D72B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "csv_test", "test\base\proj\csv_test.vcproj", "{042429A9-745E-4F8A-9424-9FBB7C759F21}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "serializer_test", "test\base\proj\serializer_test.vcproj", "{59196ADF-9978-4C52-820A-48B86EC1A7B3}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "env_test", "test\base\proj\env_test.vcproj", "{3D3FA8A0-BDF3-43F8-94B5-0565FF811596}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atomic_test", "test\base\proj\atomic_test.vcproj", "{FBC9E3E3-6B8C-48A3-AB25-843A5983C2A5}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_test", "test\base\proj\tls_test.vcproj", "{AD4AD12B-A004-49E7-803B-E10514C06208}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread_test", "test\base\proj\thread_test.vcproj", "{E15C5C1A-F0FD-47C3-A636-AE074BFEF39C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "condition_variable_test", "test\base\proj\condition_variable_test.vcproj", "{033B7F0C-0EA0-4FE9-820A-F29684A660B6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nlp", "nlp", "{2636D5CB-F140-4ED9-927D-A2B2B3B19FA5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "random_test", "test\nlp\proj\random_test.vcproj", "{D0B6CDA2-ED5A-488C-8A00-42B558C10F2E}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sparse_test", "test\nlp\proj\sparse_test.vcproj", "{4C0C4E8A-0030-4450-8B3D-2BFC77443D98}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "condition_variable_cs_test", "test\base\proj\condition_variable_cs_test.vcproj", "{A7A9319D-8A71-4188-83E8-8FC23369F6F0}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ssl_smpl", "sample\proj\ssl_smpl.vcproj", "{E92D9155-A74C-4E23-91F2-E584B325DF52}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmap_test", "test\base\proj\mmap_test.vcproj", "{D53C6B45-1BA5-4B75-9E41-FE7EDF6309E5}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "use_3rd_party", "use_3rd_party", "{0D2C804C-41DB-4115-90E2-1E8CF56BC893}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib_test", "test\base\proj\zlib_test.vcproj", "{D2B62441-4CFD-4579-8E4A-ABB1DB75D516}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_int_test", "test\base\proj\convert_int_test.vcxproj", "{50DB3714-94E8-4D91-A438-F782918A65D1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mecab_smpl", "sample\proj\mecab_smpl.vcproj", "{A06ACC88-1001-49B6-8AD0-0CCCADE2ECBF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_test", "test\base\proj\string_test.vcxproj", "{E74BF314-768B-42F9-9B80-2B11E4BA49F9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mecab_test", "test\base\proj\mecab_test.vcproj", "{2E67FBE4-4C23-4142-9792-31A7F185DEC4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exception_smpl", "sample\proj\exception_smpl.vcxproj", "{A652D071-3DCC-4C40-8046-D629D960690B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "array_test", "test\base\proj\array_test.vcproj", "{2E6F2333-489F-4E2A-A52C-DFEB7C985DFD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_test", "test\base\proj\file_test.vcxproj", "{A6702B91-0DB3-44FE-AD10-1BF462F2CBAB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "event_test", "test\base\proj\event_test.vcproj", "{FF34A66D-5C7F-41BC-A3E5-A0E37C365805}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "time_test", "test\base\proj\time_test.vcxproj", "{E5C319EE-2E49-4B9A-8AE5-6826A82408E0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plsi_smpl", "sample\proj\plsi_smpl.vcproj", "{2178822E-0A94-443C-B534-B6201722F15A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endian_test", "test\base\proj\endian_test.vcxproj", "{35A35B48-5769-40D3-9A0E-5800F4F549E4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svd_smpl", "sample\proj\svd_smpl.vcproj", "{A91D5B25-5583-49A5-98A0-E34C0D1822F3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base64_test", "test\base\proj\base64_test.vcxproj", "{F2EC5BE0-9269-4C81-AADF-A43FA81525CC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svd_test", "test\nlp\proj\svd_test.vcproj", "{382604E1-AA7C-4AF6-9E8D-60E5CB352675}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_operation_test", "test\base\proj\string_operation_test.vcxproj", "{09B74583-C00F-48C2-9857-AC901A568AF6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "config_test", "test\base\proj\config_test.vcxproj", "{BFCE8477-DC88-4ED9-A823-3E32977928B5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stream_test", "test\base\proj\stream_test.vcxproj", "{FDB6F109-B322-4114-A0EF-2997B997D72B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "csv_test", "test\base\proj\csv_test.vcxproj", "{042429A9-745E-4F8A-9424-9FBB7C759F21}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "serializer_test", "test\base\proj\serializer_test.vcxproj", "{59196ADF-9978-4C52-820A-48B86EC1A7B3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "env_test", "test\base\proj\env_test.vcxproj", "{3D3FA8A0-BDF3-43F8-94B5-0565FF811596}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atomic_test", "test\base\proj\atomic_test.vcxproj", "{FBC9E3E3-6B8C-48A3-AB25-843A5983C2A5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_test", "test\base\proj\tls_test.vcxproj", "{AD4AD12B-A004-49E7-803B-E10514C06208}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread_test", "test\base\proj\thread_test.vcxproj", "{E15C5C1A-F0FD-47C3-A636-AE074BFEF39C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "condition_variable_test", "test\base\proj\condition_variable_test.vcxproj", "{033B7F0C-0EA0-4FE9-820A-F29684A660B6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "random_test", "test\nlp\proj\random_test.vcxproj", "{D0B6CDA2-ED5A-488C-8A00-42B558C10F2E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sparse_test", "test\nlp\proj\sparse_test.vcxproj", "{4C0C4E8A-0030-4450-8B3D-2BFC77443D98}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "condition_variable_cs_test", "test\base\proj\condition_variable_cs_test.vcxproj", "{A7A9319D-8A71-4188-83E8-8FC23369F6F0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ssl_smpl", "sample\proj\ssl_smpl.vcxproj", "{E92D9155-A74C-4E23-91F2-E584B325DF52}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmap_test", "test\base\proj\mmap_test.vcxproj", "{D53C6B45-1BA5-4B75-9E41-FE7EDF6309E5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib_test", "test\base\proj\zlib_test.vcxproj", "{D2B62441-4CFD-4579-8E4A-ABB1DB75D516}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mecab_smpl", "sample\proj\mecab_smpl.vcxproj", "{A06ACC88-1001-49B6-8AD0-0CCCADE2ECBF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mecab_test", "test\base\proj\mecab_test.vcxproj", "{2E67FBE4-4C23-4142-9792-31A7F185DEC4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "array_test", "test\base\proj\array_test.vcxproj", "{2E6F2333-489F-4E2A-A52C-DFEB7C985DFD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "event_test", "test\base\proj\event_test.vcxproj", "{FF34A66D-5C7F-41BC-A3E5-A0E37C365805}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plsi_smpl", "sample\proj\plsi_smpl.vcxproj", "{2178822E-0A94-443C-B534-B6201722F15A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svd_smpl", "sample\proj\svd_smpl.vcxproj", "{A91D5B25-5583-49A5-98A0-E34C0D1822F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svd_test", "test\nlp\proj\svd_test.vcxproj", "{382604E1-AA7C-4AF6-9E8D-60E5CB352675}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "minixml_test", "test\base\proj\minixml_test.vcxproj", "{3C5995ED-0713-48A2-9983-62021AC1A8C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -318,6 +320,14 @@ Global
 		{382604E1-AA7C-4AF6-9E8D-60E5CB352675}.Release|Win32.Build.0 = Release|Win32
 		{382604E1-AA7C-4AF6-9E8D-60E5CB352675}.Release|x64.ActiveCfg = Release|x64
 		{382604E1-AA7C-4AF6-9E8D-60E5CB352675}.Release|x64.Build.0 = Release|x64
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Debug|Win32.Build.0 = Debug|Win32
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Debug|x64.ActiveCfg = Debug|x64
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Debug|x64.Build.0 = Debug|x64
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Release|Win32.ActiveCfg = Release|Win32
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Release|Win32.Build.0 = Release|Win32
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Release|x64.ActiveCfg = Release|x64
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -325,12 +335,14 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{589DDC04-EFD7-44A2-BCAC-8C40874BF621} = {56636765-83D3-486D-B32D-AF9BBCAEDD24}
 		{2636D5CB-F140-4ED9-927D-A2B2B3B19FA5} = {56636765-83D3-486D-B32D-AF9BBCAEDD24}
+		{A652D071-3DCC-4C40-8046-D629D960690B} = {75FC3DD2-6007-4A5A-9768-0166608AB2CF}
+		{2178822E-0A94-443C-B534-B6201722F15A} = {75FC3DD2-6007-4A5A-9768-0166608AB2CF}
 		{50DB3714-94E8-4D91-A438-F782918A65D1} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
+		{E74BF314-768B-42F9-9B80-2B11E4BA49F9} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{A6702B91-0DB3-44FE-AD10-1BF462F2CBAB} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{E5C319EE-2E49-4B9A-8AE5-6826A82408E0} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{35A35B48-5769-40D3-9A0E-5800F4F549E4} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{F2EC5BE0-9269-4C81-AADF-A43FA81525CC} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
-		{E74BF314-768B-42F9-9B80-2B11E4BA49F9} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{09B74583-C00F-48C2-9857-AC901A568AF6} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{BFCE8477-DC88-4ED9-A823-3E32977928B5} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{FDB6F109-B322-4114-A0EF-2997B997D72B} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
@@ -345,8 +357,7 @@ Global
 		{D53C6B45-1BA5-4B75-9E41-FE7EDF6309E5} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{2E6F2333-489F-4E2A-A52C-DFEB7C985DFD} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{FF34A66D-5C7F-41BC-A3E5-A0E37C365805} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
-		{A652D071-3DCC-4C40-8046-D629D960690B} = {75FC3DD2-6007-4A5A-9768-0166608AB2CF}
-		{2178822E-0A94-443C-B534-B6201722F15A} = {75FC3DD2-6007-4A5A-9768-0166608AB2CF}
+		{3C5995ED-0713-48A2-9983-62021AC1A8C7} = {589DDC04-EFD7-44A2-BCAC-8C40874BF621}
 		{D0B6CDA2-ED5A-488C-8A00-42B558C10F2E} = {2636D5CB-F140-4ED9-927D-A2B2B3B19FA5}
 		{4C0C4E8A-0030-4450-8B3D-2BFC77443D98} = {2636D5CB-F140-4ED9-927D-A2B2B3B19FA5}
 		{E92D9155-A74C-4E23-91F2-E584B325DF52} = {0D2C804C-41DB-4115-90E2-1E8CF56BC893}
