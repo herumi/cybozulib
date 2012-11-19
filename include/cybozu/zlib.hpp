@@ -12,7 +12,7 @@
 #include <zlib.h>
 
 #ifdef _MSC_VER
-	#pragma comment(lib, "zdll.lib")
+	#pragma comment(lib, "zlib.lib")
 #endif
 
 namespace cybozu {
