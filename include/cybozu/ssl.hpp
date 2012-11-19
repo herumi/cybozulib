@@ -70,10 +70,16 @@ public:
 	{
 		if (ctx_ == 0) {
 			engine_.putError();
-			cybozu::SslException e;
-			e << "Ctx";
-			throw e;
+			fprintf(stderr, "SSL_CTX_new:err");
+			exit(1);
 		}
+#if 0
+		if (SSL_CTX_set_cipher_list(ctx_, "ALL:eNULL") == 0) {
+			engine_.putError();
+			fprintf(stderr, "SSL_CTX_set_cipher_list:err");
+			exit(1);
+		}
+#endif
 	}
 	~Ctx()
 	{
