@@ -10,6 +10,7 @@
 #include <cybozu/atomic.hpp>
 #include <assert.h>
 #ifdef _WIN32
+	#include <winsock2.h>
 	#include <windows.h>
 	#include <process.h>
 	#pragma warning(disable : 4127)

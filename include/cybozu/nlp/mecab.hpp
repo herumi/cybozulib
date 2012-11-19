@@ -6,6 +6,10 @@
 	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
 */
 #include <string>
+#include <assert.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
 #include "mecab.h"
 #include <cybozu/exception.hpp>
 #ifdef _WIN32
@@ -66,17 +70,24 @@ struct Mecab {
 	{
 		set(&str[0], str.size());
 	}
-	bool isEnd() const { return node_->stat == MECAB_EOS_NODE; }
+	bool isEnd() const
+	{
+		if (node_ == 0) return true;
+		return node_->stat == MECAB_EOS_NODE;
+	}
 	const char *getPos() const { return node_->surface; }
 	size_t getSize() const { return node_->length; }
 	/* adhoc */
 	bool isNoun() const
 	{
+		assert(node_);
 		const char *p = node_->feature;
+		if (node_->length < 2) return false;
 		return p[0] == '\xE5' && p[1] == '\x90' && p[2] == '\x8D';
 	}
 	void next()
 	{
+		assert(node_);
 		node_ = node_->next;
 	}
 	~Mecab()
