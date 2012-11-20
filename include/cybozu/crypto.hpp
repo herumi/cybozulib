@@ -43,7 +43,7 @@ public:
 		case N_SHA384: return SHA384_DIGEST_LENGTH;
 		case N_SHA512: return SHA512_DIGEST_LENGTH;
 		default:
-			throw cybozu::Exception("crypto:Hash:getSize" << name;
+			throw cybozu::Exception("crypto:Hash:getSize") << name;
 		}
 	}
 	explicit Hash(Name name = N_SHA1)
@@ -74,7 +74,7 @@ public:
 		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
 		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
 		default:
-			throw cyobzu::Exception("crypto:Hash:rset" << name_;
+			throw cybozu::Exception("crypto:Hash:rset") << name_;
 		}
 	}
 	/*
