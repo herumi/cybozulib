@@ -11,10 +11,6 @@
 
 namespace cybozu {
 
-struct EnvException : public cybozu::Exception {
-	EnvException() : cybozu::Exception("env") { }
-};
-
 inline bool QueryEnv(std::string& value, const std::string& key)
 {
 #ifdef _WIN32
@@ -46,13 +42,8 @@ inline bool QueryEnv(std::string& value, const std::string& key)
 inline std::string GetEnv(const std::string& key)
 {
 	std::string value;
-	if (QueryEnv(value, key)) {
-		return value;
-	} else {
-		cybozu::EnvException e;
-		e << "GetEnv" << key;
-		throw e;
-	}
+	if (!QueryEnv(value, key)) throw cybozu::Exception("env:GetEnv") << key;
+	return value;
 }
 
 /**
@@ -65,11 +56,8 @@ inline std::string GetEnv(const std::string& key)
 inline std::string GetEnv(const std::string& key, const std::string& defaultValue)
 {
 	std::string value;
-	if (QueryEnv(value, key)) {
-		return value;
-	} else {
-		return defaultValue;
-	}
+	if (!QueryEnv(value, key)) return defaultValue;
+	return value;
 }
 
 } // cybozu

@@ -136,7 +136,7 @@ CYBOZU_TEST_AUTO(input_err)
 
 		cybozu::CsvReaderT<cybozu::MemoryInputStream, 20> csv(is);
 		std::vector<std::string> vec;
-		CYBOZU_TEST_EXCEPTION_MESSAGE(csv.read(vec), cybozu::CsvException, tbl[i].msg);
+		CYBOZU_TEST_EXCEPTION_MESSAGE(csv.read(vec), cybozu::Exception, tbl[i].msg);
 	}
 }
 

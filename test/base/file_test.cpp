@@ -84,8 +84,8 @@ CYBOZU_TEST_AUTO(move_and_remove)
 	}
 	{
 		CYBOZU_TEST_ASSERT(!cybozu::file::Remove(fileName2));
-		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Remove(fileName2, !cybozu::DontThrow), cybozu::FileException, fileName2);
-		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Move(fileName, fileName2, !cybozu::DontThrow), cybozu::FileException, fileName2);
+		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Remove(fileName2, !cybozu::DontThrow), cybozu::Exception, fileName2);
+		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Move(fileName, fileName2, !cybozu::DontThrow), cybozu::Exception, fileName2);
 	}
 }
 

@@ -12,10 +12,6 @@
 
 namespace cybozu {
 
-struct Base64Exception : public cybozu::Exception {
-	Base64Exception() : cybozu::Exception("base64") { }
-};
-
 namespace base64_local {
 
 template<class OutputStream>
@@ -23,9 +19,7 @@ void Write(OutputStream& os, const char *buf, size_t size)
 {
 	size_t writeSize = static_cast<size_t>(os.write(buf, size));
 	if (writeSize != size) {
-		cybozu::Base64Exception e;
-		e << "Write" << cybozu::exception::makeString(buf, size);
-		throw e;
+		throw cybozu::Exception("base64::Write") << cybozu::exception::makeString(buf, size) << size;
 	}
 }
 
@@ -43,9 +37,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 {
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
-		cybozu::Base64Exception e;
-		e << "EncodeToBase64" << "bad line size" << (int)maxLineSize;
-		throw e;
+		throw cybozu::Exception("base64::EncodeToBase64:bad line size") << maxLineSize;
 	}
 
 	const char *tbl = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

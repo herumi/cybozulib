@@ -173,7 +173,7 @@ CYBOZU_TEST_AUTO(load)
 		cybozu::Config config;
 		if (t.msg) {
 			std::istringstream is(std::string(t.config));
-			CYBOZU_TEST_EXCEPTION_MESSAGE(config.load(is), cybozu::ConfigException, t.msg);
+			CYBOZU_TEST_EXCEPTION_MESSAGE(config.load(is), cybozu::Exception, t.msg);
 		} else {
 			std::istringstream is(std::string(t.config));
 			config.load(is);

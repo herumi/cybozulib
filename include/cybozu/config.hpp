@@ -15,10 +15,6 @@
 
 namespace cybozu {
 
-struct ConfigException : public cybozu::Exception {
-	ConfigException() : cybozu::Exception("config") { }
-};
-
 namespace config_local {
 
 inline bool isName(const std::string& str, char *badChar)
@@ -56,17 +52,13 @@ inline void split(std::string& key, std::string& value, const std::string& line)
 	const char *p = line.c_str();
 	const char *q = strchr(p, '=');
 	if (q == 0) {
-		cybozu::ConfigException e;
-		e << "split" << "no equal" << line;
-		throw e;
+		throw cybozu::Exception("config:split:no equal") << line;
 	}
 	key = line.substr(0, q - p);
 	trimEndSpace(key);
 	char badChar;
 	if (!cybozu::config_local::isName(key, &badChar)) {
-		cybozu::ConfigException e;
-		e << "split" << "bad key" << key << badChar;
-		throw e;
+		throw cybozu::Exception("config:split:bad key") << key << badChar;
 	}
 	const size_t valueTop = q + 1 - p;
 	value = line.substr(valueTop, line.size() - valueTop);
@@ -117,9 +109,7 @@ public:
 				bool b;
 				T t = cybozu::atoi(&b, str_);
 				if (!b) {
-					cybozu::ConfigException e;
-					e << "get" << "bad integer" << str_ << key_;
-					throw e;
+					throw cybozu::Exception("config:get:bad integer") << str_ << key_;
 				}
 				return t;
 			}
@@ -145,9 +135,7 @@ public:
 				bool b;
 				T t = cybozu::atoi(&b, *value);
 				if (!b) {
-					cybozu::ConfigException e;
-					e << "getValueInteger" << "bad integer" << *value << key;
-					throw e;
+					throw cybozu::Exception("config:getValueInteger:bad integer") << *value << key;
 				}
 				return t;
 			} else {
@@ -165,15 +153,11 @@ public:
 		{
 			char badChar;
 			if (!config_local::isName(key, &badChar)) {
-				cybozu::ConfigException e;
-				e << "append" << "bad key" << key << badChar;
-				throw e;
+				throw cybozu::Exception("config:append:bad key") << key << badChar;
 			}
 			std::pair<Map::iterator, bool> ret = map_.insert(Map::value_type(key, value));
 			if (!ret.second) {
-				cybozu::ConfigException e;
-				e << "append" << "key already exists" << key;
-				throw e;
+				throw cybozu::Exception("config:append:key already exists") << key;
 			}
 		}
 		/**
@@ -199,9 +183,7 @@ public:
 			if (value) {
 				return Section::ResultType(*value, key);
 			} else {
-				cybozu::ConfigException e;
-				e << "getValue" << key;
-				throw e;
+				throw cybozu::Exception("config:getValue") << key;
 			}
 		}
 		/**
@@ -284,9 +266,7 @@ public:
 	{
 		char badChar;
 		if (!config_local::isName(name, &badChar)) {
-			cybozu::ConfigException e;
-			e << "appendSection" << "bad section" << name << badChar;
-			throw e;
+			throw cybozu::Exception("config:appendSection:bad section") << name << badChar;
 		}
 		std::pair<Map::iterator, bool> ret = map_.insert(Map::value_type(name, Section()));
 		return &ret.first->second;
@@ -334,9 +314,7 @@ public:
 		if (section) {
 			return *section;
 		} else {
-			cybozu::ConfigException e;
-			e << "getSection" << "no section" << name;
-			throw e;
+			throw cybozu::Exception("config:getSection:no section") << name;
 		}
 	}
 	/**
@@ -347,9 +325,7 @@ public:
 	{
 		std::ifstream ifs(name.c_str());
 		if (!ifs) {
-			cybozu::ConfigException e;
-			e << "load" << name;
-			throw e;
+			throw cybozu::Exception("config:load") << name;
 		}
 		load(ifs);
 	}
@@ -381,9 +357,7 @@ public:
 			// section
 			if (c == '[') {
 				if (line[n - 1] != ']') {
-					cybozu::ConfigException e;
-					e << "load" << "bad section" << line;
-					throw e;
+					throw cybozu::Exception("config:load:bad section") << line;
 				}
 				section = appendSection(line.substr(1, n - 2));
 				continue;

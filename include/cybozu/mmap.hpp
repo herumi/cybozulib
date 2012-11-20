@@ -20,10 +20,6 @@
 
 namespace cybozu {
 
-struct MmapException : public cybozu::Exception {
-	MmapException() : cybozu::Exception("mmap") { }
-};
-
 class Mmap {
 	const char *map_;
 #ifdef _WIN32
@@ -42,19 +38,17 @@ public:
 #endif
 		, size_(0)
 	{
-		MmapException e;
+		const char *errMsg = 0;
 #ifdef _WIN32
 		hFile_ = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile_ == INVALID_HANDLE_VALUE) {
-			e << "CreateFile";
-			goto ERR_EXIT;
+			errMsg = "CreateFile"; goto ERR_EXIT;
 		}
 		{
 			LARGE_INTEGER size;
 			if (GetFileSizeEx(hFile_, &size) == 0) {
-				e << "GetFileSizeEx";
-				goto ERR_EXIT;
+				errMsg = "GetFileSizeEx"; goto ERR_EXIT;
 			}
 			size_ = size.QuadPart;
 		}
@@ -65,50 +59,48 @@ public:
 
 		hMap_ = CreateFileMapping(hFile_, NULL, PAGE_READONLY, 0, 0, NULL);
 		if (hMap_ == NULL) {
-			e << "CreateFileMapping";
-			goto ERR_EXIT;
+			errMsg = "CreateFileMapping"; goto ERR_EXIT;
 		}
 
 		map_ = (const char*)MapViewOfFile(hMap_, FILE_MAP_READ, 0, 0, 0);
 		if (map_ == 0) {
-			e << "MapViewOfFile";
-			goto ERR_EXIT;
+			errMsg = "MapViewOfFile"; goto ERR_EXIT;
 		}
 		return;
-	ERR_EXIT:
+ERR_EXIT:
+		std::string reason = cybozu::ErrorNo().toString();
 		if (hMap_) CloseHandle(hMap_);
 		if (hFile_ != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
-		e << fileName;
-		throw e;
+		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
 #else
-		int fd = open(fileName.c_str(), O_RDONLY);
+		int fd = ::open(fileName.c_str(), O_RDONLY);
 		if (fd == -1) {
-			MmapException e;
-			e << "open" << fileName;
-			throw e;
+			errMsg = "open"; goto ERR_EXIT;
 		}
 
-		struct stat st;
-		int ret = fstat(fd, &st);
-		if (ret != 0) {
-			close(fd);
-			MmapException e;
-			e << "fstat" << fileName;
-			throw e;
+		{
+			struct stat st;
+			int ret = ::fstat(fd, &st);
+			if (ret != 0) {
+				errMsg = "fstat"; goto ERR_EXIT;
+			}
+			size_ = st.st_size;
 		}
-		size_ = st.st_size;
 		if (size_ == 0) {
-			close(fd);
+			::close(fd);
 			return;
 		}
 
-		map_ = (const char*)mmap(NULL, size_, PROT_READ, MAP_SHARED, fd, 0);
-		close(fd);
+		map_ = (const char*)::mmap(NULL, size_, PROT_READ, MAP_SHARED, fd, 0);
 		if (map_ == MAP_FAILED) {
-			MmapException e;
-			e << "mmap" << fileName;
-			throw e;
+			errMsg = "mmap"; goto ERR_EXIT;
 		}
+		::close(fd);
+		return;
+	ERR_EXIT:
+		std::string reason = cybozu::ErrorNo().toString();
+		if (fd != -1) close(fd);
+		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
 #endif
 	}
 	~Mmap()
@@ -118,7 +110,7 @@ public:
 		if (hMap_) CloseHandle(hMap_);
 		if (hFile_ != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
 #else
-		if (map_ != MAP_FAILED) munmap(const_cast<char*>(map_), size_);
+		if (map_ != MAP_FAILED) ::munmap(const_cast<char*>(map_), size_);
 #endif
 	}
 	int64_t size() const { return size_; }

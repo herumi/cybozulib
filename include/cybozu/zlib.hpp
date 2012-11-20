@@ -17,10 +17,6 @@
 
 namespace cybozu {
 
-struct ZlibException : public cybozu::Exception {
-	ZlibException() : cybozu::Exception("zlib") { }
-};
-
 namespace zlib_local {
 
 const int DEF_MEM_LEVEL = 8;
@@ -60,17 +56,13 @@ public:
 		z_.opaque = Z_NULL;
 		if (useGzip_) {
 			if (deflateInit2(&z_, compressionLevel, Z_DEFLATED, -MAX_WBITS, zlib_local::DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK) {
-				cybozu::ZlibException e;
-				e << "ZlibCompressorT" << "deflateInit2" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:ZlibCompressorT:deflateInit2") << std::string(z_.msg);
 			}
 			char header[] = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03"; /* OS_CODE = 0x03(Unix) */
 			write(header, 10);
 		} else {
 			if (deflateInit(&z_, compressionLevel) != Z_OK) {
-				cybozu::ZlibException e;
-				e << "ZlibCompressorT" << "deflateInit" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:ZlibCompressorT:deflateInit") << std::string(z_.msg);
 			}
 		}
 	}
@@ -100,9 +92,7 @@ public:
 
 			int ret = deflate(&z_, Z_NO_FLUSH);
 			if (ret != Z_STREAM_END && ret != Z_OK) {
-				cybozu::ZlibException e;
-				e << "exec" << "compress" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:exec:compress") << std::string(z_.msg);
 			}
 			write(buf_, maxBufSize - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
@@ -120,9 +110,7 @@ public:
 
 			int ret = deflate(&z_, Z_FINISH);
 			if (ret != Z_STREAM_END && ret != Z_OK) {
-				cybozu::ZlibException e;
-				e << "flush" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:flush") << std::string(z_.msg);
 			}
 			write(buf_, sizeof(buf_) - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
@@ -141,9 +129,7 @@ private:
 		uint32_t size = (uint32_t)_size;
 		size_t writeSize = os_.write(buf, size);
 		if (writeSize != size) {
-			cybozu::ZlibException e;
-			e << "write";
-			throw e;
+			throw cybozu::Exception("zlib:write");
 		}
 	}
 };
@@ -166,9 +152,7 @@ class ZlibDecompressorT {
 	{
 		ssize_t readSize = is_.read(buf, size);
 		if ((size_t)readSize != size) {
-			cybozu::ZlibException e;
-			e << "readAll";
-			throw e;
+			throw cybozu::Exception("zlib:ZlibDecompressorT:readAll");
 		}
 	}
 	void skipToZero()
@@ -219,9 +203,7 @@ class ZlibDecompressorT {
 			}
 			return;
 		}
-		cybozu::ZlibException e;
-		e << "readGzipHeader" << "bad gzip header";
-		throw e;
+		throw cybozu::Exception("zlib:ZlibDecompressorT:readGzipHeader:bad gzip header") << std::string(header, 10);
 	}
 	ZlibDecompressorT(const ZlibDecompressorT&);
 	void operator=(const ZlibDecompressorT&);
@@ -246,15 +228,11 @@ public:
 		z_.avail_in = 0;
 		if (useGzip_) {
 			if (inflateInit2(&z_, -MAX_WBITS) != Z_OK) {
-				cybozu::ZlibException e;
-				e << "ZlibDecompressorT" << "inflateInit2" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:ZlibDecompressorT:inflateInit2") << std::string(z_.msg);
 			}
 		} else {
 			if (inflateInit(&z_) != Z_OK) {
-				cybozu::ZlibException e;
-				e << "ZlibDecompressorT" << "inflateInit" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:ZlibDecompressorT:inflateInit") << std::string(z_.msg);
 			}
 		}
 	}
@@ -288,9 +266,7 @@ public:
 			ret_ = inflate(&z_, Z_NO_FLUSH);
 			if (ret_ == Z_STREAM_END) break;
 			if (ret_ != Z_OK) {
-				cybozu::ZlibException e;
-				e << "read" << "decompress" << std::string(z_.msg);
-				throw e;
+				throw cybozu::Exception("zlib:read:decompress") << std::string(z_.msg);
 			}
 		} while (size == z_.avail_out);
 

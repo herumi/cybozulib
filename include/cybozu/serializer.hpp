@@ -10,12 +10,9 @@
 #include <list>
 #include <set>
 #include <cybozu/atoi.hpp>
+#include <cybozu/itoa.hpp>
 
 namespace cybozu {
-
-struct SerializerException : public cybozu::Exception {
-	SerializerException() : cybozu::Exception("serializer") { }
-};
 
 template<class OutputStream, class T>
 void serialize(OutputStream& os, const T& x)
@@ -44,9 +41,7 @@ template<class OutputStream>
 void write(OutputStream& os, const char *str, size_t size)
 {
 	if ((size_t)os.write(str, size) != size) {
-		cybozu::SerializerException e;
-		e << "write" << cybozu::exception::makeString(str, size);
-		throw e;
+		throw cybozu::Exception("serializer:write") << cybozu::exception::makeString(str, size) << size;
 	}
 }
 
@@ -66,9 +61,7 @@ template<class InputStream>
 void read(InputStream& is, char *str, size_t size)
 {
 	if ((size_t)is.read(str, size) != size) {
-		cybozu::SerializerException e;
-		e << "read" << cybozu::exception::makeString(str, size);
-		throw e;
+		throw cybozu::Exception("serializer:read") << cybozu::exception::makeString(str, size) << size;
 	}
 }
 
@@ -83,9 +76,7 @@ size_t readWithoutEscape(InputStream& is, char *str, size_t size)
 		if (c == sep) return i;
 		str[i++] = c;
 	}
-	cybozu::SerializerException e;
-	e << "readWithoutEscape" << "no comma" << cybozu::exception::makeString(str, i);
-	throw e;
+	throw cybozu::Exception("serializer::readWithoutEscape:no comma") << cybozu::exception::makeString(str, i);
 }
 
 template<class OutputStream, class V>
@@ -159,9 +150,7 @@ void deserialize(InputStream& is, Float& x) \
 	char str[size]; \
 	serializer_detail::read(is, str, size); \
 	if (str[size - 1] != serializer_detail::sep) { \
-		cybozu::SerializerException e; \
-		e << "deserialize" << "no comma" << std::string(str, size); \
-		throw e; \
+		throw cybozu::Exception("serializer::deserialize:no comma") << std::string(str, size); \
 	} \
 	union { \
 		Int i; \
@@ -218,17 +207,13 @@ void deserialize(InputStream& is, std::string& str)
 	for (;;) {
 		char c;
 		if (is.read(&c, 1) != 1) {
-			cybozu::SerializerException e;
-			e << "deserialize" << "no separator" << str;
-			throw e;
+			throw cybozu::Exception("serializer:deserialize:no separator") << str;
 		}
 		if (str.empty() && serializer_detail::ignoreChar(c)) continue;
 		if (c == serializer_detail::sep) return;
 		if (c == serializer_detail::escape) {
 			if (is.read(&c, 1) != 1) {
-				cybozu::SerializerException e;
-				e << "deserialize" << "escape not terminate" << str;
-				throw e;
+				throw cybozu::Exception("serializer::deserialize:escape not terminate") << str;
 			}
 			switch (c) {
 			case 'n':
@@ -244,11 +229,7 @@ void deserialize(InputStream& is, std::string& str)
 				c = ',';
 				break;
 			default:
-				{
-					cybozu::SerializerException e;
-					e << "deserialize" << "bad escape" << c;
-					throw e;
-				}
+				throw cybozu::Exception("serializer:deserialize:bad escape") << c;
 			}
 		}
 		str += c;

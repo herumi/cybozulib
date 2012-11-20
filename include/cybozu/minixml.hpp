@@ -14,21 +14,6 @@
 
 namespace cybozu {
 
-struct MiniXmlException : public cybozu::Exception {
-	explicit MiniXmlException(const char *msg = 0) : cybozu::Exception("minixml")
-	{
-		if (msg) (*this) << msg;
-	}
-	MiniXmlException(const char *msg, const std::string& para) : cybozu::Exception("minixml")
-	{
-		(*this) << msg << para;
-	}
-	MiniXmlException(const char *msg, char c) : cybozu::Exception("minixml")
-	{
-		(*this) << msg << c;
-	}
-};
-
 namespace minixml {
 
 const int indentWidth = 3;
@@ -84,7 +69,7 @@ inline std::string unescape(const std::string& str)
 				ret += '"';
 				i += 5;
 			} else {
-				throw MiniXmlException("unescape", str.substr(i, 8));
+				throw cybozu::Exception("xml:unescape") << str.substr(i, 8);
 			}
 		} else {
 			ret += c;
@@ -107,9 +92,7 @@ public:
 	{
 		const std::string *p = query(key);
 		if (p) return *p;
-		MiniXmlException e("Attributes");
-		e << "no key" << key;
-		throw e;
+		throw cybozu::Exception("xml:Attributes:no key") << key;
 	}
 	std::string& operator[](const std::string& key)
 	{
@@ -229,7 +212,6 @@ inline bool isName2(char c)
 	return !isSpace(c) && !isEqual(c) && !isQuote(c) && c != '>';
 }
 
-
 struct isAttrValue {
 	char q_; /* ' or " */
 	explicit isAttrValue(char q) : q_(q) { }
@@ -271,7 +253,7 @@ struct InputStream {
 	}
 	char next()
 	{
-		if (empty()) throw MiniXmlException("InputStream:empty");
+		if (empty()) throw cybozu::Exception("xml:InputStream:empty");
 		return *begin_++;
 	}
 	void skipSpace()
@@ -299,7 +281,7 @@ struct InputStream {
 	void parseAttribute(std::string *key, std::string *val)
 	{
 		*key = getWord(isName);
-		if (key->empty()) throw MiniXmlException("bad key");
+		if (key->empty()) throw cybozu::Exception("xml:parseAttribute:bad key");
 		skipSpace();
 		char c = next();
 		if (isEqual(c)) {
@@ -311,7 +293,7 @@ struct InputStream {
 				if (c == q) return;
 			}
 		}
-		throw MiniXmlException("attribute:", *key);
+		throw cybozu::Exception("xml:parseAttribute") << *key;
 	}
 	/*
 		normal : true is last is '/>'
@@ -323,7 +305,7 @@ struct InputStream {
 	{
 		for (;;) {
 			skipSpace();
-			if (empty()) throw MiniXmlException("tag is not complete");
+			if (empty()) throw cybozu::Exception("xml:parseAttributes:tag is not complete");
 			char c = query();
 			if (normal) {
 				if (c == '>') {
@@ -341,7 +323,7 @@ struct InputStream {
 	LAST:
 		inc();
 		char c = next();
-		if (c != '>') throw MiniXmlException("bad tag char", c);
+		if (c != '>') throw cybozu::Exception("xml:parseAttributes:bad tag char") << c;
 		return true;
 	}
 	/*
@@ -352,11 +334,11 @@ struct InputStream {
 	std::string getTagName(bool *isEnd)
 	{
 		std::string name = getWord(isName);
-		if (name.size() <= 1 || name[name.size() - 1] != '>') throw MiniXmlException("invalid tag");
+		if (name.size() <= 1 || name[name.size() - 1] != '>') throw cybozu::Exception("xml:getTagName:invalid tag");
 		name.resize(name.size() - 1);
 		if (name[0] == '/') {
 			*isEnd = true;
-			if (name.size() <= 1) throw MiniXmlException("empty name");
+			if (name.size() <= 1) throw cybozu::Exception("xml:getTagName:empty name");
 			return name.substr(1);
 		}
 		return name;
@@ -365,8 +347,8 @@ struct InputStream {
 	{
 		skipSpace();
 		char c = next();
-		if (c != '<') throw MiniXmlException("bad begin tag", c);
-		if (empty()) throw MiniXmlException("invalid tag1");
+		if (c != '<') throw cybozu::Exception("xml:parseTag:bad begin tag") << c;
+		if (empty()) throw cybozu::Exception("xml:parseTag:invalid tag1");
 		TagType type = BeginTag;
 		c = query();
 		if (c == '/') {
@@ -374,10 +356,10 @@ struct InputStream {
 			inc();
 		}
 		name = getWord(isName2);
-		if (name.empty()) throw MiniXmlException("invalid tag2");
+		if (name.empty()) throw cybozu::Exception("xml:parseTag:invalid tag2");
 		if (type == EndTag) {
 			char c = next();
-			if (c != '>') throw MiniXmlException("invalid tag", name);
+			if (c != '>') throw cybozu::Exception("xml:parseTag:invalid tag") << name;
 			return EndTag;
 		}
 		bool ret = parseAttributes(attr);
@@ -391,19 +373,17 @@ struct InputStream {
 	{
 		for (;;) {
 			skipSpace();
-			if (empty()) throw MiniXmlException("no end tag1", node->name);
+			if (empty()) throw cybozu::Exception("xml:parseNode:no end tag1") << node->name;
 			if (query() != '<') {
 				node->content = parseContent();
-				if (empty()) throw MiniXmlException("no end tag2", node->name);
+				if (empty()) throw cybozu::Exception("xml:parseNode:no end tag2") << node->name;
 			}
 			std::string name;
 			Attributes attr;
 			TagType type = parseTag(name, attr);
 			if (type == EndTag) {
 				if (node->name != name) {
-					MiniXmlException e("tag mismatch", node->name);
-					e << name;
-					throw e;
+					throw cybozu::Exception("xml:parseNode:") << node->name << name;
 				}
 				return;
 			}
@@ -425,7 +405,7 @@ class MiniXml {
 	{
 		is.skipSpace();
 		std::string w = is.getWord(minixml::isName);
-		if (w != "<?xml") throw MiniXmlException("header:", w);
+		if (w != "<?xml") throw cybozu::Exception("xml:readHeader:") << w;
 		root_ = new minixml::Node();
 		is.parseAttributes(xmlAttr_, false);
 	}
@@ -446,7 +426,7 @@ public:
 	{
 		readHeader(is);
 		minixml::TagType type = is.parseTag(root_->name, root_->attr);
-		if (type == minixml::EndTag) throw MiniXmlException("bad end tag", root_->name);
+		if (type == minixml::EndTag) throw cybozu::Exception("xml:parse:bad end tag") << root_->name;
 		if (type == minixml::BeginTag) {
 			is.parseNode(root_);
 		}

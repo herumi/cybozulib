@@ -5,7 +5,7 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <string>
-#include <cybozu/itoa.hpp>
+#include <sstream>
 #include <errno.h>
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -13,6 +13,7 @@
 #else
 	#include <string.h> // for strerror_r
 #endif
+#include <cybozu/inttype.hpp>
 
 namespace cybozu {
 
@@ -20,18 +21,13 @@ const bool DontThrow = true;
 
 namespace exception {
 
-/* get max 32 characters to avoid buffer overrun */
-inline std::string makeString(const char *p, size_t size = -1)
+/* get max 10 characters to avoid buffer overrun */
+inline std::string makeString(const char *str, size_t size)
 {
-	const size_t maxSize = 32;
-	size_t pos = 0;
-	if (p) {
-		for (pos = 0; pos < (std::min)(size, maxSize); pos++) {
-			if (p[pos] == 0) break;
-		}
-	}
-	return std::string(p, pos);
+	return std::string(str, std::min<size_t>(size,10));
 }
+
+
 /**
 	convert errno to string
 	@param err [in] errno
@@ -59,35 +55,22 @@ inline std::string ConvertErrorNoToString(int err)
 class Exception : public std::exception {
 	std::string str_;
 public:
-	explicit Exception(const char *name)
+	explicit Exception(const std::string& name = "")
 		: str_(name)
 	{
 	}
-	~Exception() throw () {}
-	const char *what() const throw () { return str_.c_str(); }
-	const std::string& toString() const { return str_; }
-	/**
-		append string into str_
-	*/
-	Exception& operator<<(const std::string& str)
+	~Exception() throw() {}
+	const char *what() const throw() { return str_.c_str(); }
+	const std::string& toString() const throw() { return str_; }
+	template<class T>
+	Exception& operator<<(const T& x)
 	{
 		str_ += ':';
-		str_ += str;
+		std::ostringstream os;
+		os << x;
+		str_ += os.str();
 		return *this;
 	}
-	/**
-		append C-string into str_
-	*/
-	Exception& operator<<(const char *str) { return operator<<(cybozu::exception::makeString(str)); }
-	/**
-		append char into str_
-	*/
-	Exception& operator<<(char c) { str_ += ':'; str_ += c; return *this; }
-	/**
-		append integer into str_
-	*/
-	template<class P>
-	Exception& operator<<(P t) { return operator<<(cybozu::itoa(t)); }
 };
 
 class ErrorNo {
@@ -152,5 +135,10 @@ public:
 #endif
 	}
 };
+
+inline std::ostream& operator<<(std::ostream& os, const cybozu::ErrorNo& self)
+{
+	return os << self.toString();
+}
 
 } // cybozu
