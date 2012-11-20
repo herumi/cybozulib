@@ -8,6 +8,7 @@
 #include <vector>
 #include <cybozu/itoa.hpp>
 #include <stdlib.h>
+#include <iosfwd>
 
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -207,6 +208,11 @@ public:
 		return out;
 	}
 };
+
+inline std::ostream& operator<<(std::ostream& os, const StackTrace& self)
+{
+	return os << self.toString();
+}
 
 } // cybozu
 

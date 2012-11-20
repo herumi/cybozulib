@@ -19,7 +19,7 @@ void f2()
 	MailException e;
 	e << "can't send" << msg << abc << c << port << s << '\n';
 	cybozu::StackTrace st;
-	e << st.toString();
+	e << st;
 	throw e;
 }
 

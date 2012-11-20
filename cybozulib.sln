@@ -51,6 +51,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "csv_test", "test\base\proj\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ssl_smpl", "sample\proj\ssl_smpl\ssl_smpl.vcxproj", "{167A43E8-6159-4337-82C2-084551350739}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stacktrace_smpl", "sample\proj\stacktrace_smpl\stacktrace_smpl.vcxproj", "{E8D067B3-DA08-401D-BC28-4DDE08FAEFE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -157,6 +159,10 @@ Global
 		{167A43E8-6159-4337-82C2-084551350739}.Debug|x64.Build.0 = Debug|x64
 		{167A43E8-6159-4337-82C2-084551350739}.Release|x64.ActiveCfg = Release|x64
 		{167A43E8-6159-4337-82C2-084551350739}.Release|x64.Build.0 = Release|x64
+		{E8D067B3-DA08-401D-BC28-4DDE08FAEFE1}.Debug|x64.ActiveCfg = Debug|x64
+		{E8D067B3-DA08-401D-BC28-4DDE08FAEFE1}.Debug|x64.Build.0 = Debug|x64
+		{E8D067B3-DA08-401D-BC28-4DDE08FAEFE1}.Release|x64.ActiveCfg = Release|x64
+		{E8D067B3-DA08-401D-BC28-4DDE08FAEFE1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
