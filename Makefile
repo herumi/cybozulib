@@ -9,8 +9,13 @@ all:
 test:
 	$(MAKE) -C test test
 
+sample:
+	$(MAKE) -C sample
+
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C sample clean
+
+.PHONY: sample clean
 
