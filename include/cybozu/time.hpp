@@ -8,6 +8,7 @@
 #include <ctime>
 #include <cybozu/exception.hpp>
 #include <cybozu/atoi.hpp>
+#include <cybozu/itoa.hpp>
 #ifdef _WIN32
 	#include <sys/timeb.h>
 #else
@@ -15,10 +16,6 @@
 #endif
 
 namespace cybozu {
-
-struct TimeException : public cybozu::Exception {
-	TimeException() : cybozu::Exception("time") { }
-};
 
 /**
 	time struct with time_t and msec
@@ -137,9 +134,7 @@ public:
 			return;
 		}
 	ERR:
-		cybozu::TimeException e;
-		e << "fromString" << cybozu::exception::makeString(begin, 24);
-		throw e;
+		throw cybozu::Exception("time::fromString") << std::string(begin, 24);
 	}
 
 	/**
@@ -157,18 +152,14 @@ public:
 #ifdef _WIN32
 		struct tm tm;
 		if (_gmtime64_s(&tm, &time_) != 0) {
-			cybozu::TimeException e;
-			e << "toString" << time_;
-			throw e;
+			throw cybozu::Exception("time::toString") << time_;
 		}
 		struct tm *ptm = &tm;
 #else
 		struct tm *ptm = gmtime(&time_);
 #endif
 		if (std::strftime(buf, sizeof(buf), format, ptm) == 0) {
-			cybozu::TimeException e;
-			e << "toString" << "too long" << format << (uint64_t)time_;
-			throw e;
+			throw cybozu::Exception("time::toString::too long") << format << time_;
 		}
 		out += buf;
 		if (appendMsec) {

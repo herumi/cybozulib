@@ -105,7 +105,7 @@ struct MemoryInputStream : public stream_local::Readable<MemoryInputStream> {
 	}
 	ssize_t read(char *buf, size_t size)
 	{
-		ssize_t readSize = static_cast<ssize_t>(std::min(size, size_ - pos_));
+		ssize_t readSize = std::min<ssize_t>(size, size_ - pos_);
 		memcpy(buf, &buf_[pos_], readSize);
 		pos_ += readSize;
 		return readSize;

@@ -12,10 +12,6 @@
 
 namespace cybozu {
 
-struct CsvException : public cybozu::Exception {
-	CsvException() : cybozu::Exception("csv") { }
-};
-
 namespace csv_local {
 
 inline bool isValidSeparator(char c)
@@ -47,9 +43,7 @@ public:
 		, eof_(false)
 	{
 		if (!csv_local::isValidSeparator(sep)) {
-			cybozu::CsvException e;
-			e << "ReaderT" << "invalid separator" << sep;
-			throw e;
+			throw cybozu::Exception("csv:CsvReaderT:invalid separator") << sep;
 		}
 	}
 	/**
@@ -100,9 +94,7 @@ public:
 				break;
 			case InQuote:
 				if (c == EOF) {
-					cybozu::CsvException e;
-					e << "read" << "quote is necessary" << line_ << str;
-					throw e;
+					throw cybozu::Exception("csv:read:quote is necessary") << line_ << str;
 				}
 				if (c == quote) {
 					state = NeedSepOrQuote;
@@ -122,9 +114,7 @@ public:
 					appendAndClear(out, str);
 					state = Top;
 				} else {
-					cybozu::CsvException e;
-					e << "read" << "bad character after quote" << line_ << str << c;
-					throw e;
+					throw cybozu::Exception("csv:read:bad character after quote") << line_ << str << c;
 				}
 				break;
 			case SearchSep:
@@ -149,9 +139,7 @@ private:
 		str += (char)c;
 		lineSize_++;
 		if (lineSize_ == MAX_LINE_SIZE) {
-			cybozu::CsvException e;
-			e << "addChar" << "too large size" << line_ << str << MAX_LINE_SIZE;
-			throw e;
+			throw cybozu::Exception("csv:addChar:too large size") << line_ << str << MAX_LINE_SIZE;
 		}
 	}
 	template<class Container>
@@ -203,9 +191,7 @@ public:
 		, sep_(sep)
 	{
 		if (!csv_local::isValidSeparator(sep)) {
-			cybozu::CsvException e;
-			e << "WriteT" << "inavlid separator" << sep;
-			throw e;
+			throw cybozu::Exception("csv:CsvWriteT:inavlid separator") << sep;
 		}
 	}
 	/**
@@ -254,9 +240,7 @@ private:
 	{
 		ssize_t writeSize = os_.write(str, size);
 		if (size != static_cast<size_t>(writeSize)) {
-			cybozu::CsvException e;
-			e << "writeToStream" << cybozu::exception::makeString(str, size);
-			throw e;
+			throw cybozu::Exception("csv::CsvWriterT::writeToStream") << cybozu::exception::makeString(str, size) << size;
 		}
 	}
 	OutputStream& os_;

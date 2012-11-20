@@ -31,10 +31,6 @@
 
 namespace cybozu {
 
-struct FileException : public cybozu::Exception {
-	FileException() : cybozu::Exception("file") { }
-};
-
 class File {
 	std::string name_;
 #ifdef _WIN32
@@ -82,12 +78,8 @@ public:
 			if ((mode & std::ios::app) && (mode & std::ios::trunc)) isCorrectMode = false;
 		}
 		if (!isCorrectMode) {
-			if (!dontThrow) {
-				cybozu::FileException e;
-				e << "bad mode" << name_ << mode;
-				throw e;
-			}
-			return false;
+			if (dontThrow) return false;
+			throw cybozu::Exception("file:open:bad mode") << name_ << mode;
 		}
 #ifdef _WIN32
 		DWORD access = GENERIC_READ;
@@ -124,9 +116,7 @@ public:
 			return true;
 		} else {
 			if (dontThrow) return false;
-			cybozu::FileException e;
-			e << "open" << name_ << cybozu::ErrorNo().toString() << (int)mode;
-			throw e;
+			throw cybozu::Exception("file:open") << name_ << cybozu::ErrorNo() << (int)mode;
 		}
 	}
 	bool openW(const std::string& name, bool dontThrow = true)
@@ -147,9 +137,7 @@ public:
 #endif
 		hdl_ = INVALID_HANDLE_VALUE;
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "close" << name_ << cybozu::ErrorNo().toString();
-			throw e;
+			throw cybozu::Exception("fie:close") << name_ << cybozu::ErrorNo();
 		}
 		return isOK;
 	}
@@ -164,9 +152,7 @@ public:
 		bool isOK = fcntl(hdl_, F_FULLFSYNC) == 0;
 #endif
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "sync" << name_ << cybozu::ErrorNo().toString();
-			throw e;
+			throw cybozu::Exception("file:sync") << name_ << cybozu::ErrorNo();
 		}
 		return isOK;
 	}
@@ -180,9 +166,7 @@ public:
 		bool isOK = ::write(hdl_, buf, bufSize) == static_cast<ssize_t>(bufSize);
 #endif
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "write" << name_ << cybozu::ErrorNo().toString();
-			throw e;
+			throw cybozu::Exception("file:write") << name_ << cybozu::ErrorNo();
 		}
 		return isOK ? bufSize : -1;
 	}
@@ -197,9 +181,7 @@ public:
 		bool isOK = readSize >= 0;
 #endif
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "read" << name_ << cybozu::ErrorNo().toString();
-			throw e;
+			throw cybozu::Exception("file:read") << name_ << cybozu::ErrorNo();
 		}
 		return isOK ? (int)readSize : -1;
 	}
@@ -240,9 +222,7 @@ public:
 		bool isOK = lseek(hdl_, pos, whence) >= 0;
 #endif
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "seek" << name_ << cybozu::ErrorNo().toString() << pos << (int)dir;
-			throw e;
+			throw cybozu::Exception("file:seek") << name_ << cybozu::ErrorNo() << pos << (int)dir;
 		}
 		return isOK;
 	}
@@ -259,9 +239,7 @@ public:
 		fileSize = stat.st_size;
 #endif
 		if (!dontThrow && !isOK) {
-			cybozu::FileException e;
-			e << "getSize" << name_ << cybozu::ErrorNo().toString();
-			throw e;
+			throw cybozu::Exception("file:getSize") << name_ << cybozu::ErrorNo();
 		}
 		return isOK ? fileSize : -1;
 	}
@@ -343,9 +321,7 @@ inline int64_t GetSize(const std::string& name, bool dontThrow = true)
 	bool isOK = stat(name.c_str(), &buf) == 0;
 #endif
 	if (!dontThrow && !isOK) {
-		cybozu::FileException e;
-		e << "GetSize" << name << cybozu::ErrorNo().toString();
-		throw e;
+		throw cybozu::Exception("file:GetSize") << name << cybozu::ErrorNo();
 	}
 	return isOK ? buf.st_size : -1;
 }
@@ -373,13 +349,8 @@ inline bool DoesExist(const std::string& path)
 inline bool Move(const std::string& from, const std::string& to, bool dontThrow = true)
 {
 	if (DoesExist(to)) {
-		if (dontThrow) {
-			return false;
-		} else {
-			cybozu::FileException e;
-			e << "file already exist" << to;
-			throw e;
-		}
+		if (dontThrow) return false;
+		throw cybozu::Exception("file:Move:file already exist") << from << to;
 	}
 #ifdef _WIN32
 	bool isOK = ::MoveFileEx(from.c_str(), to.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) != 0;
@@ -387,9 +358,7 @@ inline bool Move(const std::string& from, const std::string& to, bool dontThrow 
 	bool isOK = rename(from.c_str(), to.c_str()) == 0;
 #endif
 	if (!dontThrow && !isOK) {
-		cybozu::FileException e;
-		e << "Move" << from << to << cybozu::ErrorNo().toString();
-		throw e;
+		throw cybozu::Exception("file:Move") << from << to << cybozu::ErrorNo();
 	}
 	return isOK;
 }
@@ -405,9 +374,7 @@ inline bool Remove(const std::string& name, bool dontThrow = true)
 	bool isOK = unlink(name.c_str()) == 0;
 #endif
 	if (!dontThrow && !isOK) {
-		cybozu::FileException e;
-		e << "Remove" << name << cybozu::ErrorNo().toString();
-		throw e;
+		throw cybozu::Exception("file:Remove") << name << cybozu::ErrorNo();
 	}
 	return isOK;
 }

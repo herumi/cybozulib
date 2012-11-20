@@ -12,10 +12,6 @@
 
 namespace cybozu {
 
-struct AtoiException : public cybozu::Exception {
-	AtoiException() : cybozu::Exception("atoi") { }
-};
-
 namespace atoi_local {
 
 template<typename T, size_t n>
@@ -64,8 +60,7 @@ T convertToInt(bool *b, const char *p, size_t size, const char (&max)[n], T min,
 		*b = false;
 		return 0;
 	} else {
-		cybozu::AtoiException e; e << "convertToInt" << cybozu::exception::makeString(keepP, keepSize);
-		throw e;
+		throw cybozu::Exception("atoi::convertToInt") << std::string(keepP, keepSize);
 	}
 }
 
@@ -105,8 +100,7 @@ T convertToUint(bool *b, const char *p, size_t size, T overflow1, char overflow2
 		*b = false;
 		return 0;
 	} else {
-		cybozu::AtoiException e; e << "convertToUint" << cybozu::exception::makeString(keepP, keepSize);
-		throw e;
+		throw cybozu::Exception("atoi::convertToUint") << std::string(keepP, keepSize);
 	}
 }
 
@@ -141,8 +135,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 	if (i == 0) isOK = false;
 	if (b) *b = isOK;
 	if (isOK) return x;
-	cybozu::AtoiException e; e << "convertHexToInt" << cybozu::exception::makeString(p, size);
-	throw e;
+	throw cybozu::Exception("atoi::convertHexToInt") << std::string(p, size);
 }
 
 } // atoi_local

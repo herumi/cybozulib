@@ -19,10 +19,6 @@
 
 namespace cybozu {
 
-struct StringException : public cybozu::Exception {
-	StringException() : cybozu::Exception("string") { }
-};
-
 #ifdef __GNUC__
 	/* avoid to use uint32_t because compiling boost::regex fails */
 	typedef wchar_t Char; //!< Char for Linux
@@ -374,9 +370,7 @@ public:
 		while (begin != end) {
 			Char c;
 			if (!string::GetCharFromUtf16(c, begin, end)) {
-				cybozu::StringException e;
-				e << "cstr UTF-16";
-				throw e;
+				throw cybozu::Exception("string:StringT:UTF-16");
 			}
 			str_ += c;
 		}
@@ -1380,9 +1374,7 @@ public:
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
 			if (!string::AppendUtf8(str, str_[i])) {
-				cybozu::StringException e;
-				e << "toUtf8" << str;
-				throw e;
+				throw cybozu::Exception("string:toUtf8") << i;
 			}
 		}
 	}
@@ -1399,9 +1391,7 @@ public:
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
 			if (!string::AppendUtf16(str, str_[i])) {
-				cybozu::StringException e;
-				e << "toUtf16";
-				throw e;
+				throw cybozu::Exception("string:toUtf16") << i;
 			}
 		}
 	}
@@ -1448,9 +1438,7 @@ private:
 	{
 		CharT c;
 		if (!cybozu::string::GetCharFromUtf8(&c, begin, end)) {
-			cybozu::StringException e;
-			e << "getOneCharSub";
-			throw e;
+			throw cybozu::Exception("string:getOneCharSub");
 		}
 		return c;
 	}
@@ -1600,18 +1588,14 @@ inline cybozu::String16 ToUtf16(const std::string& in)
 {
 	cybozu::String16 out;
 	if (ConvertUtf8ToUtf16(&out, in)) return out;
-	StringException e;
-	e << "bad utf8" << in;
-	throw e;
+	throw cybozu::Exception("string:ToUtf16:bad utf8") << in;
 }
 
 inline std::string ToUtf8(const cybozu::String16& in)
 {
 	std::string out;
 	if (ConvertUtf16ToUtf8(&out, in)) return out;
-	StringException e;
-	e << "bad utf16";
-	throw e;
+	throw cybozu::Exception("string:ToUtf8:bad utf16");
 }
 
 } // cybozu

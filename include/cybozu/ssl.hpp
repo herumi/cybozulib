@@ -24,10 +24,6 @@
 
 namespace cybozu {
 
-struct SslException : public cybozu::Exception {
-	SslException() : cybozu::Exception("ssl") { }
-};
-
 namespace ssl {
 
 struct Engine {
@@ -112,9 +108,7 @@ public:
 		: ssl_(SSL_new(impl::InstanceIsHere<>::ctx_.get()))
 	{
 		if (ssl_ == 0) {
-			cybozu::SslException e;
-			e << "ClientSocket";
-			throw e;
+			throw cybozu::Exception("ssl:ClientSocket");
 		}
 	}
 	bool connect(const std::string& address, unsigned short port)
@@ -132,9 +126,7 @@ public:
 		bool isOK;
 #ifdef _WIN32
 		if (soc_.sd_ > INT_MAX) {
-			cybozu::SslException e;
-			e << "large socket" << soc_.sd_;
-			throw e;
+			throw cybozu::Exception("ssl:large socket handle") << soc_.sd_;
 		}
 #endif
 		isOK = SSL_set_fd(ssl_, static_cast<int>(soc_.sd_)) != 0;

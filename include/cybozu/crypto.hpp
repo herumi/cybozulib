@@ -15,10 +15,6 @@
 
 namespace cybozu {
 
-struct cryptoException : public cybozu::Exception {
-	cryptoException() : cybozu::Exception("crypto") { }
-};
-
 namespace crypto {
 
 class Hash {
@@ -47,8 +43,7 @@ public:
 		case N_SHA384: return SHA384_DIGEST_LENGTH;
 		case N_SHA512: return SHA512_DIGEST_LENGTH;
 		default:
-			cryptoException e; e << "Hash::getSize" << name;
-			throw e;
+			throw cybozu::Exception("crypto:Hash:getSize" << name;
 		}
 	}
 	explicit Hash(Name name = N_SHA1)
@@ -79,8 +74,7 @@ public:
 		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
 		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
 		default:
-			cryptoException e; e << "Hash" << name_;
-			throw e;
+			throw cyobzu::Exception("crypto:Hash:rset" << name_;
 		}
 	}
 	/*
@@ -97,8 +91,7 @@ public:
 		case N_SHA384: SHA384_Final(md, &ctx_.sha512); break;
 		case N_SHA512: SHA512_Final(md, &ctx_.sha512); break;
 		default:
-			cryptoException e; e << "Sha::digest" << name_;
-			throw e;
+			throw cybozu::Exception("crypto:Hash:digest") << name_;
 		}
 		reset();
 		return std::string(reinterpret_cast<const char*>(md), getSize(name_));
@@ -118,8 +111,7 @@ public:
 		case N_SHA384: SHA384(src, bufSize, md); break;
 		case N_SHA512: SHA512(src, bufSize, md); break;
 		default:
-			cryptoException e; e << "Sha::digest" << name;
-			throw e;
+			throw cybozu::Exception("crypt:Hash:digest") << name;
 		}
 		return std::string(reinterpret_cast<const char*>(md), getSize(name));
 	}
@@ -141,8 +133,7 @@ public:
 		case Hash::N_SHA384: evp_ = EVP_sha384(); break;
 		case Hash::N_SHA512: evp_ = EVP_sha512(); break;
 		default:
-			cryptoException e; e << "Hmac" << name;
-			throw e;
+			throw cybozu::Exception("crypto:Hmac:") << name;
 		}
 	}
 	std::string eval(const std::string& key, const std::string& data)
@@ -154,8 +145,7 @@ public:
 			out.resize(outLen);
 			return out;
 		}
-		cryptoException e; e << "Hmac::eval";
-		throw e;
+		throw cybozu::Exception("crypto::Hamc::eval");
 	}
 };
 
@@ -179,8 +169,7 @@ public:
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
 		case N_AES256_CBC: cipher_ = EVP_aes_256_cbc(); break;
 		default:
-			cryptoException e; e << "Cipher:name" << name;
-			throw e;
+			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
 		}
 	}
 	~Cipher()
@@ -195,17 +184,16 @@ public:
 		const int keyLen = static_cast<int>(key.size());
 		const int expectedKeyLen = EVP_CIPHER_key_length(cipher_);
 		if (keyLen != expectedKeyLen) {
-			cryptoException e; e << "Cipher::setup::keyLen" << keyLen << expectedKeyLen;
-			throw e;
+			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
 		}
 
 		int ret = EVP_CipherInit_ex(&ctx_, cipher_, NULL, (const uint8_t*)&key[0], (const uint8_t*)&iv[0], mode == Encoding ? 1 : 0);
 		if (ret != 1) {
-			cryptoException e; e << "Cipher::setup:init" << ret;
+			throw cybozu::Exception("crypto:Cipher:setup:EVP_CipherInit_ex") << ret;
 		}
 		ret = EVP_CIPHER_CTX_set_padding(&ctx_, padding ? 1 : 0);
 		if (ret != 1) {
-			cryptoException e; e << "Cipher::setup:padding" << ret;
+			throw cybozu::Exception("crypto:Cipher:setup:EVP_CIPHER_CTX_set_padding") << ret;
 		}
 	}
 	/*
