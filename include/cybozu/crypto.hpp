@@ -46,6 +46,18 @@ public:
 			throw cybozu::Exception("crypto:Hash:getSize") << name;
 		}
 	}
+	static inline const char *getName(Name name)
+	{
+		switch (name) {
+		case N_SHA1:   return "sha1";
+		case N_SHA224: return "sha224";
+		case N_SHA256: return "sha256";
+		case N_SHA384: return "sha384";
+		case N_SHA512: return "sha512";
+		default:
+			throw cybozu::Exception("crypto:Hash:getName") << name;
+		}
+	}
 	explicit Hash(Name name = N_SHA1)
 		: name_(name)
 	{
