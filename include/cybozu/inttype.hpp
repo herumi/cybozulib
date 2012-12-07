@@ -50,9 +50,9 @@
 #define CYBOZU_NUM_OF_ARRAY(x) (sizeof(x) / sizeof(*x))
 
 #ifdef _MSC_VER
-	#define CYBOZU_SNPRINTF _snprintf_s
+	#define CYBOZU_SNPRINTF(x, len, ...) _snprintf_s(x, len - 1, __VA_ARGS__)
 #else
-	#define CYBOZU_SNPRINTF snprintf
+	#define CYBOZU_SNPRINTF(x, len, ...) snprintf(x, len, __VA_ARGS__)
 #endif
 
 namespace cybozu {
