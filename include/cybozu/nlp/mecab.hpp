@@ -18,19 +18,13 @@
 
 namespace cybozu { namespace nlp {
 
-struct MecabException : cybozu::Exception {
-	MecabException() : cybozu::Exception("nlp::mecab") { }
-};
-
 struct Mecab {
 	Mecab(const char *option = "-O wakati")
 		: tagger_(MeCab::createTagger(option))
 		, node_(0)
 	{
 		if (tagger_ == 0) {
-			MecabException e;
-			e << "createTagger";
-			throw e;
+			throw cybozu::Exception("nlp:mecab:createTagger");
 		}
 	}
 	/**
