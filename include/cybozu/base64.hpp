@@ -12,6 +12,14 @@
 
 namespace cybozu {
 
+namespace base64 {
+
+const int useLF = 0;
+const int useCRLF = 1;
+const int noEndLine = 2;
+
+} // base64
+
 namespace base64_local {
 
 template<class OutputStream>
@@ -21,6 +29,13 @@ void Write(OutputStream& os, const char *buf, size_t size)
 	if (writeSize != size) {
 		throw cybozu::Exception("base64::Write") << cybozu::exception::makeString(buf, size) << size;
 	}
+}
+
+static inline void addEndLine(char *outBuf, size_t& outBufSize, int mode)
+{
+	if (mode == base64::noEndLine) return;
+	if (mode == base64::useCRLF) outBuf[outBufSize++] = (char)0x0d;
+	outBuf[outBufSize++] = (char)0x0a;
 }
 
 } // base64_local
@@ -33,7 +48,7 @@ void Write(OutputStream& os, const char *buf, size_t size)
 	@param isCRLF [in] put CRLF if ture, put LF if false
 */
 template<class OutputStream, class InputStream>
-void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, bool isCRLF = true)
+void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, int mode = base64::useCRLF)
 {
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
@@ -73,8 +88,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 				idx = 0;
 			}
 			if (maxLineSize && pos == maxLineSize) {
-				if (isCRLF) outBuf[outBufSize++] = (char)0x0d;
-				outBuf[outBufSize++] = (char)0x0a;
+				base64_local::addEndLine(outBuf, outBufSize, mode);
 				pos = 0;
 			}
 			assert(outBufSize <= sizeof(outBuf));
@@ -92,8 +106,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 		}
 	}
 	if (maxLineSize && pos > 0) {
-		if (isCRLF) outBuf[outBufSize++] = (char)0x0d;
-		outBuf[outBufSize++] = (char)0x0a;
+		base64_local::addEndLine(outBuf, outBufSize, mode);
 	}
 	if (outBufSize > 0) {
 		base64_local::Write(os, outBuf, outBufSize);
