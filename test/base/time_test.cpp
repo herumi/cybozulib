@@ -90,13 +90,18 @@ CYBOZU_TEST_AUTO(fromString2)
 		cybozu::Time tm(d.str);
 		CYBOZU_TEST_EQUAL(tm.getTime(), time);
 		CYBOZU_TEST_EQUAL(tm.getMsec(), d.msec);
+		uint32_t high, low;
+		tm.getFILETIME(low, high);
+		cybozu::Time tm2;
+		tm2.setByFILETIME(low, high);
+		CYBOZU_TEST_EQUAL(tm, tm2);
 	}
 }
 
 #ifdef _WIN32
 #include <sstream>
 
-CYBOZU_TEST_AUTO(filetime)
+CYBOZU_TEST_AUTO(filetime_win)
 {
 	SYSTEMTIME st;
 	GetSystemTime(&st);
@@ -108,8 +113,12 @@ CYBOZU_TEST_AUTO(filetime)
 	FILETIME ft;
 	SystemTimeToFileTime(&st, &ft);
 	cybozu::Time time;
-	time.setTimeFromFILETIME(ft.dwLowDateTime, ft.dwHighDateTime);
+	time.setByFILETIME(ft.dwLowDateTime, ft.dwHighDateTime);
 	std::string t2 = time.toString();
 	CYBOZU_TEST_EQUAL(t1, t2);
+	FILETIME ft2;
+	time.getFILETIME(ft2.dwLowDateTime, ft2.dwHighDateTime);
+	CYBOZU_TEST_EQUAL(ft.dwLowDateTime, ft2.dwLowDateTime);
+	CYBOZU_TEST_EQUAL(ft.dwHighDateTime, ft2.dwHighDateTime);
 }
 #endif
