@@ -22,6 +22,7 @@ namespace cybozu {
 	@note time MUST be latesr than 1970/1/1
 */
 class Time {
+	static const uint64_t epochBias = 116444736000000000ull;
 	std::time_t time_;
 	int msec_;
 public:
@@ -45,12 +46,21 @@ public:
 		};
 		the value represents the number of 100-nanosecond intervals since January 1, 1601 (UTC).
 	*/
-	void setTimeFromFILETIME(uint32_t low, uint32_t high)
+	void setByFILETIME(uint32_t low, uint32_t high)
 	{
-		const uint64_t epochBias = 116444736000000000ull;
 		const uint64_t fileTime = (((uint64_t(high) << 32) | low) - epochBias) / 10000;
 		time_ = fileTime / 1000;
 		msec_ = fileTime % 1000;
+	}
+	/*
+		DWORD is defined as unsigned long in windows
+	*/
+	template<class dword>
+	void getFILETIME(dword& low, dword& high) const
+	{
+		const uint64_t fileTime = (time_ * 1000 + msec_) * 10000 + epochBias;
+		low = dword(fileTime);
+		high = dword(fileTime >> 32);
 	}
 	explicit Time(const std::string& in)
 	{
