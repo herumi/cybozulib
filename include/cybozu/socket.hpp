@@ -210,13 +210,13 @@ private:
 		struct timeval t;
 		t.tv_sec = msec / 1000;
 		t.tv_usec = (msec % 1000) * 1000;
-		return ::setsockopt(sd_, SOL_SOCKET, type, reinterpret_cast<const char*>(&t), sizeof(t)) == 0;
+		return ::setsockopt(sd_, SOL_SOCKET, type, cybozu::cast<const char*>(&t), sizeof(t)) == 0;
 	}
 	int getTimeout(int type) const
 	{
 		struct timeval t;
 		socklen_t len = sizeof(t);
-		if (::getsockopt(sd_, SOL_SOCKET, type, reinterpret_cast<char*>(&t), &len) == 0) {
+		if (::getsockopt(sd_, SOL_SOCKET, type, cybozu::cast<char*>(&t), &len) == 0) {
 			return t.tv_sec * 1000 + t.tv_usec / 1000; /* msec */
 		} else {
 			return -1;
@@ -450,7 +450,7 @@ public:
 	*/
 	bool setSocketOption(int level, int optname, int value)
 	{
-		return setsockopt(sd_, level, optname, reinterpret_cast<const char*>(&value), sizeof(value)) == 0;
+		return setsockopt(sd_, level, optname, cybozu::cast<const char*>(&value), sizeof(value)) == 0;
 	}
 	bool setSocketOption(int optname, int value)
 	{
@@ -462,7 +462,7 @@ public:
 	bool getSocketOption(int level, int optname, int* value) const
 	{
 		socklen_t len = sizeof(*value);
-		return getsockopt(sd_, level, optname, reinterpret_cast<char*>(value), &len) == 0;
+		return getsockopt(sd_, level, optname, cybozu::cast<char*>(value), &len) == 0;
 	}
 	bool getSocketOption(int optname, int* value) const
 	{
@@ -471,13 +471,13 @@ public:
 	template<typename T>
 	bool setSocketOption(int optname, const T& value)
 	{
-		return setsockopt(sd_, SOL_SOCKET, optname, reinterpret_cast<const char*>(&value), sizeof(T)) == 0;
+		return setsockopt(sd_, SOL_SOCKET, optname, cybozu::cast<const char*>(&value), sizeof(T)) == 0;
 	}
 	template<typename T>
 	bool getSocketOption(int optname, T* value) const
 	{
 		socklen_t len = sizeof(T);
-		return getsockopt(sd_, SOL_SOCKET, optname, reinterpret_cast<char*>(value), &len) == 0;
+		return getsockopt(sd_, SOL_SOCKET, optname, cybozu::cast<char*>(value), &len) == 0;
 	}
 	/**
 		setup linger

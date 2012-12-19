@@ -117,12 +117,12 @@ private:
 		memset(&last[bufSize], 0, 64 - bufSize);
 		last[bufSize] = uint8_t(0x80); /* top bit = 1 */
 		if (bufSize >= 56) {
-			round(reinterpret_cast<const char*>(last));
+			round(cybozu::cast<const char*>(last));
 			memset(last, 0, sizeof(last)); // clear stack
 		}
 		cybozu::Set32bitAsBE(&last[56], uint32_t(totalSize >> 29));
 		cybozu::Set32bitAsBE(&last[60], uint32_t(totalSize * 8));
-		round(reinterpret_cast<const char*>(last));
+		round(cybozu::cast<const char*>(last));
 
 		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(H_); i++) {
 			cybozu::Set32bitAsBE(&digest_[i], H_[i]);
@@ -200,7 +200,7 @@ public:
 	}
 	std::string get() const
 	{
-		return std::string(reinterpret_cast<const char*>(&digest_[0]), sizeof(digest_));
+		return std::string(cybozu::cast<const char*>(&digest_[0]), sizeof(digest_));
 	}
 };
 
