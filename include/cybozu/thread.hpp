@@ -133,7 +133,7 @@ protected:
 	*/
 	static void threadLoopIF(void *arg)
 	{
-		ThreadBase* main = reinterpret_cast<ThreadBase*>(arg);
+		ThreadBase* main = static_cast<ThreadBase*>(arg);
 		main->threadEntry();
 		// end of thread
 //		main->detachThread();

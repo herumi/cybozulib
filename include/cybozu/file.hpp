@@ -116,7 +116,7 @@ public:
 			return true;
 		} else {
 			if (dontThrow) return false;
-			throw cybozu::Exception("file:open") << name_ << cybozu::ErrorNo() << (int)mode;
+			throw cybozu::Exception("file:open") << name_ << cybozu::ErrorNo() << static_cast<int>(mode);
 		}
 	}
 	bool openW(const std::string& name, bool dontThrow = true)
@@ -159,9 +159,9 @@ public:
 	ssize_t write(const void *buf, size_t bufSize, bool dontThrow = true)
 	{
 #ifdef _WIN32
-		assert(bufSize < (1ULL << 32)); // modify for 64bit
+		assert(bufSize < (1ULL << 31)); // modify for 64bit
 		DWORD writeSize;
-		bool isOK = WriteFile(hdl_, buf, (DWORD)bufSize, &writeSize, NULL) != 0;
+		bool isOK = WriteFile(hdl_, buf, static_cast<DWORD>(bufSize), &writeSize, NULL) != 0;
 #else
 		bool isOK = ::write(hdl_, buf, bufSize) == static_cast<ssize_t>(bufSize);
 #endif
@@ -173,17 +173,17 @@ public:
 	ssize_t read(void *buf, size_t bufSize, bool dontThrow = true)
 	{
 #ifdef _WIN32
-		assert(bufSize < (1ULL << 32)); // modify for 64bit
+		assert(bufSize < (1ULL << 31)); // modify for 64bit
 		DWORD readSize;
-		bool isOK = ReadFile(hdl_, buf, (DWORD)bufSize, &readSize, NULL) != 0;
+		bool isOK = ReadFile(hdl_, buf, static_cast<DWORD>(bufSize), &readSize, NULL) != 0;
 #else
-		int readSize = ::read(hdl_, buf, bufSize);
+		ssize_t readSize = ::read(hdl_, buf, bufSize);
 		bool isOK = readSize >= 0;
 #endif
 		if (!dontThrow && !isOK) {
 			throw cybozu::Exception("file:read") << name_ << cybozu::ErrorNo();
 		}
-		return isOK ? (int)readSize : -1;
+		return isOK ? static_cast<ssize_t>(readSize) : -1;
 	}
 	bool seek(int64_t pos, std::ios::seek_dir dir, bool dontThrow = true)
 	{
@@ -222,7 +222,7 @@ public:
 		bool isOK = lseek(hdl_, pos, whence) >= 0;
 #endif
 		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:seek") << name_ << cybozu::ErrorNo() << pos << (int)dir;
+			throw cybozu::Exception("file:seek") << name_ << cybozu::ErrorNo() << pos << static_cast<int>(dir);
 		}
 		return isOK;
 	}
@@ -278,7 +278,7 @@ inline std::string GetExePath(std::string *baseName = 0)
 	std::string path;
 	path.resize(4096);
 #ifdef _WIN32
-	if (GetModuleFileNameA(NULL, &path[0], (int)path.size() - 2)) {
+	if (GetModuleFileNameA(NULL, &path[0], static_cast<int>(path.size()) - 2)) {
 		PathRemoveExtensionA(&path[0]);
 		if (baseName) {
 			*baseName = PathFindFileNameA(&path[0]);
