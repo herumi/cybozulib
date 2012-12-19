@@ -106,7 +106,7 @@ public:
 			throw cybozu::Exception("crypto:Hash:digest") << name_;
 		}
 		reset();
-		return std::string(reinterpret_cast<const char*>(md), getSize(name_));
+		return std::string(cybozu::cast<const char*>(md), getSize(name_));
 	}
 	std::string digest(const std::string& buf = "")
 	{
@@ -115,7 +115,7 @@ public:
 	static inline std::string digest(Name name, const char *buf, size_t bufSize)
 	{
 		unsigned char md[128];
-		const unsigned char *src = reinterpret_cast<const unsigned char *>(buf);
+		const unsigned char *src = cybozu::cast<const unsigned char *>(buf);
 		switch (name) {
 		case N_SHA1:   SHA1(src, bufSize, md);   break;
 		case N_SHA224: SHA224(src, bufSize, md); break;
@@ -125,7 +125,7 @@ public:
 		default:
 			throw cybozu::Exception("crypt:Hash:digest") << name;
 		}
-		return std::string(reinterpret_cast<const char*>(md), getSize(name));
+		return std::string(cybozu::cast<const char*>(md), getSize(name));
 	}
 	static inline std::string digest(Name name, const std::string& buf)
 	{

@@ -60,7 +60,7 @@ public:
 	}
 	void read(void *buf, int byteSize)
 	{
-		if (CryptGenRandom(prov_, byteSize, reinterpret_cast<BYTE*>(buf)) == 0) {
+		if (CryptGenRandom(prov_, byteSize, static_cast<BYTE*>(buf)) == 0) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
 	}

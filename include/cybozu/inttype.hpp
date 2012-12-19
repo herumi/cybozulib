@@ -58,5 +58,9 @@
 namespace cybozu {
 template<class T>
 void disable_warning_unused_variable(const T&) { }
+template<class T, class S>
+T cast(const S* ptr) { return static_cast<T>(static_cast<const void*>(ptr)); }
+template<class T, class S>
+T cast(S* ptr) { return static_cast<T>(static_cast<void*>(ptr)); }
 } // cybozu
 
