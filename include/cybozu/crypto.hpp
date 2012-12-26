@@ -153,7 +153,7 @@ public:
 		std::string out(evp_->md_size + 1, 0);
 		unsigned int outLen = 0;
 		if (HMAC(evp_, key.c_str(), static_cast<int>(key.size()),
-			(const uint8_t *)data.c_str(), data.size(), (uint8_t *)&out[0], &outLen)) {
+			cybozu::cast<const uint8_t *>(data.c_str()), data.size(), cybozu::cast<uint8_t *>(&out[0]), &outLen)) {
 			out.resize(outLen);
 			return out;
 		}
@@ -199,7 +199,7 @@ public:
 			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
 		}
 
-		int ret = EVP_CipherInit_ex(&ctx_, cipher_, NULL, (const uint8_t*)&key[0], (const uint8_t*)&iv[0], mode == Encoding ? 1 : 0);
+		int ret = EVP_CipherInit_ex(&ctx_, cipher_, NULL, cybozu::cast<const uint8_t*>(key.c_str()), cybozu::cast<const uint8_t*>(iv.c_str()), mode == Encoding ? 1 : 0);
 		if (ret != 1) {
 			throw cybozu::Exception("crypto:Cipher:setup:EVP_CipherInit_ex") << ret;
 		}
@@ -216,7 +216,7 @@ public:
 	int update(char *outBuf, const char *inBuf, int inBufSize)
 	{
 		int outLen = 0;
-		int ret = EVP_CipherUpdate(&ctx_, (uint8_t*)outBuf, &outLen, (const uint8_t*)inBuf, inBufSize);
+		int ret = EVP_CipherUpdate(&ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen, cybozu::cast<const uint8_t*>(inBuf), inBufSize);
 		if (ret != 1) return -1;
 		return outLen;
 	}
@@ -227,7 +227,7 @@ public:
 	int finalize(char *outBuf)
 	{
 		int outLen = 0;
-		int ret = EVP_CipherFinal_ex(&ctx_, (uint8_t*)outBuf, &outLen);
+		int ret = EVP_CipherFinal_ex(&ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen);
 		if (ret != 1) return -1;
 		return outLen;
 	}
