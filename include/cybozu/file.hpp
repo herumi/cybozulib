@@ -248,17 +248,33 @@ public:
 namespace file {
 
 /**
-	if str has tail, then remove '.' + tail
-	otherwise return str
+	if name has tail, then remove '.' + tail
+	otherwise return name
 */
-inline std::string RemoveTail(const std::string& str, const std::string& tail, char c = '.')
+inline std::string RemoveTail(const std::string& name, const std::string& tail, char c = '.')
 {
-	size_t pos = str.find_last_of(c);
-	if (str.substr(pos + 1) == tail) {
-		return str.substr(0, pos);
+	size_t pos = name.find_last_of(c);
+	if (name.substr(pos + 1) == tail) {
+		return name.substr(0, pos);
 	}
-	return str;
+	return name;
 }
+/*
+	split name as basename.suffix
+*/
+inline std::string GetBaseName(const std::string& name, std::string *suffix = 0)
+{
+	size_t pos = name.find_last_of('.');
+	if (pos == std::string::npos) {
+		if (suffix) suffix->clear();
+		return name;
+	}
+	if (suffix) {
+		*suffix = name.substr(pos + 1);
+	}
+	return name.substr(0, pos);
+}
+
 /**
 	replace \ with /
 */

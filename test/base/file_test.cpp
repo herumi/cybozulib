@@ -157,3 +157,26 @@ CYBOZU_TEST_AUTO(GetFilesInDir)
 	CYBOZU_TEST_EQUAL(CYBOZU_NUM_OF_ARRAY(fileTbl), foundFileNum);
 	CYBOZU_TEST_EQUAL(CYBOZU_NUM_OF_ARRAY(dirTbl), foundDirNum);
 }
+
+CYBOZU_TEST_AUTO(GetBaseName)
+{
+	const struct {
+		const char *name;
+		const char *base;
+		const char *suf;
+	} tbl[] = {
+		{ "test", "test", "" },
+		{ "test.abc", "test", "abc" },
+		{ "test.abc.def", "test.abc", "def" },
+		{ ".abc", "", "abc" },
+		{ "abc.", "abc", "" },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const std::string name = tbl[i].name;
+		CYBOZU_TEST_EQUAL(cybozu::file::GetBaseName(name), tbl[i].base);
+		std::string suf;
+		CYBOZU_TEST_EQUAL(cybozu::file::GetBaseName(name, &suf), tbl[i].base);
+		CYBOZU_TEST_EQUAL(suf, tbl[i].suf);
+
+	}
+}
