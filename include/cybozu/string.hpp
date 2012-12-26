@@ -16,6 +16,7 @@
 #include <functional> // for unary_function
 
 #include <cybozu/exception.hpp>
+#include <cybozu/hash.hpp>
 
 namespace cybozu {
 
@@ -1610,11 +1611,7 @@ template<>
 struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
 	size_t operator()(const cybozu::String& str) const
 	{
-		size_t seed = 0;
-		for (size_t i = 0, n = str.size(); i < n; i++) {
-			seed ^= str[i] + 0x9e3779b9 + (seed << 6) + (seed >> 2); // copied from boost/functional/hash.hpp
-		}
-		return seed;
+		return static_cast<size_t>(cybozu::hash64(str.c_str(), str.size()));
 	}
 };
 
