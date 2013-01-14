@@ -55,6 +55,32 @@
 	#define CYBOZU_SNPRINTF(x, len, ...) snprintf(x, len, __VA_ARGS__)
 #endif
 
+#define CYBOZU_CPP_VERSION_CPP03 0
+#define CYBOZU_CPP_VERSION_TR1 1
+#define CYBOZU_CPP_VERSION_CPP11 2
+
+#if (__cplusplus >= 201103) || (_MSC_VER >= 1500) || defined(__GXX_EXPERIMENTAL_CXX0X__)
+	#if defined(_MSC_VER) && (_MSC_VER < 1600)
+		#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_TR1
+	#else
+		#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_CPP11
+	#endif
+#elif (__GNUC__ >= 4 && __GNUC_MINOR__ >= 5) || (__clang_major__ >= 3)
+	#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_TR1
+#else
+	#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_CPP03
+#endif
+
+#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_TR1)
+	#define CYBOZU_NAMESPACE_STD std::tr1
+	#define CYBOZU_NAMESPACE_TR1_BEGIN namespace tr1 {
+	#define CYBOZU_NAMESPACE_TR1_END }
+#else
+	#define CYBOZU_NAMESPACE_STD std
+	#define CYBOZU_NAMESPACE_TR1_BEGIN
+	#define CYBOZU_NAMESPACE_TR1_END
+#endif
+
 namespace cybozu {
 template<class T>
 void disable_warning_unused_variable(const T&) { }
