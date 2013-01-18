@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <cybozu/test.hpp>
 #include <cybozu/nlp/random.hpp>
+#include <cybozu/random_generator.hpp>
 #include <math.h>
+#include <time.h>
 
 CYBOZU_TEST_AUTO(random)
 {
@@ -21,3 +23,27 @@ CYBOZU_TEST_AUTO(random)
 	CYBOZU_TEST_ASSERT(fabs(m) < 2e-3);
 	CYBOZU_TEST_ASSERT(fabs(s - 1) < 2e-3);
 }
+
+template<class RG>
+struct Benchmark {
+	RG rg;
+	Benchmark()
+	{
+		const int N = 1000000;
+		uint32_t a = 0;
+		clock_t begin = clock();
+		for (int i = 0; i < N; i++) {
+			a += rg();
+		}
+		clock_t end = clock();
+		double time = (end - begin) / double(CLOCKS_PER_SEC) / N * 1e6;
+		printf("%x %.3fusec\n", a, time);
+	}
+};
+
+CYBOZU_TEST_AUTO(bench)
+{
+	Benchmark<cybozu::nlp::UniformRandomGenerator>();
+	Benchmark<cybozu::RandomGenerator>();
+}
+
