@@ -47,3 +47,16 @@ CYBOZU_TEST_AUTO(bench)
 	Benchmark<cybozu::RandomGenerator>();
 }
 
+CYBOZU_TEST_AUTO(urando_bench)
+{
+	cybozu::RandomGenerator rg;
+	const int N = 1000000;
+	clock_t begin = clock();
+	char buf[20];
+	for (int i = 0; i < N; i++) {
+		rg.read(buf, sizeof(buf));
+	}
+	clock_t end = clock();
+	double time = (end - begin) / double(CLOCKS_PER_SEC) / N * 1e6;
+	printf("%.3fusec\n", time);
+}
