@@ -6,6 +6,7 @@
 	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
 */
+#include <cybozu/inttype.hpp>
 
 namespace cybozu { namespace nlp {
 
@@ -15,7 +16,7 @@ namespace cybozu { namespace nlp {
 class UniformRandomGenerator {
 	double a_;
 	double b_;
-	unsigned int x_, y_, z_, w_;
+	uint32_t x_, y_, z_, w_;
 public:
 	/* generate uniform random value in [a, b) */
 	explicit UniformRandomGenerator(double a = 0, double b = 1, int seed = 0)
@@ -32,11 +33,19 @@ public:
 		w_ = 88675123;
 	}
 	/* [0, 2^32) random number */
-	unsigned int get()
+	uint32_t get()
 	{
 		unsigned int t = x_ ^ (x_ << 11);
 		x_ = y_; y_ = z_; z_ = w_;
 		return w_ = (w_ ^ (w_ >> 19)) ^ (t ^ (t >> 8));
+	}
+	uint32_t operator()() { return get(); }
+	uint32_t get32() { return get(); }
+	uint64_t get64()
+	{
+		uint32_t a = get();
+		uint32_t b = get();
+		return (uint64_t(a) << 32) | b;
 	}
 	/* [a, b) random number */
 	double getDouble()
