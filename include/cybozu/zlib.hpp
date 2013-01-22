@@ -84,7 +84,7 @@ public:
 			crc_ = crc32(crc_, (const Bytef *)buf, size);
 			totalSize_ += (unsigned int)size;
 		}
-		z_.next_in = (Bytef*)buf;
+		z_.next_in = (Bytef*)const_cast<char*>(buf);
 		z_.avail_in = size;
 		while (z_.avail_in > 0) {
 			z_.next_out = (Bytef*)buf_;
