@@ -58,9 +58,9 @@ public:
 		}
 		throw cybozu::Exception("randomgenerator");
 	}
-	void read(void *buf, int byteSize)
+	void read(void *buf, size_t byteSize)
 	{
-		if (CryptGenRandom(prov_, byteSize, static_cast<BYTE*>(buf)) == 0) {
+		if (CryptGenRandom(prov_, static_cast<DWORD>(byteSize), static_cast<BYTE*>(buf)) == 0) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
 	}
@@ -82,9 +82,9 @@ private:
 	{
 		if (fd_ >= 0) ::close(fd_);
 	}
-	void read(void *buf, int byteSize)
+	void read(void *buf, size_t byteSize)
 	{
-		if (::read(fd_, buf, byteSize) != byteSize) {
+		if (static_cast<size_t>(::read(fd_, buf, byteSize)) != byteSize) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
 	}
