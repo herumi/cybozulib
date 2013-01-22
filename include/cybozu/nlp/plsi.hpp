@@ -32,7 +32,7 @@ os& dump(os& out, const std::vector<T>& list) {
 
 } // local
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+//const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 typedef cybozu::nlp::SparseVector<bool> BoolSVec;
 typedef cybozu::nlp::SparseVector<double> DoubleSVec;
@@ -236,7 +236,7 @@ public:
 			DoubleVec& ivec = item_z_[k];
 			double s = 0;
 			for (size_t j = 0; j < N; j++) {
-				double r = rand.get();
+				double r = rand.getDouble();
 				ivec.push_back(r);
 				s += r;
 			}
