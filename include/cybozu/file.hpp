@@ -146,7 +146,7 @@ public:
 		if (!isOpen()) return true;
 #ifdef _WIN32
 		bool isOK = FlushFileBuffers(hdl_) != 0;
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__CYGWIN__)
 		bool isOK = fdatasync(hdl_) == 0;
 #else
 		bool isOK = fcntl(hdl_, F_FULLFSYNC) == 0;
