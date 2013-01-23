@@ -9,10 +9,10 @@ CP = cp -f
 AR = ar r
 MKDIR=mkdir -p
 RM=rm -fr
-CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG -msse2
+CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
 #CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
-CFLAGS = -g -D_FILE_OFFSET_BITS=64
+CFLAGS = -g -D_FILE_OFFSET_BITS=64 -msse4.2
 CFLAGS+=$(CFLAGS_WARN)
 LDFLAGS += -lz -lpthread -lssl -lmecab 
 
