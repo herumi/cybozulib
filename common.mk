@@ -14,7 +14,8 @@ CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
 CFLAGS = -g -D_FILE_OFFSET_BITS=64 -msse4.2
 CFLAGS+=$(CFLAGS_WARN)
-LDFLAGS += -lz -lpthread -lssl -lmecab 
+LDFLAGS += -lz -lpthread -lssl -lmecab
+BIT=64
 
 DEBUG=1
 ifeq ($(RELEASE),1)
@@ -35,8 +36,8 @@ TOPDIR=$(shell 'pwd' | sed "s@cybozulib/.*@cybozulib/@")
 EXTDIR=$(TOPDIR)../cybozulib_ext/
 #CFLAGS+= -I$(TOPDIR)include -I$(EXTDIR)icu4c/icu/include -I$(EXTDIR)openssl/openssl/include
 #LDFLAGS+= -L$(TOPDIR)lib -lssl -lcrypto -ldl -licuuc -licudata -licui18n -lz -Wl,-rpath,'$$ORIGIN/../lib'
-CFLAGS+= -I$(TOPDIR)include 
-LDFLAGS+= -L$(TOPDIR)lib -Wl,-rpath,'$$ORIGIN/../lib'
+CFLAGS+= -I$(TOPDIR)include -m$(BIT)
+LDFLAGS+= -L$(TOPDIR)lib -m$(BIT) -Wl,-rpath,'$$ORIGIN/../lib'
 
 MKDEP = sh -ec '$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@' 
 
