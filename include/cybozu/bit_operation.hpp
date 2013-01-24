@@ -7,7 +7,7 @@
 
 #if defined(_WIN32)
 	#include <intrin.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__CYGWIN__)
 	#include <x86intrin.h>
 #elif defined(__GNUC__)
 	#include <emmintrin.h>
@@ -65,10 +65,11 @@ uint64_t makeBitMask64(T x)
 	assert(x < 64);
 	return (uint64_t(1) << x) - 1;
 }
+
+#if defined(_MSC_VER) || defined(__POPCNT__)
 template<class T>
 uint32_t popcnt(T x);
 
-#if defined(_MSC_VER) || defined(__POPCNT__)
 #if defined(_WIN64) || defined(__x86_64__)
 template<>
 inline uint32_t popcnt<uint64_t>(uint64_t x)
