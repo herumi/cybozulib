@@ -71,11 +71,18 @@ class AlignedArray {
 	AlignedArray(const AlignedArray&);
 	void operator=(const AlignedArray&);
 public:
-	explicit AlignedArray(size_t size)
-		: p_((T*)AlignedMalloc(size * sizeof(T) + 16, 16))
-		, size_(size)
+	explicit AlignedArray(size_t size = 0)
+		: p_(0)
+		, size_(0)
 	{
+		resize(size);
+	}
+	void resize(size_t size)
+	{
+		clear();
+		p_ = (T*)AlignedMalloc(size * sizeof(T) + 16, 16);
 		if (p_ == 0) throw std::bad_alloc();
+		size_ = size;
 		bool init = true;
 		size_t initSize = 0;
 		try {
@@ -97,12 +104,19 @@ public:
 			throw std::bad_alloc();
 		}
 	}
-	~AlignedArray()
+	void clear()
 	{
+		if (p_ == 0) return;
 		for (size_t i = 0; i < size_; i++) {
 			p_[i].~T();
 		}
 		AlignedFree(p_);
+		p_ = 0;
+		size_ = 0;
+	}
+	~AlignedArray()
+	{
+		clear();
 	}
 	T& operator[](size_t idx) { return p_[idx]; }
 	const T& operator[](size_t idx) const { return p_[idx]; }

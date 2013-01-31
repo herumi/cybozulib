@@ -67,6 +67,16 @@ CYBOZU_TEST_AUTO(aligned_array_char)
 	}
 }
 
+CYBOZU_TEST_AUTO(resize)
+{
+	{
+		cybozu::AlignedArray<char> a(10);
+		CYBOZU_TEST_EQUAL(((size_t)&a[0]) & 15, (size_t)0);
+		a.resize(123);
+		CYBOZU_TEST_EQUAL(((size_t)&a[0]) & 15, (size_t)0);
+	}
+}
+
 CYBOZU_TEST_AUTO(aligned_array_exception)
 {
 	CYBOZU_TEST_EXCEPTION(cybozu::AlignedArray<B> a(4), std::exception);
