@@ -3,6 +3,7 @@
 	@file
 	@brief bit operation
 */
+#include <assert.h>
 #include <cybozu/inttype.hpp>
 
 #if defined(_WIN32)
