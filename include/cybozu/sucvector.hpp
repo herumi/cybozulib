@@ -144,7 +144,8 @@ public:
 		const B& b = blk_[q];
 		uint64_t ret = b.a64 % maxBitSize;
 		if (r > 0) {
-			ret += b.ab.b[r];
+//			ret += b.ab.b[r];
+			ret += uint8_t(b.a64 >> (32 + r * 8));
 		}
 		ret += cybozu::popcnt<uint64_t>(b.org[r] & cybozu::makeBitMask64(i & 63));
 		return ret;
