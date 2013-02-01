@@ -187,8 +187,8 @@ public:
 	template<bool b>
 	size_t selectSub(uint64_t rank) const
 	{
+		if (rank >= num_[b]) return NotFound;
 		rank++;
-		if (rank > num_[b]) return NotFound;
 		size_t L = 0;
 		size_t R = blk_.size();
 		while (L < R) {
@@ -201,6 +201,7 @@ public:
 		}
 		if (L > 0) L--;
 		rank -= rank_a<b>(L);
+
 		size_t i = 0;
 		while (i < 3) {
 			size_t r = get_b<b>(L, i + 1);
