@@ -246,8 +246,8 @@ void bench(const T& sv, const F& f, size_t N)
 	uint64_t ret = 0;
 	clock_t begin = clock();
 	for (size_t i = 0; i < N; i++) {
-		uint32_t x = rg() % M;
-		ret += (sv.*f)((x & 0x80000000) != 0, x);
+		uint32_t x = rg() & (M - 1);
+		ret += (sv.*f)((x & 1) != 0, x);
 	}
 	double t = (clock() - begin) / double(CLOCKS_PER_SEC) / N * 1e9;
 	printf("ret=%x, %.2fnsec\n", (int)ret, t);
@@ -263,7 +263,7 @@ CYBOZU_TEST_AUTO(select64Bench)
 	benchSelect64(select64n);
 
 	cybozu::XorShift rg;
-	const size_t N = 100000;
+	const size_t N = 1 << 19;
 	std::vector<uint64_t> v;
 	v.resize(N);
 	for (size_t i = 0; i < N; i++) {
