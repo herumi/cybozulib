@@ -5,7 +5,6 @@
 
 uint64_t select64n(uint64_t v, size_t n)
 {
-	n++;
 	size_t count = 0;
 	for (int i = 0; i < 64; i++) {
 		if (v & (uint64_t(1) << i))
@@ -167,7 +166,7 @@ inline uint64_t select64C(uint64_t x, uint64_t i)
 	uint64_t x3 = ((x2 & 0xf0f0f0f0f0f0f0f0ULL) >>  4) + (x2 & 0x0f0f0f0f0f0f0f0fULL);
 	uint64_t x4 = ((x3 & 0xff00ff00ff00ff00ULL) >>  8) + (x3 & 0x00ff00ff00ff00ffULL);
 	uint64_t x5 = ((x4 & 0xffff0000ffff0000ULL) >> 16) + (x4 & 0x0000ffff0000ffffULL);
-	i++;
+//	i++;
 	uint64_t pos = 0;
 	uint64_t v5 = x5 & 0xffffffffULL;
 	if (i > v5) { i -= v5; pos += 32; }
@@ -189,7 +188,7 @@ CYBOZU_TEST_AUTO(select8)
 	const uint32_t s = 18;
 	for (uint32_t v = 0; v < (1 << s); v++) {
 		for (uint32_t x = 0; x < s; x++) {
-			uint64_t a = cybozu::sucvector_util::select64(v, x + 1);
+			uint64_t a = cybozu::sucvector_util::select64(v, x);
 //			uint64_t a = select64n(v, x);
 			uint64_t b = select64C(v, x);
 			if (a < 64) {
@@ -213,7 +212,7 @@ CYBOZU_TEST_AUTO(select64)
 		uint64_t v = tbl[i];
 		for (size_t x = 0; x < 64; x++) {
 //			uint64_t a = select64C(v, x);
-			uint64_t a = cybozu::sucvector_util::select64(v, x + 1);
+			uint64_t a = cybozu::sucvector_util::select64(v, x);
 			uint64_t b = select64n(v, x);
 			if (a < 64) {
 				CYBOZU_TEST_EQUAL(a, b);
