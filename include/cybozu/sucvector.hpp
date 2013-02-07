@@ -69,7 +69,7 @@ inline uint64_t load64bit(std::istream& is, const char *msg)
 	if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
 		return ci.i;
 	}
-	throw cybozu::Exception("SucVector:load64bit") << msg;
+	throw cybozu::Exception("sucvector_util:load64bit") << msg;
 }
 
 inline void save64bit(std::ostream& os, uint64_t val, const char *msg)
@@ -77,8 +77,28 @@ inline void save64bit(std::ostream& os, uint64_t val, const char *msg)
 	ci ci;
 	ci.i = val;
 	if (!os.write(ci.c, sizeof(ci.c))) {
-		throw cybozu::Exception("SucVector:save64bit") << msg;
+		throw cybozu::Exception("sucvector_util:save64bit") << msg;
 	}
+}
+
+template<class V>
+void loadVec(V& v, std::istream& is, const char *msg)
+{
+	const uint64_t size64 = sucvector_util::load64bit(is, msg);
+	assert(size64 <= ~size_t(0));
+	const size_t size = size_t(size64);
+	v.resize(size);
+	if (is.read(cybozu::cast<char*>(&v[0]), size * sizeof(v[0]))) return;
+	throw cybozu::Exception("sucvector_util:loadVec") << msg;
+}
+
+template<class V>
+void saveVec(std::ostream& os, const V& v, const char *msg)
+{
+	save64bit(os, v.size(), msg);
+	const size_t size = v.size() * sizeof(v[0]);
+	if (os.write(cybozu::cast<const char*>(&v[0]), size) && os.flush()) return;
+	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
 
 } // cybozu::sucvector_util
@@ -122,7 +142,7 @@ struct SucVector {
 public:
 	SucVector() : bitSize_(0) { num_[0] = num_[1] = 0; }
 	/*
-		data format(little endian for x86/x64)
+		data format(endian is depend on CPU:eg. little endian for x86/x64)
 		bitSize  : 8
 		num_[0]  : 8
 		num_[1]  : 8
@@ -134,23 +154,14 @@ public:
 		sucvector_util::save64bit(os, bitSize_, "bitSize");
 		sucvector_util::save64bit(os, num_[0], "num0");
 		sucvector_util::save64bit(os, num_[1], "num1");
-		sucvector_util::save64bit(os, blk_.size(), "blkSize");
-		const size_t size = blk_.size() * sizeof(blk_[0]);
-		if (os.write(cybozu::cast<const char*>(&blk_[0]), size) && os.flush()) return;
-		throw cybozu::Exception("SucVector:save");
+		sucvector_util::saveVec(os, blk_, "blk");
 	}
 	void load(std::istream& is)
 	{
 		bitSize_ = sucvector_util::load64bit(is, "bitSize");
 		num_[0] = sucvector_util::load64bit(is, "num0");
 		num_[1] = sucvector_util::load64bit(is, "num1");
-		const uint64_t v = sucvector_util::load64bit(is, "blkSize");
-		assert(v <= ~size_t(0));
-		const size_t blkSize = size_t(v);
-		blk_.resize(blkSize);
-		const size_t size = blkSize * sizeof(blk_[0]);
-		if (is.read(cybozu::cast<char*>(&blk_[0]), size)) return;
-		throw cybozu::Exception("SucVector:load");
+		sucvector_util::loadVec(blk_, is, "blk");
 	}
 	/*
 		@param blk [in] bit pattern block
