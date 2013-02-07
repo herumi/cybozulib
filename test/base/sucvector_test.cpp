@@ -1,6 +1,7 @@
 #include <cybozu/test.hpp>
 #include <cybozu/sucvector.hpp>
 #include <cybozu/xorshift.hpp>
+#include <sstream>
 #include <time.h>
 
 uint64_t select64n(uint64_t v, size_t n)
@@ -137,7 +138,17 @@ uint32_t count(const uint64_t *blk, size_t pos)
 	return ret;
 }
 
-CYBOZU_TEST_AUTO(get)
+void testSub(const cybozu::SucVector& sv, const uint64_t *tbl, size_t tblNum)
+{
+	for (size_t i = 0; i < tblNum * 64; i++) {
+		CYBOZU_TEST_EQUAL(sv.get(i), get(tbl, i));
+		CYBOZU_TEST_EQUAL(sv.rank1(i), count(tbl, i));
+	}
+	CYBOZU_TEST_EQUAL(sv.rank0(tblNum * 64), sv.getNum(0));
+	CYBOZU_TEST_EQUAL(sv.rank1(tblNum * 64), sv.getNum(1));
+}
+
+CYBOZU_TEST_AUTO(get_load_save)
 {
 	uint64_t tbl[] = {
 		0x1234567812345678ULL, 0xffffffffffffffffULL, 0x1020304050607080ULL,
@@ -147,12 +158,20 @@ CYBOZU_TEST_AUTO(get)
 	const size_t tblNum = CYBOZU_NUM_OF_ARRAY(tbl);
 	cybozu::SucVector sv;
 	sv.init(tbl, tblNum * 64);
-	for (size_t i = 0; i < tblNum * 64; i++) {
-		CYBOZU_TEST_EQUAL(sv.get(i), get(tbl, i));
-		CYBOZU_TEST_EQUAL(sv.rank1(i), count(tbl, i));
+
+	testSub(sv, tbl, tblNum);
+	std::string data;
+	{
+		std::ostringstream os;
+		sv.save(os);
+		data = os.str();
 	}
-	CYBOZU_TEST_EQUAL(sv.rank0(tblNum * 64), sv.getNum(0));
-	CYBOZU_TEST_EQUAL(sv.rank1(tblNum * 64), sv.getNum(1));
+	{
+		std::istringstream is(data);
+		cybozu::SucVector sv2;
+		sv2.load(is);
+		testSub(sv2, tbl, tblNum);
+	}
 }
 
 /*
