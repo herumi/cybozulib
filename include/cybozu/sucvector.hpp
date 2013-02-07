@@ -29,7 +29,7 @@ inline uint32_t rank64(uint64_t v, size_t i)
     return cybozu::popcnt<uint64_t>(v & cybozu::makeBitMask64(i));
 }
 
-inline uint64_t select64(uint64_t v, size_t r)
+inline uint32_t select64(uint64_t v, size_t r)
 {
 	assert(r <= 64);
 	if (r > popcnt(v)) return 64;
@@ -58,6 +58,29 @@ inline uint64_t select64(uint64_t v, size_t r)
 	return pos + c;
 }
 
+union ci {
+	uint64_t i;
+	char c[8];
+};
+
+inline uint64_t load64bit(std::istream& is, const char *msg)
+{
+	ci ci;
+	if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
+		return ci.i;
+	}
+	throw cybozu::Exception("SucVector:load64bit") << msg;
+}
+
+inline void save64bit(std::ostream& os, uint64_t val, const char *msg)
+{
+	ci ci;
+	ci.i = val;
+	if (!os.write(ci.c, sizeof(ci.c))) {
+		throw cybozu::Exception("SucVector:save64bit") << msg;
+	}
+}
+
 } // cybozu::sucvector_util
 
 /*
@@ -81,11 +104,11 @@ struct SucVector {
 	std::vector<B> blk_;
 
 	template<int b>
-	uint64_t rank_a(uint64_t i) const
+	uint64_t rank_a(size_t i) const
 	{
 		assert(i < blk_.size());
 		uint64_t ret = blk_[i].a64 % maxBitSize;
-		if (!b) ret = i * 256 - ret;
+		if (!b) ret = i * uint64_t(256) - ret;
 		return ret;
 	}
 	template<bool b>
@@ -95,26 +118,6 @@ struct SucVector {
 		size_t r = blk_[L].ab.b[i];
 		if (!b) r = 64 * i - r;
 		return r;
-	}
-	union ci {
-		uint64_t i;
-		char c[8];
-	};
-	uint64_t load64bit(std::istream& is, const char *msg)
-	{
-		ci ci;
-		if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
-			return ci.i;
-		}
-		throw cybozu::Exception("SucVector:load64bit") << msg;
-	}
-	void save64bit(std::ostream& os, uint64_t val, const char *msg) const
-	{
-		ci ci;
-		ci.i = val;
-		if (!os.write(ci.c, sizeof(ci.c))) {
-			throw cybozu::Exception("SucVector:save64bit") << msg;
-		}
 	}
 public:
 	SucVector() : bitSize_(0) { num_[0] = num_[1] = 0; }
@@ -128,20 +131,22 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		save64bit(os, bitSize_, "bitSize");
-		save64bit(os, num_[0], "num0");
-		save64bit(os, num_[1], "num1");
-		save64bit(os, blk_.size(), "blkSize");
+		sucvector_util::save64bit(os, bitSize_, "bitSize");
+		sucvector_util::save64bit(os, num_[0], "num0");
+		sucvector_util::save64bit(os, num_[1], "num1");
+		sucvector_util::save64bit(os, blk_.size(), "blkSize");
 		const size_t size = blk_.size() * sizeof(blk_[0]);
 		if (os.write(cybozu::cast<const char*>(&blk_[0]), size) && os.flush()) return;
 		throw cybozu::Exception("SucVector:save");
 	}
 	void load(std::istream& is)
 	{
-		bitSize_ = load64bit(is, "bitSize");
-		num_[0] = load64bit(is, "num0");
-		num_[1] = load64bit(is, "num1");
-		const size_t blkSize = load64bit(is, "blkSize");
+		bitSize_ = sucvector_util::load64bit(is, "bitSize");
+		num_[0] = sucvector_util::load64bit(is, "num0");
+		num_[1] = sucvector_util::load64bit(is, "num1");
+		const uint64_t v = sucvector_util::load64bit(is, "blkSize");
+		assert(v <= ~size_t(0));
+		const size_t blkSize = size_t(v);
 		blk_.resize(blkSize);
 		const size_t size = blkSize * sizeof(blk_[0]);
 		if (is.read(cybozu::cast<char*>(&blk_[0]), size)) return;
@@ -152,15 +157,17 @@ public:
 		@param bitSize [in] bitSize ; blk size = (bitSize + 63) / 64
 		@note max bitSize is 1<<40
 	*/
-	SucVector(const uint64_t *blk, size_t bitSize)
+	SucVector(const uint64_t *blk, uint64_t bitSize)
 	{
 		if (bitSize > maxBitSize) throw cybozu::Exception("SucVector:too large") << bitSize;
 		init(blk, bitSize);
 	}
-	void init(const uint64_t *blk, size_t bitSize)
+	void init(const uint64_t *blk, uint64_t bitSize)
 	{
 		bitSize_ = bitSize;
-		const size_t blkNum = (bitSize + 63) / 64;
+		const uint64_t v = (bitSize + 63) / 64;
+		assert(v <= ~size_t(0));
+		const size_t blkNum = size_t(v);
 		size_t tblNum = (blkNum + 3) / 4;
 		blk_.resize(tblNum + 1);
 
@@ -186,10 +193,11 @@ public:
 		num_[1] = av;
 	}
 	uint64_t getNum(bool b) const { return num_[b ? 1 : 0]; }
-	uint64_t rank1(size_t i) const
+	uint64_t rank1(uint64_t i) const
 	{
-		size_t q = i / 256;
-		size_t r = (i / 64) & 3;
+		assert(i / 256 <= ~size_t(0));
+		size_t q = size_t(i / 256);
+		size_t r = size_t((i / 64) & 3);
 		assert(q < blk_.size());
 		const B& b = blk_[q];
 		uint64_t ret = b.a64 % maxBitSize;
@@ -200,27 +208,28 @@ public:
 		ret += cybozu::popcnt<uint64_t>(b.org[r] & cybozu::makeBitMask64(i & 63));
 		return ret;
 	}
-	size_t size() const { return bitSize_; }
-	uint64_t rank0(size_t i) const
+	uint64_t size() const { return bitSize_; }
+	uint64_t rank0(uint64_t i) const
 	{
 		return i - rank1(i);
 	}
-	uint64_t rank(bool b, size_t i) const
+	uint64_t rank(bool b, uint64_t i) const
 	{
 		if (b) return rank1(i);
 		return rank0(i);
 	}
-	bool get(size_t i) const
+	bool get(uint64_t i) const
 	{
-		size_t q = i / 256;
-		size_t r = (i / 64) & 3;
+		assert(i / 256 <= ~size_t(0));
+		size_t q = size_t(i / 256);
+		size_t r = size_t((i / 64) & 3);
 		assert(q < blk_.size());
 		const B& b = blk_[q];
 		return (b.org[r] & (1ULL << (i & 63))) != 0;
 	}
-	size_t select0(uint64_t rank) const { return selectSub<false>(rank); }
-	size_t select1(uint64_t rank) const { return selectSub<true>(rank); }
-	size_t select(bool b, uint64_t rank) const
+	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank); }
+	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank); }
+	uint64_t select(bool b, uint64_t rank) const
 	{
 		if (b) return select1(rank);
 		return select0(rank);
@@ -235,7 +244,7 @@ public:
 		select(3) = 7
 	*/
 	template<bool b>
-	size_t selectSub(uint64_t rank) const
+	uint64_t selectSub(uint64_t rank) const
 	{
 		if (rank >= num_[b]) return NotFound;
 		rank++;
@@ -266,7 +275,8 @@ public:
 		}
 		uint64_t v = blk_[L].org[i];
 		if (!b) v = ~v;
-		uint64_t ret = cybozu::sucvector_util::select64(v, rank);
+		assert(rank <= 64);
+		uint64_t ret = cybozu::sucvector_util::select64(v, size_t(rank));
 		ret += L * 256 + i * 64;
 		return ret;
    	}

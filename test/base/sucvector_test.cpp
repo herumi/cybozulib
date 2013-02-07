@@ -82,7 +82,7 @@ CYBOZU_TEST_AUTO(select)
 	sv.init(v, bitLen);
 	for (int s = 0; s < 2; s++) {
 		const bool b = s == 0;
-		const size_t max = sv.rank(b, bitLen);
+		const uint64_t max = sv.rank(b, bitLen);
 		for (size_t r = 0; r < max; r++) {
 			CYBOZU_TEST_EQUAL(sv.select(b, r), select(sv, b, r));
 			CYBOZU_TEST_EQUAL(sv.rank(b, sv.select(b, r) + 1), r + 1);
@@ -260,12 +260,12 @@ void benchSelect64(F& f)
 template<class T, class F>
 void bench(const T& sv, const F& f, size_t N)
 {
-	const size_t M = sv.size();
+	const uint64_t M = sv.size();
 	cybozu::XorShift rg;
 	uint64_t ret = 0;
 	clock_t begin = clock();
 	for (size_t i = 0; i < N; i++) {
-		uint32_t x = rg() & (M - 1);
+		uint64_t x = rg() & (M - 1);
 		ret += (sv.*f)((x & 1) != 0, x);
 	}
 	double t = (clock() - begin) / double(CLOCKS_PER_SEC) / N * 1e9;
