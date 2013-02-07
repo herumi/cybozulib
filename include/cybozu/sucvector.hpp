@@ -11,6 +11,7 @@
 #include <cybozu/exception.hpp>
 #include <cybozu/bit_operation.hpp>
 #include <cybozu/select8.hpp>
+#include <iosfwd>
 
 #ifdef _MSC_VER
 	#pragma warning(push)
@@ -75,9 +76,9 @@ struct SucVector {
 			} ab;
 		};
 	};
-	std::vector<B> blk_;
 	uint64_t bitSize_;
 	uint64_t num_[2];
+	std::vector<B> blk_;
 
 	template<int b>
 	uint64_t rank_a(uint64_t i) const
@@ -95,8 +96,57 @@ struct SucVector {
 		if (!b) r = 64 * i - r;
 		return r;
 	}
+	union ci {
+		uint64_t i;
+		char c[8];
+	};
+	uint64_t load64bit(std::istream& is, const char *msg)
+	{
+		ci ci;
+		if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
+			return ci.i;
+		}
+		throw cybozu::Exception("SucVector:load64bit") << msg;
+	}
+	void save64bit(std::ostream& os, uint64_t val, const char *msg) const
+	{
+		ci ci;
+		ci.i = val;
+		if (!os.write(ci.c, sizeof(ci.c))) {
+			throw cybozu::Exception("SucVector:save64bit") << msg;
+		}
+	}
 public:
 	SucVector() : bitSize_(0) { num_[0] = num_[1] = 0; }
+	/*
+		data format(little endian for x86/x64)
+		bitSize  : 8
+		num_[0]  : 8
+		num_[1]  : 8
+		blkSize  : 8
+		blk data : blkSize * sizeof(B)
+	*/
+	void save(std::ostream& os) const
+	{
+		save64bit(os, bitSize_, "bitSize");
+		save64bit(os, num_[0], "num0");
+		save64bit(os, num_[1], "num1");
+		save64bit(os, blk_.size(), "blkSize");
+		const size_t size = blk_.size() * sizeof(blk_[0]);
+		if (os.write(cybozu::cast<const char*>(&blk_[0]), size) && os.flush()) return;
+		throw cybozu::Exception("SucVector:save");
+	}
+	void load(std::istream& is)
+	{
+		bitSize_ = load64bit(is, "bitSize");
+		num_[0] = load64bit(is, "num0");
+		num_[1] = load64bit(is, "num1");
+		const size_t blkSize = load64bit(is, "blkSize");
+		blk_.resize(blkSize);
+		const size_t size = blkSize * sizeof(blk_[0]);
+		if (is.read(cybozu::cast<char*>(&blk_[0]), size)) return;
+		throw cybozu::Exception("SucVector:load");
+	}
 	/*
 		@param blk [in] bit pattern block
 		@param bitSize [in] bitSize ; blk size = (bitSize + 63) / 64
