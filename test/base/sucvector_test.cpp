@@ -282,7 +282,7 @@ CYBOZU_TEST_AUTO(select64Bench)
 	benchSelect64(select64n);
 
 	cybozu::XorShift rg;
-	const size_t N = 1 << 19;
+	const size_t N = 1 << 25;
 	std::vector<uint64_t> v;
 	v.resize(N);
 	for (size_t i = 0; i < N; i++) {
