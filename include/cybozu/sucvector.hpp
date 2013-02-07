@@ -273,49 +273,6 @@ public:
 		rank -= rank_a<b>(L);
 
 		size_t i = 0;
-#if 0
-		{
-			const uint8_t *p = blk_[L].ab.b;
-			if (b) {
-				if (p[2] >= rank) {
-					if (p[1] >= rank) {
-						i = 0;
-					} else {
-						i = 1;
-						rank -= p[1];
-					}
-				} else {
-					if (p[3] >= rank) {
-						i = 2;
-						rank -= p[2];
-					} else {
-						i = 3;
-						rank -= p[3];
-					}
-				}
-			} else {
-				size_t r = 128 - p[2];
-				if (r >= rank) {
-					r = 64 - p[1];
-					if (r >= rank) {
-						i = 0;
-					} else {
-						i = 1;
-						rank -= r;
-					}
-				} else {
-					size_t r2 = 192 - p[3];
-					if (r2 >= rank) {
-						i = 2;
-						rank -= r;
-					} else {
-						i = 3;
-						rank -= r2;
-					}
-				}
-			}
-		}
-#else
 		while (i < 3) {
 			size_t r = get_b<b>(L, i + 1);
 			if (r >= rank) {
@@ -327,7 +284,6 @@ public:
 			size_t r = get_b<b>(L, i);
 			rank -= r;
 		}
-#endif
 		uint64_t v = blk_[L].org[i];
 		if (!b) v = ~v;
 		assert(rank <= 64);
