@@ -16,7 +16,14 @@
 
 namespace cybozu {
 
-static inline int bsf(uint32_t x)
+template<class T>
+int bsf(T x);
+
+template<class T>
+int bsr(T x);
+
+template<>
+inline int bsf<uint32_t>(uint32_t x)
 {
 #if defined(_WIN32)
 	unsigned long out;
@@ -27,7 +34,8 @@ static inline int bsf(uint32_t x)
 #endif
 }
 
-static inline int bsr(uint32_t x)
+template<>
+inline int bsr<uint32_t>(uint32_t x)
 {
 #if defined(_WIN32)
 	unsigned long out;
@@ -39,7 +47,8 @@ static inline int bsr(uint32_t x)
 }
 
 #if defined(_WIN64) || defined(__x86_64__)
-static inline int bsf64(uint64_t x)
+template<>
+inline int bsf<uint64_t>(uint64_t x)
 {
 #if defined(_WIN32)
 	unsigned long out;
@@ -50,7 +59,8 @@ static inline int bsf64(uint64_t x)
 #endif
 }
 
-static inline int bsr64(uint64_t x)
+template<>
+inline int bsr<uint64_t>(uint64_t x)
 {
 #if defined(_WIN32)
 	unsigned long out;
