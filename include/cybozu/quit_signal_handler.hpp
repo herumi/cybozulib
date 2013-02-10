@@ -22,13 +22,13 @@ template<class App>
 class QuitSignalHandler {
 	static App *app_;
 #ifdef _WIN32
-	static inline BOOL WINAPI ctrlHandler(DWORD)
+	static inline BOOL WINAPI ctrlHandler(DWORD) throw()
 	{
 		if (app_) app_->quit();
 		return TRUE;
 	}
 #else
-	static void ctrlHandler(int)
+	static void ctrlHandler(int) throw()
 	{
 		app_->quit();
 //		signal(SIGINT, SIG_IGN);
