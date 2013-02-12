@@ -36,7 +36,6 @@ public:
 	{
 		if (doSet) setCurrentTime();
 	}
-	double getTimeMsec() const { return time_ + msec_ * 0.001; }
 	Time& setTime(std::time_t time, int msec = 0)
 	{
 		time_ = time;
@@ -77,6 +76,7 @@ public:
 	}
 	const std::time_t& getTime() const { return time_; }
 	int getMsec() const { return msec_; }
+	double getTimeSec() const { return time_ + msec_ * 1e-3; }
 	void addSec(int sec) { time_ += sec; }
 	bool operator<(const Time& rhs) const { return (time_ < rhs.time_) || (time_ == rhs.time_ && msec_ < rhs.msec_); }
 //	bool operator<=(const Time& rhs) const { return (*this < rhs) || (*this == rhs); }
