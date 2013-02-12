@@ -32,6 +32,11 @@ public:
 		, msec_(msec)
 	{
 	}
+	explicit Time(bool doSet)
+	{
+		if (doSet) setCurrentTime();
+	}
+	double getTimeMsec() const { return time_ + msec_ * 0.001; }
 	Time& setTime(std::time_t time, int msec = 0)
 	{
 		time_ = time;
@@ -65,6 +70,10 @@ public:
 	explicit Time(const std::string& in)
 	{
 		fromString(in);
+	}
+	explicit Time(const char *in)
+	{
+		fromString(in, in + strlen(in));
 	}
 	const std::time_t& getTime() const { return time_; }
 	int getMsec() const { return msec_; }
