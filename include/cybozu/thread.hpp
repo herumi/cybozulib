@@ -36,7 +36,16 @@ inline void Sleep(int msec)
 	struct timespec req;
 	req.tv_sec = msec / 1000;
 	req.tv_nsec = (msec % 1000) * 1000000;
-	nanosleep(&req, 0);
+	for (;;) {
+		struct timespec rem;
+		int ret = nanosleep(&req, &rem);
+		if (ret == 0) break;
+		if (errno != EINTR) {
+			printf("Sleep errno %d\n", errno);
+			break;
+		}
+		req = rem;
+	}
 #endif
 }
 
@@ -81,7 +90,7 @@ inline bool Begin(ThreadHandle& hdl, ThreadEntryCallback entryFct, void *arg, in
 	pthread_attr_t attr;
 	if (pthread_attr_init(&attr)) return false;
 	if (stackSize) if (pthread_attr_setstacksize(&attr, stackSize)) return false;
-	return pthread_create(&hdl, &attr, entryFct, arg) != 0;
+	return pthread_create(&hdl, &attr, entryFct, arg) == 0;
 #endif
 }
 
@@ -166,9 +175,7 @@ public:
 	{
 		thread::ThreadHandle hdl = (thread::ThreadHandle)AtomicExchangeSize_t((size_t*)&threadHdl_, 0);
 		if (hdl) {
-			if (thread::Join(hdl, waitMsec)) {
-				return false;
-			}
+			return thread::Join(hdl, waitMsec);
 		}
 		return true;
 	}
