@@ -22,12 +22,15 @@ namespace cybozu {
 	see http://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Atomic-Builtins.html
 	http://msdn.microsoft.com/en-us/library/ms683504(VS.85).aspx
 */
+template<class T>
+T AtomicAdd(T *p, T y);
 /**
 	tmp = *p;
 	*p += y;
 	return tmp;
 */
-inline int AtomicAdd(int *p, int y)
+template<>
+int AtomicAdd<int>(int *p, int y)
 {
 #ifdef _WIN32
 	return _InterlockedExchangeAdd((long*)p, y);
@@ -36,13 +39,16 @@ inline int AtomicAdd(int *p, int y)
 #endif
 }
 
-inline unsigned int AtomicAdd(unsigned int *p, unsigned int y)
+template<>
+unsigned int AtomicAdd<unsigned int>(unsigned int *p, unsigned int y)
 {
 	return (unsigned int)AtomicAdd((int*)p, (int)y);
 }
 
-#if defined(_WIN64) || defined(__x86_64__)
-inline int64_t AtomicAdd(int64_t *p, int64_t y)
+#ifdef CYBOZU_64BIT
+
+template<>
+int64_t AtomicAdd<int64_t>(int64_t *p, int64_t y)
 {
 #ifdef _WIN32
 	return _InterlockedExchangeAdd64(p, y);
@@ -51,9 +57,10 @@ inline int64_t AtomicAdd(int64_t *p, int64_t y)
 #endif
 }
 
-inline uint64_t AtomicAdd(uint64_t *p, uint64_t y)
+template<>
+uint64_t AtomicAdd<uint64_t>(uint64_t *p, uint64_t y)
 {
-	return (uint64_t)AtomicAdd((int64_t*)p, (int64_t)y);
+	return (uint64_t)AtomicAdd<int64_t>((int64_t*)p, (int64_t)y);
 }
 #endif
 
@@ -62,7 +69,11 @@ inline uint64_t AtomicAdd(uint64_t *p, uint64_t y)
 	if (*p == oldValue) *p = newValue;
 	return tmp;
 */
-inline int AtomicCompareExchange(int *p, int newValue, int oldValue)
+template<class T>
+T AtomicCompareExchange(T *p, T newValue, T oldValue);
+
+template<>
+int AtomicCompareExchange<int>(int *p, int newValue, int oldValue)
 {
 #ifdef _WIN32
 	return InterlockedCompareExchange((long*)p, newValue, oldValue);
@@ -71,7 +82,14 @@ inline int AtomicCompareExchange(int *p, int newValue, int oldValue)
 #endif
 }
 
-inline int64_t AtomicCompareExchange(int64_t *p, int64_t newValue, int64_t oldValue)
+template<>
+unsigned int AtomicCompareExchange<unsigned int>(unsigned int *p, unsigned int newValue, unsigned int oldValue)
+{
+	return (unsigned int)AtomicCompareExchange((int*)p, (int)newValue, (int)oldValue);
+}
+
+template<>
+int64_t AtomicCompareExchange<int64_t>(int64_t *p, int64_t newValue, int64_t oldValue)
 {
 #ifdef _WIN32
 	return _InterlockedCompareExchange64(p, newValue, oldValue);
@@ -80,14 +98,20 @@ inline int64_t AtomicCompareExchange(int64_t *p, int64_t newValue, int64_t oldVa
 #endif
 }
 
-inline unsigned int AtomicCompareExchange(unsigned int *p, unsigned int newValue, unsigned int oldValue)
+template<>
+uint64_t AtomicCompareExchange<uint64_t>(uint64_t *p, uint64_t newValue, uint64_t oldValue)
 {
-	return (unsigned int)AtomicCompareExchange((int*)p, (int)newValue, (int)oldValue);
+	return (uint64_t)AtomicCompareExchange<int64_t>((int64_t*)p, (int64_t)newValue, (int64_t)oldValue);
 }
 
-inline uint64_t AtomicCompareExchange(uint64_t *p, uint64_t newValue, uint64_t oldValue)
+template<>
+void* AtomicCompareExchange<void*>(void **p, void *newValue, void *oldValue)
 {
-	return (uint64_t)AtomicCompareExchange((int64_t*)p, (int64_t)newValue, (int64_t)oldValue);
+#ifdef CYBOZU_32BIT
+	return (void*)AtomicCompareExchange<int>((int*)p, (int)newValue, (int)oldValue);
+#else
+	return (void*)AtomicCompareExchange<int64_t>((int64_t*)p, (int64_t)newValue, (int64_t)oldValue);
+#endif
 }
 
 /**
@@ -95,7 +119,11 @@ inline uint64_t AtomicCompareExchange(uint64_t *p, uint64_t newValue, uint64_t o
 	*p = newValue;
 	return tmp;
 */
-inline int AtomicExchange(int *p, int newValue)
+template<class T>
+T AtomicExchange(T *p, T newValue);
+
+template<>
+int AtomicExchange<int>(int *p, int newValue)
 {
 #ifdef _WIN32
 	return InterlockedExchange((long*)p, newValue);
@@ -104,21 +132,38 @@ inline int AtomicExchange(int *p, int newValue)
 #endif
 }
 
-inline unsigned int AtomicExchange(unsigned int *p, unsigned int newValue)
+template<>
+unsigned int AtomicExchange<unsigned int>(unsigned int *p, unsigned int newValue)
 {
 	return (unsigned int)AtomicExchange((int*)p, (int)newValue);
 }
 
-inline size_t AtomicExchangeSize_t(size_t *p, size_t newValue)
+#ifdef CYBOZU_64BIT
+
+template<>
+int64_t AtomicExchange<int64_t>(int64_t *p, int64_t newValue)
 {
 #ifdef _WIN32
-	#ifdef _WIN64
-		return (size_t)_InterlockedExchange64((__int64*)p, (__int64)newValue);
-	#else
-		return AtomicExchange((int*)p, (int)newValue);
-	#endif
+	return _InterlockedExchange64(p, newValue);
 #else
 	return __sync_lock_test_and_set(p, newValue);
+#endif
+}
+
+template<>
+uint64_t AtomicExchange<uint64_t>(uint64_t *p, uint64_t newValue)
+{
+	return (uint64_t)AtomicExchange<int64_t>((int64_t*)p, (int64_t)newValue);
+}
+#endif
+
+template<>
+void* AtomicExchange<void*>(void **p, void *newValue)
+{
+#ifdef CYBOZU_32BIT
+	return (void*)AtomicExchange<int>((int*)p, (int)newValue);
+#else
+	return (void*)AtomicExchange<int64_t>((int64_t*)p, (int64_t)newValue);
 #endif
 }
 
@@ -127,4 +172,3 @@ inline void mfence()
 	_mm_mfence();
 }
 } // cybozu
-
