@@ -71,6 +71,7 @@ namespace thread {
 #endif
 	}
 	inline void MutexLock(MutexHandle& mutex) { pthread_mutex_lock(&mutex); }
+#if 0
 	inline bool MutexLockTimeout(MutexHandle& mutex, int msec)
 	{
 		timespec absTime;
@@ -80,6 +81,7 @@ namespace thread {
 		bool ret = pthread_mutex_timedlock(&mutex, &absTime) == 0;
 		return ret;
 	}
+#endif
 	inline void MutexUnlock(MutexHandle& mutex) { pthread_mutex_unlock(&mutex); }
 	inline void MutexTerm(MutexHandle& mutex) { pthread_mutex_destroy(&mutex); }
 #endif
