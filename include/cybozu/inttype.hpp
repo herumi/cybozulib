@@ -81,6 +81,12 @@
 	#define CYBOZU_NAMESPACE_TR1_END
 #endif
 
+#if defined(_WIN64) || defined(__x86_64__)
+	#define CYBOZU_64BIT
+#else
+	#define CYBOZU_32BIT
+#endif
+
 namespace cybozu {
 template<class T>
 void disable_warning_unused_variable(const T&) { }
