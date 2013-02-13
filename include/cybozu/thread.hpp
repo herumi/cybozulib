@@ -88,9 +88,25 @@ inline bool Begin(ThreadHandle& hdl, ThreadEntryCallback entryFct, void *arg, in
 	return hdl != 0;
 #else
 	pthread_attr_t attr;
-	if (pthread_attr_init(&attr)) return false;
-	if (stackSize) if (pthread_attr_setstacksize(&attr, stackSize)) return false;
-	return pthread_create(&hdl, &attr, entryFct, arg) == 0;
+	if (pthread_attr_init(&attr)) {
+		perror("pthread_attr_init");
+		return false;
+	}
+	int ret = 0;
+	if (stackSize) {
+		ret = pthread_attr_setstacksize(&attr, stackSize);
+		if (ret) {
+			perror("pthread_attr_setstacksize");
+			goto EXIT;
+		}
+	}
+	ret = pthread_create(&hdl, &attr, entryFct, arg);
+EXIT:
+	if (pthread_attr_destroy(&attr)) {
+		perror("pthread_attr_destroy");
+		return false;
+	}
+	return ret == 0;
 #endif
 }
 
