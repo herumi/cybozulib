@@ -37,6 +37,21 @@ public:
 		uint32_t b = get32();
 		return (uint64_t(a) << 32) | b;
 	}
+	template<class T>
+	void read(T *x, size_t n)
+	{
+		const size_t size = sizeof(T) * n;
+		const size_t q = size / sizeof(uint32_t);
+		const size_t r = size % sizeof(uint32_t);
+		uint32_t *p32 = (uint32_t*)&x;
+		for (size_t i = 0; i < q; i++) {
+			p32[i] = get32();
+		}
+		uint8_t *p8 = (uint8_t*)&p32[q];
+		for (size_t i = 0; i < r; i++) {
+			p8[i] = (uint8_t)get32();
+		}
+	}
 };
 
 } // cybozu
