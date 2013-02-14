@@ -40,7 +40,7 @@ struct Thread : public cybozu::ThreadBase {
 	{
 		for (N i = begin_; i < end_; i++) {
 			try {
-				(*t_)(i, threadIdx_);
+				if (!(*t_)(i, threadIdx_)) break;
 			} catch (std::exception& e) {
 				err_ = e.what();
 				break;
