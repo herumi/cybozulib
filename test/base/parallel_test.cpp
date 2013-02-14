@@ -14,7 +14,7 @@ struct X {
 	void operator()(int idx, int /*threadIdx*/)
 	{
 		double ret = 0;
-		const int N = 40000;
+		const int N = 10000;
 		for (int i = 0; i < N; i++) {
 			ret += sin(double(i) / N) * idx;
 		}
@@ -33,7 +33,7 @@ void test(int n, int threadNum)
 CYBOZU_TEST_AUTO(parallel)
 	try
 {
-	for (int threadNum = 1; threadNum < 16; threadNum++) {
+	for (int threadNum = 1; threadNum < 8; threadNum++) {
 		printf("threadNum=%d\n", threadNum);
 		for (int n = 1; n < 1000; n += 10) {
 			test(n, threadNum);
