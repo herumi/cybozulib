@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <cybozu/parallel.hpp>
 #include <cybozu/test.hpp>
+#include <cybozu/time.hpp>
 #include <math.h>
 
 struct X {
@@ -36,9 +37,11 @@ CYBOZU_TEST_AUTO(parallel)
 {
 	for (int threadNum = 1; threadNum < 8; threadNum++) {
 		printf("threadNum=%d\n", threadNum);
+		double begin = cybozu::GetCurrentTimeSec();
 		for (int n = 1; n < 1000; n += 10) {
 			test(n, threadNum);
 		}
+		printf("time %f\n", cybozu::GetCurrentTimeSec() - begin);
 	}
 } catch (std::exception& e) {
 	printf("err %s\n", e.what());
