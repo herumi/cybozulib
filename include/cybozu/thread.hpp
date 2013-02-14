@@ -163,14 +163,6 @@ protected:
 		// end of thread
 //		main->detachThread();
 	}
-	thread::ThreadHandle getAndSetZero()
-	{
-		if (sizeof(thread::ThreadHandle) == 4) {
-			return (thread::ThreadHandle)AtomicExchange<int>((int*)&threadHdl_, 0);
-		} else {
-			return (thread::ThreadHandle)AtomicExchange<int64_t>((int64_t*)&threadHdl_, 0);
-		}
-	}
 public:
 	ThreadBase()
 		: threadHdl_(0)
@@ -188,7 +180,7 @@ public:
 
 	bool detachThread()
 	{
-		thread::ThreadHandle hdl = getAndSetZero();
+		thread::ThreadHandle hdl = cybozu::AtomicExchange<thread::ThreadHandle>(&threadHdl_, 0);
 		if (hdl) {
 			return thread::Detach(hdl);
 		}
@@ -197,7 +189,7 @@ public:
 
 	bool joinThread(int waitMsec = thread::Infinite)
 	{
-		thread::ThreadHandle hdl = getAndSetZero();
+		thread::ThreadHandle hdl = cybozu::AtomicExchange<thread::ThreadHandle>(&threadHdl_, 0);
 		if (hdl) {
 			return thread::Join(hdl, waitMsec);
 		}
