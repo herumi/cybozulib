@@ -260,4 +260,9 @@ inline std::ostream& operator<<(std::ostream& os, const cybozu::Time& time)
 	return os << time.toString();
 }
 
+inline double GetCurrentTimeSec()
+{
+	return cybozu::Time(true).getTimeSec();
+}
+
 } // cybozu
