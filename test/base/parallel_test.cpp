@@ -11,7 +11,7 @@ struct X {
 		, processedNum(0)
 	{
 	}
-	void operator()(int idx, int /*threadIdx*/)
+	bool operator()(int idx, int /*threadIdx*/)
 	{
 		double ret = 0;
 		const int N = 10000;
@@ -20,6 +20,7 @@ struct X {
 		}
 		cybozu::AtomicAdd(&processedNum, 1);
 		cybozu::AtomicAdd(&x, (int)ret);
+		return true;
 	}
 };
 
