@@ -4,34 +4,36 @@
 #include <math.h>
 
 struct X {
-	int x_;
+	int x;
+	int processedNum;
 	X()
-		: x_(0)
+		: x(0)
+		, processedNum(0)
 	{
 	}
-	void f(int x)
+	void operator()(int idx, int /*threadIdx*/)
 	{
 		double ret = 0;
-		const int N = 10000;
+		const int N = 40000;
 		for (int i = 0; i < N; i++) {
-			ret += sin(double(i) / N) * x;
+			ret += sin(double(i) / N) * idx;
 		}
-		cybozu::AtomicAdd(&x_, (int)ret);
+		cybozu::AtomicAdd(&processedNum, 1);
+		cybozu::AtomicAdd(&x, (int)ret);
 	}
 };
 
 void test(int n, int threadNum)
 {
 	X x;
-	int processedNum = 0;
-	cybozu::parallel_for(x, &X::f, n, threadNum, &processedNum);
-	CYBOZU_TEST_EQUAL(processedNum, n);
+	cybozu::parallel_for(x, n, threadNum);
+	CYBOZU_TEST_EQUAL(x.processedNum, n);
 }
 
 CYBOZU_TEST_AUTO(parallel)
 	try
 {
-	for (int threadNum = 1; threadNum < 8; threadNum++) {
+	for (int threadNum = 1; threadNum < 16; threadNum++) {
 		printf("threadNum=%d\n", threadNum);
 		for (int n = 1; n < 1000; n += 10) {
 			test(n, threadNum);
