@@ -29,6 +29,12 @@ public:
 	}
 };
 
+CYBOZU_TEST_AUTO(cpuNum)
+{
+	int num = cybozu::GetProcessorNum();
+	CYBOZU_TEST_ASSERT(num > 0);
+	printf("cpu num=%d\n", num);
+}
 
 CYBOZU_TEST_AUTO(autoLock)
 {

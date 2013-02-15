@@ -17,7 +17,7 @@
 #else
 	#include <unistd.h>
 	#include <pthread.h>
-	#include <sys/time.h> // for gettimeofday
+	#include <time.h>
 	#include <errno.h>
 	#include <stdio.h>
 #endif
@@ -59,6 +59,23 @@ inline unsigned int GetProcessId()
 #else
 	assert(sizeof(pid_t) == 4);
 	return getpid();
+#endif
+}
+/*
+	number of processor
+	@note include hyperthread
+	@return 0 if error
+*/
+inline int GetProcessorNum()
+{
+#ifdef _WIN32
+	SYSTEM_INFO systemInfo;
+	::GetSystemInfo(&systemInfo);
+	return (int)systemInfo.dwNumberOfProcessors;
+#else
+	long ret = sysconf(_SC_NPROCESSORS_ONLN);
+	if (ret < 0) return 0;
+	return (int)ret;
 #endif
 }
 
