@@ -105,7 +105,7 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 
 /*
 	extra memory
-	(32 + 8 * 4) / 256 = 1/4 bit per bit
+	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
 struct SucVector {
 	static const uint64_t maxBitSize = uint64_t(1) << 40;
@@ -238,8 +238,8 @@ public:
 		const B& b = blk_[q];
 		return (b.org[r] & (1ULL << (i & 63))) != 0;
 	}
-	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank); }
-	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank); }
+	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank, 0, blk_.size()); }
+	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank, 0, blk_.size()); }
 	uint64_t select(bool b, uint64_t rank) const
 	{
 		if (b) return select1(rank);
@@ -255,12 +255,10 @@ public:
 		select(3) = 7
 	*/
 	template<bool b>
-	uint64_t selectSub(uint64_t rank) const
+	uint64_t selectSub(uint64_t rank, size_t L, size_t R) const
 	{
 		if (rank >= num_[b]) return NotFound;
 		rank++;
-		size_t L = 0;
-		size_t R = blk_.size();
 		while (L < R) {
 			size_t M = (L + R) / 2; // (R - L) / 2 + L;
 			if (rank_a<b>(M) < rank) {

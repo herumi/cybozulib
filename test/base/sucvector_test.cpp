@@ -37,6 +37,34 @@ uint64_t select(const cybozu::SucVector& v, bool b, size_t n)
 	return cybozu::NotFound;
 }
 
+/*
+	compare speed
+	from https://code.google.com/p/shellinford/source/browse/trunk/src/shellinford_bit_vector.cc
+*/
+inline uint64_t select64C(uint64_t x, uint64_t i)
+{
+	uint64_t x1 = ((x  & 0xaaaaaaaaaaaaaaaaULL) >>  1) + (x  & 0x5555555555555555ULL);
+	uint64_t x2 = ((x1 & 0xccccccccccccccccULL) >>  2) + (x1 & 0x3333333333333333ULL);
+	uint64_t x3 = ((x2 & 0xf0f0f0f0f0f0f0f0ULL) >>  4) + (x2 & 0x0f0f0f0f0f0f0f0fULL);
+	uint64_t x4 = ((x3 & 0xff00ff00ff00ff00ULL) >>  8) + (x3 & 0x00ff00ff00ff00ffULL);
+	uint64_t x5 = ((x4 & 0xffff0000ffff0000ULL) >> 16) + (x4 & 0x0000ffff0000ffffULL);
+//	i++;
+	uint64_t pos = 0;
+	uint64_t v5 = x5 & 0xffffffffULL;
+	if (i > v5) { i -= v5; pos += 32; }
+	uint64_t v4 = (x4 >> pos) & 0x0000ffffULL;
+	if (i > v4) { i -= v4; pos += 16; }
+	uint64_t v3 = (x3 >> pos) & 0x000000ffULL;
+	if (i > v3) { i -= v3; pos +=  8; }
+	uint64_t v2 = (x2 >> pos) & 0x0000000fULL;
+	if (i > v2) { i -= v2; pos +=  4; }
+	uint64_t v1 = (x1 >> pos) & 0x00000003ULL;
+	if (i > v1) { i -= v1; pos +=  2; }
+	uint64_t v0 = (x  >> pos) & 0x00000001ULL;
+	if (i > v0) { i -= v0; pos +=  1; }
+	return pos;
+}
+
 CYBOZU_TEST_AUTO(testall)
 {
 	cybozu::XorShift rg;
@@ -172,34 +200,6 @@ CYBOZU_TEST_AUTO(get_load_save)
 		sv2.load(is);
 		testSub(sv2, tbl, tblNum);
 	}
-}
-
-/*
-	compare speed
-	from https://code.google.com/p/shellinford/source/browse/trunk/src/shellinford_bit_vector.cc
-*/
-inline uint64_t select64C(uint64_t x, uint64_t i)
-{
-	uint64_t x1 = ((x  & 0xaaaaaaaaaaaaaaaaULL) >>  1) + (x  & 0x5555555555555555ULL);
-	uint64_t x2 = ((x1 & 0xccccccccccccccccULL) >>  2) + (x1 & 0x3333333333333333ULL);
-	uint64_t x3 = ((x2 & 0xf0f0f0f0f0f0f0f0ULL) >>  4) + (x2 & 0x0f0f0f0f0f0f0f0fULL);
-	uint64_t x4 = ((x3 & 0xff00ff00ff00ff00ULL) >>  8) + (x3 & 0x00ff00ff00ff00ffULL);
-	uint64_t x5 = ((x4 & 0xffff0000ffff0000ULL) >> 16) + (x4 & 0x0000ffff0000ffffULL);
-//	i++;
-	uint64_t pos = 0;
-	uint64_t v5 = x5 & 0xffffffffULL;
-	if (i > v5) { i -= v5; pos += 32; }
-	uint64_t v4 = (x4 >> pos) & 0x0000ffffULL;
-	if (i > v4) { i -= v4; pos += 16; }
-	uint64_t v3 = (x3 >> pos) & 0x000000ffULL;
-	if (i > v3) { i -= v3; pos +=  8; }
-	uint64_t v2 = (x2 >> pos) & 0x0000000fULL;
-	if (i > v2) { i -= v2; pos +=  4; }
-	uint64_t v1 = (x1 >> pos) & 0x00000003ULL;
-	if (i > v1) { i -= v1; pos +=  2; }
-	uint64_t v0 = (x  >> pos) & 0x00000001ULL;
-	if (i > v0) { i -= v0; pos +=  1; }
-	return pos;
 }
 
 CYBOZU_TEST_AUTO(select8)
