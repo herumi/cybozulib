@@ -29,6 +29,12 @@ inline uint32_t rank64(uint64_t v, size_t i)
     return cybozu::popcnt<uint64_t>(v & cybozu::makeBitMask64(i));
 }
 
+template<class T>
+T getBlockNum(T x, T block)
+{
+	return (x + block - 1) / block;
+}
+
 inline uint32_t select64(uint64_t v, size_t r)
 {
 	assert(r <= 64);
@@ -107,8 +113,9 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
-struct SucVector {
-	static const uint64_t maxBitSize = uint64_t(1) << 40;
+class SucVector {
+	static const uint64_t maxBitLen = 40;
+	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct B {
 		uint64_t org[4];
 		union {
@@ -122,22 +129,49 @@ struct SucVector {
 	uint64_t bitSize_;
 	uint64_t num_[2];
 	std::vector<B> blk_;
+	typedef std::vector<uint32_t> Uint32Vec;
+	static const uint64_t posUnit = 512;
+	Uint32Vec selTbl_[2];
 
 	template<int b>
 	uint64_t rank_a(size_t i) const
 	{
 		assert(i < blk_.size());
-		uint64_t ret = blk_[i].a64 % maxBitSize;
+		uint64_t ret = blk_[i].a64 & makeBitMask64(maxBitLen);
 		if (!b) ret = i * uint64_t(256) - ret;
 		return ret;
 	}
 	template<bool b>
 	size_t get_b(size_t L, size_t i) const
 	{
-		assert(i > 0);
+		assert(L < blk_.size());
+		assert(0 < i && i < 4);
 		size_t r = blk_[L].ab.b[i];
 		if (!b) r = 64 * i - r;
 		return r;
+	}
+	// call after blk_, num_ are initialized
+	void initSelTbl()
+	{
+		initSelTblSub<false>(selTbl_[0]);
+		initSelTblSub<true>(selTbl_[1]);
+	}
+	template<bool b>
+	void initSelTblSub(Uint32Vec& tbl)
+	{
+		assert(num_[1] / posUnit < 0x7fffffff - 1);
+		const size_t size = size_t(sucvector_util::getBlockNum(num_[1], posUnit) + 1);
+		tbl.resize(size);
+		uint32_t pos = 0;
+		for (size_t i = 0; i < size - 1; i++) {
+			uint64_t v = i * posUnit;
+			assert(pos < 0x7fffffff);
+			while (rank_a<b>(pos) < v) {
+				pos++;
+			}
+			tbl[i] = pos;
+		}
+		tbl[size - 1] = (uint32_t)blk_.size();
 	}
 public:
 	SucVector() : bitSize_(0) { num_[0] = num_[1] = 0; }
@@ -162,6 +196,7 @@ public:
 		num_[0] = sucvector_util::load64bit(is, "num0");
 		num_[1] = sucvector_util::load64bit(is, "num1");
 		sucvector_util::loadVec(blk_, is, "blk");
+		initSelTbl();
 	}
 	/*
 		@param blk [in] bit pattern block
@@ -175,10 +210,9 @@ public:
 	}
 	void init(const uint64_t *blk, uint64_t bitSize)
 	{
+		assert((bitSize + 63) / 64 <= ~size_t(0));
 		bitSize_ = bitSize;
-		const uint64_t v = (bitSize + 63) / 64;
-		assert(v <= ~size_t(0));
-		const size_t blkNum = size_t(v);
+		const size_t blkNum = size_t((bitSize + 63) / 64);
 		size_t tblNum = (blkNum + 3) / 4;
 		blk_.resize(tblNum + 1);
 
@@ -202,6 +236,7 @@ public:
 		blk_[tblNum].a64 = av;
 		num_[0] = blkNum * 64 - av;
 		num_[1] = av;
+		initSelTbl();
 	}
 	uint64_t getNum(bool b) const { return num_[b ? 1 : 0]; }
 	uint64_t rank1(uint64_t i) const
@@ -238,8 +273,8 @@ public:
 		const B& b = blk_[q];
 		return (b.org[r] & (1ULL << (i & 63))) != 0;
 	}
-	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank, 0, blk_.size()); }
-	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank, 0, blk_.size()); }
+	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank); }
+	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank); }
 	uint64_t select(bool b, uint64_t rank) const
 	{
 		if (b) return select1(rank);
@@ -255,9 +290,12 @@ public:
 		select(3) = 7
 	*/
 	template<bool b>
-	uint64_t selectSub(uint64_t rank, size_t L, size_t R) const
+	uint64_t selectSub(uint64_t rank) const
 	{
-		if (rank >= num_[b]) return NotFound;
+		const int tablePos = b ? 1 : 0;
+		if (rank >= num_[tablePos]) return NotFound;
+		size_t L = selTbl_[tablePos][rank / posUnit];
+		size_t R = selTbl_[tablePos][rank / posUnit + 1];
 		rank++;
 		while (L < R) {
 			size_t M = (L + R) / 2; // (R - L) / 2 + L;
