@@ -55,40 +55,34 @@ class WaveletMatrix {
 	std::vector<uint64_t> fromTbl;
 	std::vector<uint64_t> fromLtTbl;
 	typedef std::vector<uint32_t> Uint32Vec;
-	static const uint64_t posUnit = 512;
+	static const uint64_t posUnit = 256;
 	std::vector<Uint32Vec> selTbl_;
 
 	// call after initialized
 	template<class Vec>
-	void initSelTbl(const Vec& vec)
+	void initSelTbl(std::vector<Uint32Vec>& tblVec, const Vec& vec) const
 	{
-		printf("create selTBl\n");
-		selTbl_.resize(maxVal_);
-		size_t n = 0;
+		tblVec.resize(maxVal_);
+
+		Uint32Vec iTbl(maxVal_);
+		Uint32Vec numTbl(maxVal_);
 		for (uint64_t v = 0; v < maxVal_; v++) {
-			n += initSelTblSub(selTbl_[v], vec, v);
-			printf("%d ", (int)v); fflush(stdout);
+			const size_t size = sucvector_util::getBlockNum(this->size(v), posUnit) + 1;
+			tblVec[v].resize(size);
+			iTbl[v] = 1;
 		}
-		printf("\ntotal sel size=%.1fMiB\n", n * 4.0 / 1024 / 1024);
-	}
-	template<class Vec>
-	size_t initSelTblSub(Uint32Vec& tbl, const Vec& vec, uint64_t v)
-	{
-		const size_t size = sucvector_util::getBlockNum(this->size(v), posUnit) + 1;
-		tbl.resize(size);
-		uint32_t pos = 0;
-		uint32_t num = 0;
-		for (size_t i = 0; i < size - 1; i++) {
-			uint64_t r = i * posUnit;
-			assert(pos < vec.size());
-			while (num < r) {
-				if (vec[pos] == v) num++;
-				pos++;
+		for (uint32_t pos = 0, n = (uint32_t)vec.size(); pos < n; pos++) {
+			uint64_t v = vec[pos];
+			uint32_t i = iTbl[v];
+			numTbl[v]++;
+			if (numTbl[v] >= i * posUnit) {
+				tblVec[v][i] = pos + 1;
+				iTbl[v]++;
 			}
-			tbl[i] = pos;
 		}
-		tbl[size - 1] = (uint32_t)size_;
-		return size;
+		for (uint64_t v = 0; v < maxVal_; v++) {
+			tblVec[v][tblVec[v].size() - 1] = (uint32_t)size_;
+		}
 	}
 public:
 	WaveletMatrix()
@@ -155,8 +149,8 @@ public:
 	template<class Vec>
 	void init(const Vec& vec, size_t valBitLen)
 	{
-		if (vec.size() > (uint64_t(1) << 40)) throw cybozu::Exception("WaveletMatrix:init:too large") << vec.size();
-		if (valBitLen >= 64) throw cybozu::Exception("WaveletMatrix:init:too large valBitLen") << valBitLen;
+		if (vec.size() >= (uint64_t(1) << 32)) throw cybozu::Exception("WaveletMatrix:init:too large") << vec.size();
+		if (valBitLen >= 16) throw cybozu::Exception("WaveletMatrix:init:too large valBitLen") << valBitLen;
 		valBitLen_ = valBitLen;
 		maxVal_ = uint64_t(1) << valBitLen_;
 		size_ = vec.size();
@@ -199,7 +193,7 @@ public:
 		fromLtTbl.resize(maxVal_);
 		setupFromLtTbl(fromLtTbl, 0, 0, 0, 0);
 
-		initSelTbl(vec);
+		initSelTbl(selTbl_, vec);
 	}
 	uint64_t get(size_t pos) const
 	{
