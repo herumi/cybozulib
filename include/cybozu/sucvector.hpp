@@ -165,9 +165,9 @@ class SucVector {
 		tbl.resize(size);
 		uint32_t pos = 0;
 		for (size_t i = 0; i < size - 1; i++) {
-			uint64_t v = i * posUnit;
+			uint64_t r = i * posUnit;
 			assert(pos < 0x7fffffff);
-			while (rank_a<b>(pos) < v) {
+			while (rank_a<b>(pos) < r) {
 				pos++;
 			}
 			tbl[i] = pos;
@@ -282,6 +282,13 @@ public:
 		return select0(rank);
 	}
 
+	bool getL(size_t* L, bool b, uint64_t rank) const
+	{
+		const int tablePos = b ? 1 : 0;
+		if (rank >= numTbl_[tablePos]) return false;
+		*L = selTbl_[tablePos][rank / posUnit];
+		return true;
+	}
 	/*
 		0123456789
 		0100101101
