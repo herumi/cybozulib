@@ -54,6 +54,42 @@ class WaveletMatrix {
 	std::vector<uint64_t> offTbl;
 	std::vector<uint64_t> fromTbl;
 	std::vector<uint64_t> fromLtTbl;
+	typedef std::vector<uint32_t> Uint32Vec;
+	static const uint64_t posUnit = 512;
+	std::vector<Uint32Vec> selTbl_;
+
+	// call after initialized
+	template<class Vec>
+	void initSelTbl(const Vec& vec)
+	{
+		printf("create selTBl\n");
+		selTbl_.resize(maxVal_);
+		size_t n = 0;
+		for (uint64_t v = 0; v < maxVal_; v++) {
+			n += initSelTblSub(selTbl_[v], vec, v);
+			printf("%d ", (int)v); fflush(stdout);
+		}
+		printf("\ntotal sel size=%.1fMiB\n", n * 4.0 / 1024 / 1024);
+	}
+	template<class Vec>
+	size_t initSelTblSub(Uint32Vec& tbl, const Vec& vec, uint64_t v)
+	{
+		const size_t size = sucvector_util::getBlockNum(this->size(v), posUnit) + 1;
+		tbl.resize(size);
+		uint32_t pos = 0;
+		uint32_t num = 0;
+		for (size_t i = 0; i < size - 1; i++) {
+			uint64_t r = i * posUnit;
+			assert(pos < vec.size());
+			while (num < r) {
+				if (vec[pos] == v) num++;
+				pos++;
+			}
+			tbl[i] = pos;
+		}
+		tbl[size - 1] = (uint32_t)size_;
+		return size;
+	}
 public:
 	WaveletMatrix()
 		: valBitLen_(0)
@@ -86,6 +122,10 @@ public:
 		sucvector_util::saveVec(os, offTbl, "offTbl");
 		sucvector_util::saveVec(os, fromTbl, "fromTbl");
 		sucvector_util::saveVec(os, fromLtTbl, "fromLtTbl");
+
+		for (uint64_t v = 0; v < maxVal_; v++) {
+			sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+		}
 	}
 	void load(std::istream& is)
 	{
@@ -99,6 +139,11 @@ public:
 		sucvector_util::loadVec(offTbl, is, "offTbl");
 		sucvector_util::loadVec(fromTbl, is, "fromTbl");
 		sucvector_util::loadVec(fromLtTbl, is, "fromLtTbl");
+
+		selTbl_.resize(maxVal_);
+		for (uint64_t v = 0; v < maxVal_; v++) {
+			sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+		}
 	}
 	size_t size() const { return size_; }
 	template<class T>
@@ -108,23 +153,23 @@ public:
 		return rank(val, size_);
 	}
 	template<class Vec>
-	void init(const Vec& in, size_t valBitLen)
+	void init(const Vec& vec, size_t valBitLen)
 	{
-		if (in.size() > (uint64_t(1) << 40)) throw cybozu::Exception("WaveletMatrix:init:too large") << in.size();
+		if (vec.size() > (uint64_t(1) << 40)) throw cybozu::Exception("WaveletMatrix:init:too large") << vec.size();
 		if (valBitLen >= 64) throw cybozu::Exception("WaveletMatrix:init:too large valBitLen") << valBitLen;
 		valBitLen_ = valBitLen;
 		maxVal_ = uint64_t(1) << valBitLen_;
-		size_ = in.size();
+		size_ = vec.size();
 		svv.resize(valBitLen_);
 
 		// count zero bit
 		offTbl.resize(valBitLen_);
 		for (size_t i = 0, n = offTbl.size(); i < n; i++) {
-			offTbl[i] = countZero(in, valBitLen - 1 - i);
+			offTbl[i] = countZero(vec, valBitLen - 1 - i);
 		}
 
 		// construct svv
-		Vec cur = in, next;
+		Vec cur = vec, next;
 		next.resize(size_);
 		for (size_t i = 0; i < valBitLen; i++) {
 			cybozu::BitVector bv;
@@ -153,6 +198,8 @@ public:
 
 		fromLtTbl.resize(maxVal_);
 		setupFromLtTbl(fromLtTbl, 0, 0, 0, 0);
+
+		initSelTbl(vec);
 	}
 	uint64_t get(size_t pos) const
 	{
@@ -186,7 +233,7 @@ public:
 	{
 		assert(uint64_t(val) < maxVal_);
 		for (size_t i = 0; i < valBitLen_; i++) {
-			bool b = (val & (1u << (valBitLen_ - 1 - i))) != 0;
+			bool b = (val & (T(1) << (valBitLen_ - 1 - i))) != 0;
 			pos = svv[i].rank(b, pos);
 			if (b) pos += offTbl[i];
 		}
@@ -216,8 +263,11 @@ public:
 	size_t select(T val, size_t rank) const
 	{
 		assert(uint64_t(val) < maxVal_);
-		size_t L = 0;
-		size_t R = size_;
+//		size_t L = 0;
+//		size_t R = size_;
+		size_t L = selTbl_[val][rank / posUnit];
+		size_t R = selTbl_[val][rank / posUnit + 1];
+//printf("val=%d, rank=%d, L=%d, R=%d, size=%d\n", (int)val, (int)rank, (int)L, (int)R, (int)size_);
 		rank++;
 		while (L < R) {
 			size_t M = (L + R) / 2;

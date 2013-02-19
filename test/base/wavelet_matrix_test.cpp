@@ -2,7 +2,7 @@
 #include <cybozu/wavelet_matrix.hpp>
 #include <algorithm>
 #include <cybozu/xorshift.hpp>
-#include <time.h>
+#include <cybozu/time.hpp>
 
 template<class T>
 size_t selectC(const T *a, size_t N, uint32_t val, size_t n)
@@ -76,6 +76,7 @@ void testSub(const cybozu::WaveletMatrix& wm, const std::vector<uint32_t>& v, ui
 			size_t b = std::count(v.begin(), v.begin() + pos, val);
 			CYBOZU_TEST_EQUAL(a, b);
 		}
+		CYBOZU_TEST_EQUAL(wm.rank(val, vn), (uint64_t)std::count(v.begin(), v.end(), val));
 	}
 	for (size_t r = 0; r < valBitLen; r++) {
 		for (uint32_t val = 0; val < maxVal; val++) {
@@ -90,7 +91,7 @@ CYBOZU_TEST_AUTO(large_load_save)
 {
 	cybozu::XorShift rg;
 	std::vector<uint32_t> v;
-	const size_t vn = 4000;
+	const size_t vn = 5000;
 	const size_t valBitLen = 8;
 	const uint32_t maxVal = 1 << valBitLen;
 	v.resize(vn);
@@ -114,20 +115,23 @@ CYBOZU_TEST_AUTO(large_load_save)
 	}
 #ifndef NDEUBG
 	size_t x = 0;
-	clock_t begin = clock();
+	double begin = cybozu::GetCurrentTimeSec();
 	for (uint32_t val = 0; val < maxVal; val++) {
 		for (size_t pos = 0; pos < vn; pos++) {
 			x += wm.rank(val, pos);
 		}
 	}
-	printf("wm.rank   %08x %5.2fusec\n", (int)x, (clock() - begin) / double(CLOCKS_PER_SEC) / (maxVal * vn) * 1e6);
+	printf("wm.rank   %08x %5.2fusec\n", (int)x, (cybozu::GetCurrentTimeSec() - begin) / (maxVal * vn) * 1e6);
 	x = 0;
-	begin = clock();
-	for (size_t r = 0; r < valBitLen; r++) {
-		for (uint32_t val = 0; val < maxVal; val++) {
-			x += wm.select(val, r);
+	begin = cybozu::GetCurrentTimeSec();
+	const int N = 10;
+	for (int i = 0; i < N; i++) {
+		for (size_t r = 0; r < valBitLen; r++) {
+			for (uint32_t val = 0; val < maxVal; val++) {
+				x += wm.select(val, r);
+			}
 		}
 	}
-	printf("wm.select %08x %5.2fusec\n", (int)x, (clock() - begin) / double(CLOCKS_PER_SEC) / (valBitLen * maxVal) * 1e6);
+	printf("wm.select %08x %5.2fusec\n", (int)x, (cybozu::GetCurrentTimeSec() - begin) / (valBitLen * maxVal * N) * 1e6);
 #endif
 }
