@@ -172,8 +172,8 @@ void testSub(const cybozu::SucVector& sv, const uint64_t *tbl, size_t tblNum)
 		CYBOZU_TEST_EQUAL(sv.get(i), get(tbl, i));
 		CYBOZU_TEST_EQUAL(sv.rank1(i), count(tbl, i));
 	}
-	CYBOZU_TEST_EQUAL(sv.rank0(tblNum * 64), sv.getNum(0));
-	CYBOZU_TEST_EQUAL(sv.rank1(tblNum * 64), sv.getNum(1));
+	CYBOZU_TEST_EQUAL(sv.rank0(tblNum * 64), sv.size(0));
+	CYBOZU_TEST_EQUAL(sv.rank1(tblNum * 64), sv.size(1));
 }
 
 CYBOZU_TEST_AUTO(get_load_save)

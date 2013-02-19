@@ -127,10 +127,10 @@ class SucVector {
 		};
 	};
 	uint64_t bitSize_;
-	uint64_t num_[2];
+	uint64_t numTbl_[2];
 	std::vector<B> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
-	static const uint64_t posUnit = 512;
+	static const uint64_t posUnit = 1024;
 	Uint32Vec selTbl_[2];
 
 	template<int b>
@@ -150,7 +150,7 @@ class SucVector {
 		if (!b) r = 64 * i - r;
 		return r;
 	}
-	// call after blk_, num_ are initialized
+	// call after blk_, numTbl_ are initialized
 	void initSelTbl()
 	{
 		initSelTblSub<false>(selTbl_[0]);
@@ -159,8 +159,9 @@ class SucVector {
 	template<bool b>
 	void initSelTblSub(Uint32Vec& tbl)
 	{
-		assert(num_[1] / posUnit < 0x7fffffff - 1);
-		const size_t size = size_t(sucvector_util::getBlockNum(num_[1], posUnit) + 1);
+		const int tablePos = b ? 1 : 0;
+		assert(numTbl_[tablePos] / posUnit < 0x7fffffff - 1);
+		const size_t size = size_t(sucvector_util::getBlockNum(numTbl_[tablePos], posUnit) + 1);
 		tbl.resize(size);
 		uint32_t pos = 0;
 		for (size_t i = 0; i < size - 1; i++) {
@@ -174,27 +175,27 @@ class SucVector {
 		tbl[size - 1] = (uint32_t)blk_.size();
 	}
 public:
-	SucVector() : bitSize_(0) { num_[0] = num_[1] = 0; }
+	SucVector() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
 	/*
 		data format(endian is depend on CPU:eg. little endian for x86/x64)
 		bitSize  : 8
-		num_[0]  : 8
-		num_[1]  : 8
+		numTbl_[0]  : 8
+		numTbl_[1]  : 8
 		blkSize  : 8
 		blk data : blkSize * sizeof(B)
 	*/
 	void save(std::ostream& os) const
 	{
 		sucvector_util::save64bit(os, bitSize_, "bitSize");
-		sucvector_util::save64bit(os, num_[0], "num0");
-		sucvector_util::save64bit(os, num_[1], "num1");
+		sucvector_util::save64bit(os, numTbl_[0], "num0");
+		sucvector_util::save64bit(os, numTbl_[1], "num1");
 		sucvector_util::saveVec(os, blk_, "blk");
 	}
 	void load(std::istream& is)
 	{
 		bitSize_ = sucvector_util::load64bit(is, "bitSize");
-		num_[0] = sucvector_util::load64bit(is, "num0");
-		num_[1] = sucvector_util::load64bit(is, "num1");
+		numTbl_[0] = sucvector_util::load64bit(is, "num0");
+		numTbl_[1] = sucvector_util::load64bit(is, "num1");
 		sucvector_util::loadVec(blk_, is, "blk");
 		initSelTbl();
 	}
@@ -234,11 +235,10 @@ public:
 			}
 		}
 		blk_[tblNum].a64 = av;
-		num_[0] = blkNum * 64 - av;
-		num_[1] = av;
+		numTbl_[0] = blkNum * 64 - av;
+		numTbl_[1] = av;
 		initSelTbl();
 	}
-	uint64_t getNum(bool b) const { return num_[b ? 1 : 0]; }
 	uint64_t rank1(uint64_t i) const
 	{
 		assert(i / 256 <= ~size_t(0));
@@ -255,6 +255,7 @@ public:
 		return ret;
 	}
 	uint64_t size() const { return bitSize_; }
+	uint64_t size(bool b) const { return numTbl_[b ? 1 : 0]; }
 	uint64_t rank0(uint64_t i) const
 	{
 		return i - rank1(i);
@@ -293,7 +294,7 @@ public:
 	uint64_t selectSub(uint64_t rank) const
 	{
 		const int tablePos = b ? 1 : 0;
-		if (rank >= num_[tablePos]) return NotFound;
+		if (rank >= numTbl_[tablePos]) return NotFound;
 		size_t L = selTbl_[tablePos][rank / posUnit];
 		size_t R = selTbl_[tablePos][rank / posUnit + 1];
 		rank++;
