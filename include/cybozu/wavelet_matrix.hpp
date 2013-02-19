@@ -257,6 +257,7 @@ public:
 	size_t select(T val, size_t rank) const
 	{
 		assert(uint64_t(val) < maxVal_);
+		if (rank / posUnit >= selTbl_[val].size() - 1) return cybozu::NotFound;
 //		size_t L = 0;
 //		size_t R = size_;
 		size_t L = selTbl_[val][rank / posUnit];
