@@ -1,7 +1,7 @@
 #include <cybozu/wavelet_matrix.hpp>
 #include <cybozu/xorshift.hpp>
 #include <algorithm>
-#include <time.h>
+#include <cybozu/time.hpp>
 #include <stdlib.h>
 
 struct Naive {
@@ -30,19 +30,15 @@ public:
 		}
 		return ret;
 	}
-	size_t select(uint32_t val, size_t rank) const
+	size_t select(uint32_t val, size_t n) const
 	{
 		const size_t N = v_.size();
-		rank++;
-		size_t pos = 0;
-		while (rank > 0) {
-			if (pos == N) return N;
-			if (v_[pos] == val) {
-				rank--;
-			}
-			pos++;
+		n++;
+		for (size_t i = 0; i < N; i++) {
+			if (v_[i] == val) n--;
+			if (n == 0) return i;
 		}
-		return pos - 1;
+		return cybozu::NotFound;
 	}
 };
 
@@ -50,12 +46,12 @@ template<class T, class RG>
 void bench_get(const T& wm, RG& rg, size_t C, size_t N)
 {
 	size_t ret = 0;
-	clock_t begin = clock();
+	double begin = cybozu::GetCurrentTimeSec();
 	for (size_t i = 0; i < C; i++) {
 		size_t pos = rg() & (N - 1);
 		ret += wm.get(pos);
 	}
-	double t = (clock() - begin) / double(CLOCKS_PER_SEC);
+	double t = cybozu::GetCurrentTimeSec() - begin;
 	printf("get     %08x %9.2fusec\n", (int)ret, t / C * 1e6);
 }
 
@@ -63,13 +59,13 @@ template<class T, class RG>
 void bench_rank(const T& wm, RG& rg, size_t C, size_t N)
 {
 	size_t ret = 0;
-	clock_t begin = clock();
+	double begin = cybozu::GetCurrentTimeSec();
 	for (size_t i = 0; i < C; i++) {
 		size_t pos = rg() & (N - 1);
 		uint8_t c = uint8_t(rg());
 		ret += wm.rank(c, pos);
 	}
-	double t = (clock() - begin) / double(CLOCKS_PER_SEC);
+	double t = cybozu::GetCurrentTimeSec() - begin;
 	printf("rank    %08x %9.2fusec\n", (int)ret, t / C * 1e6);
 }
 
@@ -77,53 +73,67 @@ template<class T, class RG>
 void bench_rankLt(const T& wm, RG& rg, size_t C, size_t N)
 {
 	size_t ret = 0;
-	clock_t begin = clock();
+	double begin = cybozu::GetCurrentTimeSec();
 	for (size_t i = 0; i < C; i++) {
 		size_t pos = rg() & (N - 1);
 		uint8_t c = uint8_t(rg());
 		ret += wm.rankLt(c, pos);
 	}
-	double t = (clock() - begin) / double(CLOCKS_PER_SEC);
+	double t = cybozu::GetCurrentTimeSec() - begin;
 	printf("rankLt  %08x %9.2fusec\n", (int)ret, t / C * 1e6);
 }
 
-template<class T, class RG>
-void bench_select(const T& wm, RG& rg, size_t C)
+template<class T, class Vec8, class RG>
+void bench_select(const T& wm, const Vec8& v, RG& rg, size_t C)
 {
 	size_t ret = 0;
 	std::vector<int> maxTbl;
 	maxTbl.resize(256);
 	for (int i = 0; i < 256; i++) {
-		maxTbl[i] = (int)wm.size(i);
+		maxTbl[i] = (int)wm.size(i) + 1;
 	}
-	clock_t begin = clock();
+	double begin = cybozu::GetCurrentTimeSec();
 	for (size_t i = 0; i < C; i++) {
 		uint8_t c = uint8_t(rg());
 		size_t pos = rg() % maxTbl[c];
 		ret += wm.select(c, pos);
 	}
-	double t = (clock() - begin) / double(CLOCKS_PER_SEC);
+	double t = cybozu::GetCurrentTimeSec() - begin;
 	printf("select  %08x %9.2fusec\n", (int)ret, t / C * 1e6);
-#if 0
-	begin = clock();
-	for (size_t i = 0; i < C; i++) {
-		uint8_t c = uint8_t(rg());
-		size_t pos = maxTbl[c] + 1;
-		ret += wm.select(c, pos);
+	Naive nv(v);
+/*
+	over pos=67108805, i=1024, v=58
+over pos=67108841, i=1026, v=35
+*/
+	const struct {
+		uint8_t v;
+		uint64_t pos;
+	} tbl[] = {
+		{ 58, 1024 },
+		{ 35, 1026 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		uint8_t c = tbl[i].v;
+		uint64_t pos = tbl[i].pos;
+		uint64_t a = nv.select(c, pos);
+		uint64_t b = wm.select(c, pos);
+		if (a != b) {
+			printf("ERR c=%d, pos=%d, a=%d, b=%d\n", (int)c, (int)pos, (int)a, (int)b);
+			exit(1);
+		}
 	}
-	t = (clock() - begin) / double(CLOCKS_PER_SEC);
-	printf("none    %08x %9.2fusec\n", (int)ret, t / C * 1e6);
-#endif
+	puts("select ok");
 }
 
-void bench(const cybozu::WaveletMatrix& wm, size_t N)
+template<class Vec8>
+void bench(const cybozu::WaveletMatrix& wm, const Vec8& v, size_t N)
 {
 	cybozu::XorShift rg;
 	puts("wm");
 	bench_get(wm, rg, 1000000, N);
 	bench_rank(wm, rg, 1000000, N);
 	bench_rankLt(wm, rg, 1000000, N);
-	bench_select(wm, rg, 100000);
+	bench_select(wm, v, rg, 100000);
 #if 0
 	bench_get(nv, "nv", 1000000, N);
 	bench_rank(nv, "nv", 10, N);
@@ -144,9 +154,16 @@ void run(size_t bitLen)
 	for (size_t i = 0; i < N; i++) {
 		v[i] = uint8_t(rg());
 	}
+#if 0
+	printf("v\n");
+	for (size_t i = 0; i < N; i++) {
+		printf("%d ", v[i]);
+	}
+	printf("\n");
+#endif
 	wm.init(v, 8);
 	puts("start");
-	bench(wm, N);
+	bench(wm, v, N);
 }
 
 int main(int argc, char *argv[])
