@@ -166,7 +166,6 @@ class SucVector {
 		uint32_t pos = 0;
 		for (size_t i = 0; i < size; i++) {
 			uint64_t r = i * posUnit;
-			assert(pos < 0x7fffffff);
 			while (rank_a<b>(pos) < r) {
 				pos++;
 			}
@@ -236,41 +235,41 @@ public:
 		numTbl_[1] = av;
 		initSelTbl();
 	}
-	uint64_t rank1(uint64_t i) const
+	uint64_t rank1(uint64_t pos) const
 	{
-		if (i >= bitSize_) return numTbl_[1];
-		assert(i / 256 <= ~size_t(0));
-		size_t q = size_t(i / 256);
-		size_t r = size_t((i / 64) & 3);
+		if (pos >= bitSize_) return numTbl_[1];
+		assert(pos / 256 <= ~size_t(0));
+		size_t q = size_t(pos / 256);
+		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
 		const B& b = blk_[q];
 		uint64_t ret = b.a64 % maxBitSize;
 		if (r > 0) {
-//			ret += b.ab.b[r];
-			ret += uint8_t(b.a64 >> (32 + r * 8));
+			ret += b.ab.b[r]; // faster on sandy-bridge
+//			ret += uint8_t(b.a64 >> (32 + r * 8));
 		}
-		ret += cybozu::popcnt<uint64_t>(b.org[r] & cybozu::makeBitMask64(i & 63));
+		ret += cybozu::popcnt<uint64_t>(b.org[r] & cybozu::makeBitMask64(pos & 63));
 		return ret;
 	}
 	uint64_t size() const { return bitSize_; }
 	uint64_t size(bool b) const { return numTbl_[b ? 1 : 0]; }
-	uint64_t rank0(uint64_t i) const
+	uint64_t rank0(uint64_t pos) const
 	{
-		return i - rank1(i);
+		return pos - rank1(pos);
 	}
-	uint64_t rank(bool b, uint64_t i) const
+	uint64_t rank(bool b, uint64_t pos) const
 	{
-		if (b) return rank1(i);
-		return rank0(i);
+		if (b) return rank1(pos);
+		return rank0(pos);
 	}
-	bool get(uint64_t i) const
+	bool get(uint64_t pos) const
 	{
-		assert(i < bitSize_);
-		size_t q = size_t(i / 256);
-		size_t r = size_t((i / 64) & 3);
+		assert(pos < bitSize_);
+		size_t q = size_t(pos / 256);
+		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
 		const B& b = blk_[q];
-		return (b.org[r] & (1ULL << (i & 63))) != 0;
+		return (b.org[r] & (1ULL << (pos & 63))) != 0;
 	}
 	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank); }
 	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank); }
@@ -295,7 +294,7 @@ public:
 		if (rank >= numTbl_[tablePos]) return NotFound;
 		const Uint32Vec& tbl = selTbl_[tablePos];
 		assert(rank / posUnit < tbl.size());
-		const size_t pos = (size_t)(rank / posUnit);
+		const size_t pos = size_t(rank / posUnit);
 		size_t L = tbl[pos];
 		size_t R = pos >= tbl.size() - 1 ? blk_.size() : tbl[pos + 1];
 		rank++;
