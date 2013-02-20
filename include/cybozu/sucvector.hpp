@@ -5,6 +5,8 @@
 	@author MITSUNARI Shigeo(@herumi)
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
+
+	@note use -msse4.2 option for popcnt
 */
 #include <assert.h>
 #include <vector>
