@@ -139,9 +139,9 @@ public:
 			sucvector_util::loadVec(selTbl_[v], is, "selTbl");
 		}
 	}
-	size_t size() const { return size_; }
+	uint64_t size() const { return size_; }
 	template<class T>
-	size_t size(T val) const
+	uint64_t size(T val) const
 	{
 		assert(uint64_t(val) < maxVal_);
 		return rank(val, size_);
@@ -195,7 +195,7 @@ public:
 
 		initSelTbl(selTbl_, vec);
 	}
-	uint64_t get(size_t pos) const
+	uint64_t get(uint64_t pos) const
 	{
 		assert(pos < size_);
 		uint64_t ret = 0;
@@ -223,9 +223,10 @@ public:
 		see http://ja.scribd.com/doc/102636443/Wavelet-Matrix
 	*/
 	template<class T>
-	size_t rank(T val, size_t pos) const
+	uint64_t rank(T val, uint64_t pos) const
 	{
 		assert(uint64_t(val) < maxVal_);
+		if (pos > size_) pos = size_;
 		for (size_t i = 0; i < valBitLen_; i++) {
 			bool b = (val & (T(1) << (valBitLen_ - 1 - i))) != 0;
 			pos = svv[i].rank(b, pos);
@@ -237,13 +238,14 @@ public:
 		get number of less than val in [0, pos)
 	*/
 	template<class T>
-	size_t rankLt(T val, size_t pos) const
+	uint64_t rankLt(T val, uint64_t pos) const
 	{
 		assert(uint64_t(val) < maxVal_);
-		size_t ret = 0;
+		if (pos > size_) pos = size_;
+		uint64_t ret = 0;
 		for (size_t i = 0; i < valBitLen_; i++) {
 			bool b = getPos(val, valBitLen_ - 1 - i);
-			size_t end = svv[i].rank1(pos);
+			uint64_t end = svv[i].rank1(pos);
 			if (b) {
 				ret += pos - end;
 				pos = offTbl[i] + end;
@@ -254,14 +256,16 @@ public:
 		return ret - fromLtTbl[val];
 	}
 	template<class T>
-	size_t select(T val, size_t rank) const
+	uint64_t select(T val, uint64_t rank) const
 	{
 		assert(uint64_t(val) < maxVal_);
-		if (rank / posUnit >= selTbl_[val].size() - 1) return cybozu::NotFound;
+		const Uint32Vec& tbl = selTbl_[val];
+		if (rank / posUnit >= tbl.size()) return cybozu::NotFound;
+		const size_t pos = size_t(rank / posUnit);
 //		size_t L = 0;
 //		size_t R = size_;
-		size_t L = selTbl_[val][rank / posUnit];
-		size_t R = selTbl_[val][rank / posUnit + 1];
+		size_t L = tbl[pos];
+		size_t R = pos >= tbl.size() - 1 ? size_ : tbl[pos + 1];
 //printf("val=%d, rank=%d, L=%d, R=%d, size=%d\n", (int)val, (int)rank, (int)L, (int)R, (int)size_);
 		rank++;
 		while (L < R) {
