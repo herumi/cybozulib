@@ -79,8 +79,6 @@ class WaveletMatrix {
 				if (i < tblVec[v].size()) {
 					tblVec[v][i] = pos + 1;
 					iTbl[v]++;
-				} else {
-					printf("over pos=%d, i=%d, v=%d\n", (int)pos, (int)i, (int)v);
 				}
 			}
 		}
