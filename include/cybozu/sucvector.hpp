@@ -114,7 +114,7 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
 class SucVector {
-	static const uint64_t maxBitLen = 40;
+	static const uint64_t maxBitLen = 32 + 8; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct B {
 		uint64_t org[4];
@@ -161,10 +161,10 @@ class SucVector {
 	{
 		const int tablePos = b ? 1 : 0;
 		assert(numTbl_[tablePos] / posUnit < 0x7fffffff - 1);
-		const size_t size = size_t(sucvector_util::getBlockNum(numTbl_[tablePos], posUnit) + 1);
+		const size_t size = size_t(sucvector_util::getBlockNum(numTbl_[tablePos], posUnit));
 		tbl.resize(size);
 		uint32_t pos = 0;
-		for (size_t i = 0; i < size - 1; i++) {
+		for (size_t i = 0; i < size; i++) {
 			uint64_t r = i * posUnit;
 			assert(pos < 0x7fffffff);
 			while (rank_a<b>(pos) < r) {
@@ -172,7 +172,6 @@ class SucVector {
 			}
 			tbl[i] = pos;
 		}
-		tbl[size - 1] = (uint32_t)blk_.size();
 	}
 public:
 	SucVector() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
@@ -202,20 +201,19 @@ public:
 	/*
 		@param blk [in] bit pattern block
 		@param bitSize [in] bitSize ; blk size = (bitSize + 63) / 64
-		@note max bitSize is 1<<40
 	*/
 	SucVector(const uint64_t *blk, uint64_t bitSize)
 	{
-		if (bitSize > maxBitSize) throw cybozu::Exception("SucVector:too large") << bitSize;
 		init(blk, bitSize);
 	}
 	void init(const uint64_t *blk, uint64_t bitSize)
 	{
+		if (bitSize > maxBitSize) throw cybozu::Exception("SucVector:too large") << bitSize;
 		assert((bitSize + 63) / 64 <= ~size_t(0));
 		bitSize_ = bitSize;
 		const size_t blkNum = size_t((bitSize + 63) / 64);
-		size_t tblNum = (blkNum + 3) / 4;
-		blk_.resize(tblNum + 1);
+		const size_t tblNum = (blkNum + 3) / 4; // tblNum <= 2^32
+		blk_.resize(tblNum);
 
 		uint64_t av = 0;
 		size_t pos = 0;
@@ -234,13 +232,13 @@ public:
 				bv += c;
 			}
 		}
-		blk_[tblNum].a64 = av;
 		numTbl_[0] = blkNum * 64 - av;
 		numTbl_[1] = av;
 		initSelTbl();
 	}
 	uint64_t rank1(uint64_t i) const
 	{
+		if (i >= bitSize_) return numTbl_[1];
 		assert(i / 256 <= ~size_t(0));
 		size_t q = size_t(i / 256);
 		size_t r = size_t((i / 64) & 3);
@@ -267,7 +265,7 @@ public:
 	}
 	bool get(uint64_t i) const
 	{
-		assert(i / 256 <= ~size_t(0));
+		assert(i < bitSize_);
 		size_t q = size_t(i / 256);
 		size_t r = size_t((i / 64) & 3);
 		assert(q < blk_.size());
@@ -282,13 +280,6 @@ public:
 		return select0(rank);
 	}
 
-	bool getL(size_t* L, bool b, uint64_t rank) const
-	{
-		const int tablePos = b ? 1 : 0;
-		if (rank >= numTbl_[tablePos]) return false;
-		*L = selTbl_[tablePos][rank / posUnit];
-		return true;
-	}
 	/*
 		0123456789
 		0100101101
@@ -302,8 +293,11 @@ public:
 	{
 		const int tablePos = b ? 1 : 0;
 		if (rank >= numTbl_[tablePos]) return NotFound;
-		size_t L = selTbl_[tablePos][rank / posUnit];
-		size_t R = selTbl_[tablePos][rank / posUnit + 1];
+		const Uint32Vec& tbl = selTbl_[tablePos];
+		assert(rank / posUnit < tbl.size());
+		const size_t pos = (size_t)(rank / posUnit);
+		size_t L = tbl[pos];
+		size_t R = pos >= tbl.size() - 1 ? blk_.size() : tbl[pos + 1];
 		rank++;
 		while (L < R) {
 			size_t M = (L + R) / 2; // (R - L) / 2 + L;
