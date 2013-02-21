@@ -27,23 +27,23 @@ class WaveletMatrix {
 		}
 		return ret;
 	}
-	void setupFromTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t i) const
+	void initFromTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t i) const
 	{
 		if (i == valBitLen_) {
 			tbl[pos] = from;
 		} else {
-			setupFromTbl(tbl, pos, svv[i].rank(false, from), i + 1);
-			setupFromTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), svv[i].rank(true, from) + offTbl[i], i + 1);
+			initFromTbl(tbl, pos, svv[i].rank(false, from), i + 1);
+			initFromTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), svv[i].rank(true, from) + offTbl[i], i + 1);
 		}
 	}
-	void setupFromLtTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
+	void initFromLtTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
 	{
 		if (i == valBitLen_) {
 			tbl[pos] = ret;
 		} else {
 			size_t end = svv[i].rank1(from);
-			setupFromLtTbl(tbl, pos, from - end, ret, i + 1);
-			setupFromLtTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), offTbl[i] + end, ret + from - end, i + 1);
+			initFromLtTbl(tbl, pos, from - end, ret, i + 1);
+			initFromLtTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), offTbl[i] + end, ret + from - end, i + 1);
 		}
 	}
 	typedef std::vector<cybozu::SucVector> SucVecVec;
@@ -187,10 +187,10 @@ public:
 
 		// construct fromTbl
 		fromTbl.resize(maxVal_);
-		setupFromTbl(fromTbl, 0, 0, 0);
+		initFromTbl(fromTbl, 0, 0, 0);
 
 		fromLtTbl.resize(maxVal_);
-		setupFromLtTbl(fromLtTbl, 0, 0, 0, 0);
+		initFromLtTbl(fromLtTbl, 0, 0, 0, 0);
 
 		initSelTbl(selTbl_, vec);
 	}
