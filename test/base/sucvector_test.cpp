@@ -272,6 +272,23 @@ void bench(const T& sv, const F& f, size_t N)
 	printf("ret=%x, %.2fnsec\n", (int)ret, t);
 }
 
+template<class Suc>
+void benchAll(size_t bitN)
+{
+	cybozu::XorShift rg;
+	const size_t N = size_t(1) << bitN;
+	std::vector<uint64_t> v(N / 64);
+	for (size_t i = 0, n = v.size(); i < n; i++) {
+		v[i] = rg.get64();
+	}
+	Suc sv;
+	sv.init(&v[0], N);
+	puts("bench");
+	puts("rank");
+	bench(sv, &Suc::rank, 100000000);
+	puts("select");
+	bench(sv, &Suc::select, 10000000);
+}
 CYBOZU_TEST_AUTO(select64Bench)
 {
 	puts("select64C");
@@ -281,19 +298,10 @@ CYBOZU_TEST_AUTO(select64Bench)
 	puts("select64n");
 	benchSelect64(select64n);
 
-	cybozu::XorShift rg;
-	const size_t N = 1 << 25;
-	std::vector<uint64_t> v;
-	v.resize(N);
-	for (size_t i = 0; i < N; i++) {
-		v[i] = rg.get64();
-	}
-	cybozu::SucVector sv;
-	sv.init(&v[0], v.size() * 64);
-	puts("bench");
-	puts("rank");
-	bench(sv, &cybozu::SucVector::rank, 100000000);
-	puts("select");
-	bench(sv, &cybozu::SucVector::select, 10000000);
+	puts("SucVectorLt4G");
+	benchAll<cybozu::SucVectorLt4G>(31);
+	puts("SucVector");
+	benchAll<cybozu::SucVector>(31);
 }
 #endif
+
