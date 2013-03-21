@@ -175,6 +175,7 @@ class SucVectorT {
 			uint64_t r = i * posUnit;
 			while (rank_a<b>(pos) < r) {
 				pos++;
+				if (pos == blk_.size()) break;
 			}
 			tbl[i] = pos;
 		}
