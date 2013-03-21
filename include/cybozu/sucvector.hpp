@@ -109,14 +109,14 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
 
-} // cybozu::sucvector_util
 
 /*
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
-class SucVector {
-	static const uint64_t maxBitLen = 32 + 8; // don't increase this value
+template<bool support1TiB>
+class SucVectorT {
+	static const uint64_t maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct B {
 		uint64_t org[4];
@@ -139,7 +139,12 @@ class SucVector {
 	uint64_t rank_a(size_t i) const
 	{
 		assert(i < blk_.size());
-		uint64_t ret = blk_[i].a64 & makeBitMask64(maxBitLen);
+		uint64_t ret;
+		if (support1TiB) {
+			ret  = blk_[i].a64 & makeBitMask64(maxBitLen);
+		} else {
+			ret = blk_[i].ab.a;
+		}
 		if (!b) ret = i * uint64_t(256) - ret;
 		return ret;
 	}
@@ -175,7 +180,7 @@ class SucVector {
 		}
 	}
 public:
-	SucVector() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
+	SucVectorT() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
 	/*
 		data format(endian is depend on CPU:eg. little endian for x86/x64)
 		bitSize  : 8
@@ -203,13 +208,13 @@ public:
 		@param blk [in] bit pattern block
 		@param bitSize [in] bitSize ; blk size = (bitSize + 63) / 64
 	*/
-	SucVector(const uint64_t *blk, uint64_t bitSize)
+	SucVectorT(const uint64_t *blk, uint64_t bitSize)
 	{
 		init(blk, bitSize);
 	}
 	void init(const uint64_t *blk, uint64_t bitSize)
 	{
-		if (bitSize > maxBitSize) throw cybozu::Exception("SucVector:too large") << bitSize;
+		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
 		assert((bitSize + 63) / 64 <= ~size_t(0));
 		bitSize_ = bitSize;
 		const size_t blkNum = size_t((bitSize + 63) / 64);
@@ -220,7 +225,12 @@ public:
 		size_t pos = 0;
 		for (size_t i = 0; i < tblNum; i++) {
 			B& b = blk_[i];
-			b.a64 = av % maxBitSize;
+			if (support1TiB) {
+				b.a64 = av % maxBitSize;
+			} else {
+				if (av > 0xffffffff) throw cybozu::Exception("SucVectorT:too large av") << av;
+				b.ab.a = (uint32_t)av;
+			}
 			uint32_t bv = 0;
 			for (size_t j = 0; j < 4; j++) {
 				uint64_t v = pos < blkNum ? blk[pos++] : 0;
@@ -245,7 +255,12 @@ public:
 		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
 		const B& b = blk_[q];
-		uint64_t ret = b.a64 % maxBitSize;
+		uint64_t ret;
+		if (support1TiB) {
+			ret = b.a64 % maxBitSize;
+		} else {
+			ret = b.ab.a;
+		}
 		if (r > 0) {
 			ret += b.ab.b[r]; // faster on sandy-bridge
 //			ret += uint8_t(b.a64 >> (32 + r * 8));
@@ -332,8 +347,14 @@ public:
    	}
 };
 
+} // cybozu::sucvector_util
+
+typedef cybozu::sucvector_util::SucVectorT<false> SucVectorLt4G;
+typedef cybozu::sucvector_util::SucVectorT<true> SucVector;
+
 } // cybozu
 
 #ifdef _WIN32
 	#pragma warning(pop)
 #endif
+
