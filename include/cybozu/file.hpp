@@ -369,7 +369,7 @@ inline bool Move(const std::string& from, const std::string& to, bool dontThrow 
 		throw cybozu::Exception("file:Move:file already exist") << from << to;
 	}
 #ifdef _WIN32
-	bool isOK = ::MoveFileEx(from.c_str(), to.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) != 0;
+	bool isOK = ::MoveFileExA(from.c_str(), to.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) != 0;
 #else
 	bool isOK = rename(from.c_str(), to.c_str()) == 0;
 #endif
@@ -385,7 +385,7 @@ inline bool Move(const std::string& from, const std::string& to, bool dontThrow 
 inline bool Remove(const std::string& name, bool dontThrow = true)
 {
 #ifdef _WIN32
-	bool isOK = DeleteFile(name.c_str()) != 0;
+	bool isOK = DeleteFileA(name.c_str()) != 0;
 #else
 	bool isOK = unlink(name.c_str()) == 0;
 #endif
@@ -411,7 +411,7 @@ bool GetFilesInDir(T &list, const std::string& dir)
 {
 #ifdef _WIN32
 	std::string path = dir + "/*";
-	WIN32_FIND_DATA fd;
+	WIN32_FIND_DATAA fd;
 	struct Handle {
 		Handle(HANDLE hdl)
 			: hdl_(hdl)
@@ -425,7 +425,7 @@ bool GetFilesInDir(T &list, const std::string& dir)
 		}
 		HANDLE hdl_;
 	};
-	Handle hdl(FindFirstFile(path.c_str(), &fd));
+	Handle hdl(FindFirstFileA(path.c_str(), &fd));
 	if (hdl.hdl_ == INVALID_HANDLE_VALUE) {
 		return false;
 	}
@@ -438,7 +438,7 @@ bool GetFilesInDir(T &list, const std::string& dir)
 //		fileSize.HighPart = fd.nFileSizeHigh;
 //		fi.size = fileSize.QuadPart;
 		list.push_back(fi);
-	} while (FindNextFile(hdl.hdl_, &fd) != 0);
+	} while (FindNextFileA(hdl.hdl_, &fd) != 0);
 	return true;
 #else
 	struct Handle {

@@ -40,7 +40,7 @@ public:
 	{
 		const char *errMsg = 0;
 #ifdef _WIN32
-		hFile_ = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile_ == INVALID_HANDLE_VALUE) {
 			errMsg = "CreateFile"; goto ERR_EXIT;
