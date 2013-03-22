@@ -1619,8 +1619,6 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 
 namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
 
-template<class T> struct hash;
-
 template<>
 struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
 	size_t operator()(const cybozu::String& str) const
