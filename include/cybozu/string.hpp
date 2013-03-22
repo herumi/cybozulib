@@ -1616,3 +1616,17 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 };
 
 } // boost
+
+namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
+
+template<class T> struct hash;
+
+template<>
+struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
+	size_t operator()(const cybozu::String& str) const
+	{
+		return static_cast<size_t>(cybozu::hash64(str.c_str(), str.size()));
+	}
+};
+
+CYBOZU_NAMESPACE_TR1_END } // std
