@@ -27,3 +27,23 @@ uint64_t hash64(const T *x, size_t n, uint64_t v = 0)
 
 } // cybozu
 
+namespace boost {
+
+template<class T>
+struct hash;
+
+} // boost
+
+namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
+
+#ifdef _MSC_VER
+	#pragma warning(push)
+	#pragma warning(disable : 4099) // missmatch class and struct
+#endif
+template<class T>
+struct hash;
+#ifdef _MSC_VER
+	#pragma warning(pop)
+#endif
+
+CYBOZU_NAMESPACE_TR1_END } // std
