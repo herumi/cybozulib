@@ -14,9 +14,6 @@
 #ifdef CYBOZU_STRING_USE_REGEX
 	#define CYBOZU_STD std
 	#ifdef _MSC_VER
-		#ifdef _MD
-			#error "MD is not support. use /MT"
-		#endif
 		#define CYBOZU_STRING_USE_WIN
 		#pragma warning(disable : 4018) // signed/unsigned mismatch
 	#endif
@@ -28,6 +25,14 @@
 	#include <boost/regex.hpp>
 	#define CYBOZU_STD boost
 	#define CYBOZU_STRING_USE_BOOST_REGEX
+#endif
+
+#ifdef _MSC_VER
+	#define CYBOZU_RE_CHAR wchar_t
+	#define CYBOZU_RE(x) L##x
+#else
+	#define CYBOZU_RE_CHAR char
+	#define CYBOZU_RE(x) x
 #endif
 
 #ifdef CYBOZU_STRING_USE_REGEX
