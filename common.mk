@@ -14,7 +14,7 @@ CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
 CFLAGS = -g -D_FILE_OFFSET_BITS=64 -msse4.2
 CFLAGS+=$(CFLAGS_WARN)
-LDFLAGS += -lz -lpthread -lssl -lmecab
+LDFLAGS += -lz -lpthread -lssl -lmecab -lboost_regex
 BIT=64
 
 DEBUG=1
