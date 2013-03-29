@@ -118,7 +118,7 @@ template<bool support1TiB>
 class SucVectorT {
 	static const uint64_t maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
-	struct B {
+	struct Block {
 		uint64_t org[4];
 		union {
 			uint64_t a64;
@@ -130,7 +130,7 @@ class SucVectorT {
 	};
 	uint64_t bitSize_;
 	uint64_t numTbl_[2];
-	std::vector<B> blk_;
+	std::vector<Block> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
 	static const uint64_t posUnit = 1024;
 	Uint32Vec selTbl_[2];
@@ -188,7 +188,7 @@ public:
 		numTbl_[0]  : 8
 		numTbl_[1]  : 8
 		blkSize  : 8
-		blk data : blkSize * sizeof(B)
+		blk data : blkSize * sizeof(Block)
 	*/
 	void save(std::ostream& os) const
 	{
@@ -206,14 +206,14 @@ public:
 		initSelTbl();
 	}
 	/*
-		@param blk [in] bit pattern block
-		@param bitSize [in] bitSize ; blk size = (bitSize + 63) / 64
+		@param buf [in] bit pattern buffer
+		@param bitSize [in] bitSize ; buf size = (bitSize + 63) / 64
 	*/
-	SucVectorT(const uint64_t *blk, uint64_t bitSize)
+	SucVectorT(const uint64_t *buf, uint64_t bitSize)
 	{
-		init(blk, bitSize);
+		init(buf, bitSize);
 	}
-	void init(const uint64_t *blk, uint64_t bitSize)
+	void init(const uint64_t *buf, uint64_t bitSize)
 	{
 		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
 		assert((bitSize + 63) / 64 <= ~size_t(0));
@@ -222,30 +222,30 @@ public:
 		const size_t tblNum = (blkNum + 3) / 4; // tblNum <= 2^32
 		blk_.resize(tblNum);
 
-		uint64_t av = 0;
+		uint64_t num1 = 0;
 		size_t pos = 0;
 		for (size_t i = 0; i < tblNum; i++) {
-			B& b = blk_[i];
+			Block& blk = blk_[i];
 			if (support1TiB) {
-				b.a64 = av % maxBitSize;
+				blk.a64 = num1 % maxBitSize;
 			} else {
-				if (av > 0xffffffff) throw cybozu::Exception("SucVectorT:too large av") << av;
-				b.ab.a = (uint32_t)av;
+				if (num1 > 0xffffffff) throw cybozu::Exception("SucVectorT:too large num1") << num1;
+				blk.ab.a = (uint32_t)num1;
 			}
-			uint32_t bv = 0;
+			uint32_t subNum1 = 0;
 			for (size_t j = 0; j < 4; j++) {
-				uint64_t v = pos < blkNum ? blk[pos++] : 0;
-				b.org[j] = v;
+				uint64_t v = pos < blkNum ? buf[pos++] : 0;
+				blk.org[j] = v;
 				uint32_t c = cybozu::popcnt(v);
-				av += c;
+				num1 += c;
 				if (j > 0) {
-					b.ab.b[j] = (uint8_t)bv;
+					blk.ab.b[j] = (uint8_t)subNum1;
 				}
-				bv += c;
+				subNum1 += c;
 			}
 		}
-		numTbl_[0] = blkNum * 64 - av;
-		numTbl_[1] = av;
+		numTbl_[0] = blkNum * 64 - num1;
+		numTbl_[1] = num1;
 		initSelTbl();
 	}
 	uint64_t rank1(uint64_t pos) const
@@ -255,18 +255,18 @@ public:
 		size_t q = size_t(pos / 256);
 		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
-		const B& b = blk_[q];
+		const Block& blk = blk_[q];
 		uint64_t ret;
 		if (support1TiB) {
-			ret = b.a64 % maxBitSize;
+			ret = blk.a64 % maxBitSize;
 		} else {
-			ret = b.ab.a;
+			ret = blk.ab.a;
 		}
 		if (r > 0) {
-			ret += b.ab.b[r]; // faster on sandy-bridge
-//			ret += uint8_t(b.a64 >> (32 + r * 8));
+			ret += blk.ab.b[r]; // faster on sandy-bridge
+//			ret += uint8_t(blk.a64 >> (32 + r * 8));
 		}
-		ret += cybozu::popcnt<uint64_t>(b.org[r] & cybozu::makeBitMask64(pos & 63));
+		ret += cybozu::popcnt<uint64_t>(blk.org[r] & cybozu::makeBitMask64(pos & 63));
 		return ret;
 	}
 	uint64_t size() const { return bitSize_; }
@@ -286,8 +286,8 @@ public:
 		size_t q = size_t(pos / 256);
 		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
-		const B& b = blk_[q];
-		return (b.org[r] & (1ULL << (pos & 63))) != 0;
+		const Block& blk = blk_[q];
+		return (blk.org[r] & (1ULL << (pos & 63))) != 0;
 	}
 	uint64_t select0(uint64_t rank) const { return selectSub<false>(rank); }
 	uint64_t select1(uint64_t rank) const { return selectSub<true>(rank); }
