@@ -52,7 +52,7 @@ struct Thread : public cybozu::ThreadBase {
 
 } // parallel_util
 /*
-	void T::f(N i);
+	void T::f(N i, int threadIdx);
 */
 template<class T, class N>
 void parallel_for(T& target, N n, int threadNum)
