@@ -207,11 +207,11 @@ CYBOZU_TEST_AUTO(output_gzip2)
 	};
 	const char *const textBuf = cybozu::cast<const char*>(textBufTbl);
 	const char *const encBuf = cybozu::cast<const char*>(encBufTbl);
-	const std::string text(textBuf, textBuf + sizeof(textBuf));
+	const std::string text(textBuf, textBuf + sizeof(textBufTbl));
 
 	{
 		InputStream is;
-		is.is_.write(encBuf, sizeof(encBuf));
+		is.is_.write(encBuf, sizeof(encBufTbl));
 		cybozu::ZlibDecompressorT<InputStream> dec(is, true);
 		char buf[4096];
 		size_t size = dec.read(buf, sizeof(buf));

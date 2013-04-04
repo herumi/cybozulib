@@ -26,7 +26,7 @@ class Mmap {
 	HANDLE hFile_;
 	HANDLE hMap_;
 #endif
-	int64_t size_;
+	uint64_t size_;
 public:
 	explicit Mmap(const std::string& fileName)
 #ifdef _WIN32
@@ -113,7 +113,7 @@ ERR_EXIT:
 		if (map_ != MAP_FAILED) ::munmap(const_cast<char*>(map_), size_);
 #endif
 	}
-	int64_t size() const { return size_; }
+	uint64_t size() const { return size_; }
 	const char *get() const { return map_; }
 private:
 	Mmap(const Mmap &);
