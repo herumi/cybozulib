@@ -152,7 +152,7 @@ class ZlibDecompressorT {
 	{
 		ssize_t readSize = is_.read(buf, size);
 		if ((size_t)readSize != size) {
-			throw cybozu::Exception("zlib:ZlibDecompressorT:readAll");
+			throw cybozu::Exception("zlib:ZlibDecompressorT:readAll") << readSize << size;
 		}
 	}
 	void skipToZero()
