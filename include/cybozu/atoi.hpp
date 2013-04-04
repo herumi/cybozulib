@@ -60,7 +60,7 @@ T convertToInt(bool *b, const char *p, size_t size, const char (&max)[n], T min,
 		*b = false;
 		return 0;
 	} else {
-		throw cybozu::Exception("atoi::convertToInt") << std::string(keepP, keepSize);
+		throw cybozu::Exception("atoi::convertToInt") << cybozu::exception::makeString(keepP, keepSize);
 	}
 }
 
@@ -100,7 +100,7 @@ T convertToUint(bool *b, const char *p, size_t size, T overflow1, char overflow2
 		*b = false;
 		return 0;
 	} else {
-		throw cybozu::Exception("atoi::convertToUint") << std::string(keepP, keepSize);
+		throw cybozu::Exception("atoi::convertToUint") << cybozu::exception::makeString(keepP, keepSize);
 	}
 }
 
@@ -135,7 +135,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 	if (i == 0) isOK = false;
 	if (b) *b = isOK;
 	if (isOK) return x;
-	throw cybozu::Exception("atoi::convertHexToInt") << std::string(p, size);
+	throw cybozu::Exception("atoi::convertHexToInt") << cybozu::exception::makeString(p, size);
 }
 
 } // atoi_local
