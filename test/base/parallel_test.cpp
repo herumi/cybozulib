@@ -15,7 +15,7 @@ struct X {
 	bool operator()(int idx, int /*threadIdx*/)
 	{
 		double ret = 0;
-		const int N = 10000;
+		const int N = 1000;
 		for (int i = 0; i < N; i++) {
 			ret += sin(double(i) / N) * idx;
 		}
@@ -38,7 +38,7 @@ CYBOZU_TEST_AUTO(parallel)
 	for (int threadNum = 1; threadNum < 8; threadNum++) {
 		printf("threadNum=%d\n", threadNum);
 		double begin = cybozu::GetCurrentTimeSec();
-		for (int n = 1; n < 1000; n += 10) {
+		for (int n = 1; n < 100; n += 10) {
 			test(n, threadNum);
 		}
 		printf("time %f\n", cybozu::GetCurrentTimeSec() - begin);
