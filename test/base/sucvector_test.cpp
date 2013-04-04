@@ -204,7 +204,7 @@ CYBOZU_TEST_AUTO(get_load_save)
 
 CYBOZU_TEST_AUTO(select8)
 {
-	const uint32_t s = 18;
+	const uint32_t s = 13;
 	for (uint32_t v = 0; v < (1 << s); v++) {
 		for (uint32_t x = 0; x < s; x++) {
 			uint64_t a = cybozu::sucvector_util::select64(v, x);
@@ -245,7 +245,7 @@ template<class F>
 void benchSelect64(F& f)
 {
 	cybozu::XorShift rg;
-	const int N = 1000000;
+	const int N = 100000;
 	uint64_t ret = 0;
 	clock_t begin = clock();
 	for (int i = 0; i < N; i++) {
@@ -285,9 +285,9 @@ void benchAll(size_t bitN)
 	sv.init(&v[0], N);
 	puts("bench");
 	puts("rank");
-	bench(sv, &Suc::rank, 100000000);
+	bench(sv, &Suc::rank, 10000000);
 	puts("select");
-	bench(sv, &Suc::select, 10000000);
+	bench(sv, &Suc::select, 1000000);
 }
 CYBOZU_TEST_AUTO(select64Bench)
 {
