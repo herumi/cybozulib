@@ -91,7 +91,7 @@ CYBOZU_TEST_AUTO(large_load_save)
 {
 	cybozu::XorShift rg;
 	std::vector<uint32_t> v;
-	const size_t vn = 5000;
+	const size_t vn = 500;
 	const size_t valBitLen = 8;
 	const uint32_t maxVal = 1 << valBitLen;
 	v.resize(vn);
