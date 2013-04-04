@@ -5,7 +5,10 @@
 
 CYBOZU_TEST_AUTO(mmap)
 {
-	const std::string path = cybozu::file::GetExePath() + "../include/cybozu/mmap.hpp";
+	std::string path = cybozu::file::GetExePath();
+	size_t pos = path.find("cybozulib");
+	CYBOZU_TEST_ASSERT(pos != std::string::npos);
+	path = path.substr(0, pos + 9) + "/include/cybozu/mmap.hpp";
 	cybozu::Mmap mmap(path);
 	const std::string str(mmap.get(), (size_t)mmap.size());
 	CYBOZU_TEST_EQUAL(str.find("#pragma once"), 0U);
