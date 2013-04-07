@@ -2,7 +2,6 @@
 /**
 	@file
 	@brief int type definition and macros
-
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
@@ -47,20 +46,23 @@
 		#define CYBOZU_ALLOCA_(x) __builtin_alloca(x)
 	#endif
 #endif
-
-// std::vector<int> v; CYBOZU_FOREACH(auto x, v) {...}
-#if defined(_MSC_VER) && (_MSC_VER >= 1400)
-	#define CYBOZU_FOREACH(type_x, xs) for each (type_x in xs)
-#elif defined(__GNUC__)
-	#define CYBOZU_FOREACH(type_x, xs) for (type_x : xs)
+#ifndef CYBOZU_FOREACH
+	// std::vector<int> v; CYBOZU_FOREACH(auto x, v) {...}
+	#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+		#define CYBOZU_FOREACH(type_x, xs) for each (type_x in xs)
+	#elif defined(__GNUC__)
+		#define CYBOZU_FOREACH(type_x, xs) for (type_x : xs)
+	#endif
 #endif
-
-#define CYBOZU_NUM_OF_ARRAY(x) (sizeof(x) / sizeof(*x))
-
-#ifdef _MSC_VER
-	#define CYBOZU_SNPRINTF(x, len, ...) _snprintf_s(x, len - 1, __VA_ARGS__)
-#else
-	#define CYBOZU_SNPRINTF(x, len, ...) snprintf(x, len, __VA_ARGS__)
+#ifndef CYBOZU_NUM_OF_ARRAY
+	#define CYBOZU_NUM_OF_ARRAY(x) (sizeof(x) / sizeof(*x))
+#endif
+#ifndef CYBOZU_SNPRINTF
+	#ifdef _MSC_VER
+		#define CYBOZU_SNPRINTF(x, len, ...) _snprintf_s(x, len - 1, __VA_ARGS__)
+	#else
+		#define CYBOZU_SNPRINTF(x, len, ...) snprintf(x, len, __VA_ARGS__)
+	#endif
 #endif
 
 #define CYBOZU_CPP_VERSION_CPP03 0
@@ -89,10 +91,12 @@
 	#define CYBOZU_NAMESPACE_TR1_END
 #endif
 
-#if defined(_WIN64) || defined(__x86_64__)
-	#define CYBOZU_64BIT
-#else
-	#define CYBOZU_32BIT
+#ifndef CYBOZU_OS_BIT
+	#if defined(_WIN64) || defined(__x86_64__)
+		#define CYBOZU_OS_BIT 64
+	#else
+		#define CYBOZU_OS_BIT 32
+	#endif
 #endif
 
 namespace cybozu {
@@ -103,4 +107,3 @@ T cast(const S* ptr) { return static_cast<T>(static_cast<const void*>(ptr)); }
 template<class T, class S>
 T cast(S* ptr) { return static_cast<T>(static_cast<void*>(ptr)); }
 } // cybozu
-

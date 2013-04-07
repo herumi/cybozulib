@@ -61,7 +61,7 @@ template<>
 struct Tag<8> {
 	typedef int64_t type;
 
-#ifdef CYBOZU_64BIT
+#if (CYBOZU_OS_BIT == 64)
 	template<class T>
 	static inline T AtomicAddSub(T *p, T y)
 	{
@@ -83,7 +83,7 @@ struct Tag<8> {
 #endif
 	}
 
-#ifdef CYBOZU_64BIT
+#if (CYBOZU_OS_BIT == 64)
 	template<class T>
 	static inline T AtomicExchangeSub(T *p, T newValue)
 	{
