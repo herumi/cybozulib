@@ -10,7 +10,7 @@ CYBOZU_TEST_AUTO(atomic_not_in_thread)
 	cybozu::AtomicAdd(&a, b);
 	CYBOZU_TEST_EQUAL(a, 7);
 
-#ifdef CYBOZU_64BIT
+#if (CYBOZU_OS_BIT == 64)
 	ia = 4, ib = 9;
 	cybozu::AtomicAdd(&ia, ib);
 	CYBOZU_TEST_EQUAL(ia, 13);
