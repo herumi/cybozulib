@@ -39,6 +39,14 @@
 		#define CYBOZU_ALIGN(x) __attribute__((aligned(x)))
 	#endif
 #endif
+#ifndef CYBOZU_ALLOCA
+	#ifdef _MSC_VER
+		#include <malloc.h>
+		#define CYBOZU_ALLOCA(x) _malloca(x)
+	#else
+		#define CYBOZU_ALLOCA_(x) __builtin_alloca(x)
+	#endif
+#endif
 
 // std::vector<int> v; CYBOZU_FOREACH(auto x, v) {...}
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
