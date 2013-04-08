@@ -138,7 +138,11 @@ T AtomicExchange(T *p, T newValue)
 
 inline void mfence()
 {
+#ifdef _MSC_VER
+	MemoryBarrier();
+#else
 	_mm_mfence();
+#endif
 }
 
 } // cybozu
