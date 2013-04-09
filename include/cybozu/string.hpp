@@ -1599,6 +1599,38 @@ inline std::string ToUtf8(const cybozu::String16& in)
 	throw cybozu::Exception("string:ToUtf8:bad utf16");
 }
 
+template<class Iterator>
+class Utf8refT {
+	Iterator begin_;
+	Iterator end_;
+	bool ignoreBadChar_;
+public:
+	Utf8refT(Iterator begin, Iterator end, bool ignoreBadChar = false)
+		: begin_(begin)
+		, end_(end)
+		, ignoreBadChar_(ignoreBadChar)
+	{
+	}
+	/*
+		get character and seek next pointer
+	*/
+	bool next(Char *c)
+	{
+	RETRY:
+		if (begin_ == end_) return false;
+		bool b = string::GetCharFromUtf8(c, begin_, end_);
+		if (b) return true;
+		if (ignoreBadChar_) goto RETRY;
+		throw cybozu::Exception("string:Utf8ref:getAndNext");
+	}
+};
+
+struct Utf8ref : Utf8refT<const char*> {
+	Utf8ref(const char *begin, const char *end, bool ignoreBadChar = false) : Utf8refT<const char*>(begin, end, ignoreBadChar) {}
+	Utf8ref(const char *str, size_t size, bool ignoreBadChar = false) : Utf8refT<const char*>(str, str + size, ignoreBadChar) {}
+	explicit Utf8ref(const std::string& str, bool ignoreBadChar = false) : Utf8refT<const char*>(str.c_str(), str.c_str() + str.size(), ignoreBadChar) {}
+};
+
 } // cybozu
 
 // specialization for boost::hash

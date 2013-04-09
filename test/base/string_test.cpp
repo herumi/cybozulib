@@ -1,3 +1,4 @@
+﻿// don't delete bom(EF BB BF) for visual stduio
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -11,11 +12,21 @@
 
 using namespace cybozu;
 
+#ifdef _MSC_VER
+	#pragma warning(disable : 4309)
+#endif
+
 ///////// iterator
+
+#ifdef _MSC_VER
+	#define STR(x) L ## x
+#else
+	#define STR(x) x
+#endif
 
 CYBOZU_TEST_AUTO(string_iterator_test)
 {
-	/* String s("これはUTF-8 1"); */
+	// String s(STR("これはUTF-8 1"));
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	String t;
 	std::copy(s.begin(), s.end(), std::back_inserter(t));
@@ -1525,4 +1536,62 @@ CYBOZU_TEST_AUTO(string_size_test_empty)
 {
 	String s1;
 	CYBOZU_TEST_ASSERT(s1.empty());
+}
+
+CYBOZU_TEST_AUTO(utf16)
+{
+	// abc a-i-u-
+	const cybozu::Char16 utf16[6] = { 0x61, 0x62, 0x63, 0x3042, 0x3044, 0x3046 };
+	const char utf8[12] = { 0x61, 0x62, 0x63, 0xE3, 0x81, 0x82, 0xE3, 0x81, 0x84, 0xE3, 0x81, 0x86 };
+	cybozu::String16 s;
+	cybozu::ConvertUtf8ToUtf16(&s, utf8, utf8 + 12);
+	CYBOZU_TEST_EQUAL(s.size(), 6u);
+	for (int i = 0; i < 6; i++) {
+		CYBOZU_TEST_EQUAL(s[i], utf16[i]);
+	}
+	std::string t;
+	cybozu::ConvertUtf16ToUtf8(&t, utf16, utf16 + 6);
+	CYBOZU_TEST_EQUAL(t.size(), 12u);
+	for (int i = 0; i < 12; i++) {
+		CYBOZU_TEST_EQUAL(t[i], utf8[i]);
+	}
+}
+
+CYBOZU_TEST_AUTO(Utf8ref)
+{
+	const std::string utf8 = "\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1";
+	const String s(utf8);
+	cybozu::Utf8refT<std::string::const_iterator> ref(utf8.begin(), utf8.end());
+	cybozu::Char c;
+	size_t i = 0;
+	while (ref.next(&c)) {
+		CYBOZU_TEST_EQUAL(c, s[i]);
+		i++;
+	}
+	CYBOZU_TEST_EQUAL(i, s.size());
+}
+
+CYBOZU_TEST_AUTO(Utf8ref_bad_char)
+{
+	const std::string utf8 = "\xe3\x81\x93\xe3";
+	const String s(utf8.c_str(), 3);
+	cybozu::Utf8ref ref(utf8.c_str(), utf8.size());
+	cybozu::Char c;
+	CYBOZU_TEST_ASSERT(ref.next(&c));
+	CYBOZU_TEST_EQUAL(s[0], c);
+	CYBOZU_TEST_EXCEPTION(ref.next(&c), std::exception);
+}
+
+CYBOZU_TEST_AUTO(Utf8ref_ignore_bad_char)
+{
+	const std::string badUtf8 = "\xe3\x81\x93\xff\xff\xff\xe3\x82\x8c\xff\xff\xe3\x81\xaf" "UTF-8 1";
+	const String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
+	cybozu::Utf8refT<std::string::const_iterator> ref(badUtf8.begin(), badUtf8.end(), true);
+	cybozu::Char c;
+	size_t i = 0;
+	while (ref.next(&c)) {
+		CYBOZU_TEST_EQUAL(c, s[i]);
+		i++;
+	}
+	CYBOZU_TEST_EQUAL(i, s.size());
 }
