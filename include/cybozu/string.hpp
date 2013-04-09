@@ -298,7 +298,6 @@ public:
 		: str_(str)
 	{
 	}
-
 	/**
 		construct from count * c
 		@param count [local::in] count of character
@@ -376,6 +375,23 @@ public:
 			str_ += c;
 		}
 	}
+	/**
+		construct from [str, NUL)
+		@param str [local::in] original string
+	*/
+	StringT(const Char16 *buf)
+	{
+		const String16 str(buf);
+		String16::const_iterator begin = str.begin(), end = str.end();
+		while (begin != end) {
+			Char c;
+			if (!string::GetCharFromUtf16(c, begin, end)) {
+				throw cybozu::Exception("string:StringT:UTF-16");
+			}
+			str_ += c;
+		}
+	}
+
 	/**
 		construct by BasicString
 		@param str [local::in] UTF-32 string
