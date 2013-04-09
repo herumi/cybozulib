@@ -22,6 +22,9 @@
 #else
 	#define CYBOZU_RE_STD std
 	#ifdef _MSC_VER
+	#ifdef _DLL_CPPLIB
+		#error "use /MT or /MTd option. /MD and /MDd are not supported"
+	#endif
 		#define CYBOZU_STRING_USE_WIN
 		#pragma warning(disable : 4018) // signed/unsigned mismatch
 	#endif
