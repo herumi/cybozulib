@@ -148,11 +148,14 @@ struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 	  : CYBOZU_RE_STD::basic_regex<Char>(that) {}
 };
 
-
+#if 0
 struct smatch : public CYBOZU_RE_STD::match_results<cybozu::String::const_iterator> {
 	String str(int sub = 0) const {
 		return CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::str(sub);
 	}
+//	String prefix() const {
+//		return CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::prefix();
+//	}
 };
 
 struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
@@ -168,7 +171,9 @@ struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iter
    { return static_cast<const smatch*>(CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator->()); }
 #endif
 };
+#endif
 
+#if 0
 inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_search(begin, end, m, e, flags);
@@ -190,11 +195,12 @@ inline bool regex_search(const String::const_iterator begin, const String::const
 	smatch m;
 	return regex_search(begin, end, m, e, flags);
 }
+#endif
 
 inline String regex_replace(const String::const_iterator begin, const String::const_iterator end, const regex& e, const String& fmt, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	String result;
-	CYBOZU_RE_STD::regex_replace(std::back_inserter(result.get()), begin, end, e, fmt.get(), flags);
+	CYBOZU_RE_STD::regex_replace(std::back_inserter(result), begin, end, e, fmt, flags);
 	return result;
 }
 
@@ -203,6 +209,8 @@ inline String regex_replace(const String& s, const regex& e, const String& fmt, 
 	return regex_replace(s.begin(), s.end(), e, fmt, flags);
 }
 
+
+#if 0
 inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_match(begin, end, m, e, flags);
@@ -224,8 +232,21 @@ inline bool regex_match(const String& s, const regex& e, CYBOZU_RE_STD::regex_co
 	smatch m;
 	return regex_match(s, m, e, flags);
 }
+#endif
 
+//using CYBOZU_RE_STD::regex_search;
+//typedef basic_regex<cybozu::Char> regex;
+
+using CYBOZU_RE_STD::regex_iterator;
+using CYBOZU_RE_STD::basic_regex;
+using CYBOZU_RE_STD::regex_search;
+using CYBOZU_RE_STD::match_results;
+//using CYBOZU_RE_STD::regex_replace;
+using CYBOZU_RE_STD::regex_match;
 using CYBOZU_RE_STD::regex_token_iterator;
+
+typedef match_results<cybozu::String::const_iterator> smatch;
+typedef regex_iterator<String::const_iterator> sregex_iterator;
 typedef regex_token_iterator<cybozu::String::const_iterator> sregex_token_iterator;
 
 } // cybozu

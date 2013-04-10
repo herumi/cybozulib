@@ -1595,3 +1595,95 @@ CYBOZU_TEST_AUTO(Utf8ref_ignore_bad_char)
 	}
 	CYBOZU_TEST_EQUAL(i, s.size());
 }
+
+CYBOZU_TEST_AUTO(equal)
+{
+	const cybozu::String a = "abc";
+	const std::string b = "abc";
+	const char *c = "abc";
+	const cybozu::Char d[] = { 'a', 'b', 'c', '\0' };
+	CYBOZU_TEST_EQUAL(a, a);
+	CYBOZU_TEST_EQUAL(a, b);
+	CYBOZU_TEST_EQUAL(a, c);
+	CYBOZU_TEST_EQUAL(a, d);
+
+	CYBOZU_TEST_EQUAL(b, a);
+	CYBOZU_TEST_EQUAL(c, a);
+	CYBOZU_TEST_EQUAL(d, a);
+
+	CYBOZU_TEST_ASSERT(!(a != a));
+	CYBOZU_TEST_ASSERT(!(a != b));
+	CYBOZU_TEST_ASSERT(!(a != c));
+	CYBOZU_TEST_ASSERT(!(a != d));
+
+	CYBOZU_TEST_ASSERT(!(b != a));
+	CYBOZU_TEST_ASSERT(!(c != a));
+	CYBOZU_TEST_ASSERT(!(d != a));
+#ifdef _MSC_VER
+	const wchar_t e[] = L"abc";
+	CYBOZU_TEST_EQUAL(a, e);
+	CYBOZU_TEST_EQUAL(e, a);
+	CYBOZU_TEST_ASSERT(!(a != e));
+	CYBOZU_TEST_ASSERT(!(e != a));
+#endif
+}
+
+CYBOZU_TEST_AUTO(less)
+{
+	const cybozu::String a = "ab";
+	const std::string b = "abc";
+	const char *c = "abc";
+	const cybozu::Char d[] = { 'a', 'b', 'c', '\0' };
+	CYBOZU_TEST_ASSERT(a < b);
+	CYBOZU_TEST_ASSERT(a < c);
+	CYBOZU_TEST_ASSERT(a < d);
+
+	CYBOZU_TEST_ASSERT(a <= b);
+	CYBOZU_TEST_ASSERT(a <= c);
+	CYBOZU_TEST_ASSERT(a <= d);
+
+	CYBOZU_TEST_ASSERT(b > a);
+	CYBOZU_TEST_ASSERT(c > a);
+	CYBOZU_TEST_ASSERT(d > a);
+
+	CYBOZU_TEST_ASSERT(b >= a);
+	CYBOZU_TEST_ASSERT(c >= a);
+	CYBOZU_TEST_ASSERT(d >= a);
+#ifdef _MSC_VER
+	const wchar_t e[] = L"abc";
+	CYBOZU_TEST_ASSERT(a < e);
+	CYBOZU_TEST_ASSERT(a <= e);
+	CYBOZU_TEST_ASSERT(e > a);
+	CYBOZU_TEST_ASSERT(e >= a);
+#endif
+}
+
+CYBOZU_TEST_AUTO(greater)
+{
+	const cybozu::String a = "abcd";
+	const std::string b = "abc";
+	const char *c = "abc";
+	const cybozu::Char d[] = { 'a', 'b', 'c', '\0' };
+	CYBOZU_TEST_ASSERT(a > b);
+	CYBOZU_TEST_ASSERT(a > c);
+	CYBOZU_TEST_ASSERT(a > d);
+
+	CYBOZU_TEST_ASSERT(a >= b);
+	CYBOZU_TEST_ASSERT(a >= c);
+	CYBOZU_TEST_ASSERT(a >= d);
+
+	CYBOZU_TEST_ASSERT(b < a);
+	CYBOZU_TEST_ASSERT(c < a);
+	CYBOZU_TEST_ASSERT(d < a);
+
+	CYBOZU_TEST_ASSERT(b <= a);
+	CYBOZU_TEST_ASSERT(c <= a);
+	CYBOZU_TEST_ASSERT(d <= a);
+#ifdef _MSC_VER
+	const wchar_t e[] = L"abc";
+	CYBOZU_TEST_ASSERT(a > e);
+	CYBOZU_TEST_ASSERT(a >= e);
+	CYBOZU_TEST_ASSERT(e < a);
+	CYBOZU_TEST_ASSERT(e <= a);
+#endif
+}

@@ -22,11 +22,11 @@ namespace cybozu {
 
 #ifdef __GNUC__
 	/* avoid to use uint32_t because compiling boost::regex fails */
-	typedef wchar_t Char; //!< Char for Linux
+	typedef int Char; //!< Char for Linux
 	typedef unsigned short Char16; /* unsigned is necessary for gcc */
 #else
 	/* can't compile with singed */
-	typedef unsigned __int32 Char; //!< Char for Windows
+	typedef int Char; //!< Char for Windows
 	typedef wchar_t Char16;
 #endif
 
@@ -76,6 +76,18 @@ inline bool in(unsigned char c, int min, int max)
 //	  return min <= c && c <= max;
 	return static_cast<unsigned int>(c - min) <= static_cast<unsigned int>(max - min);
 }
+
+template<class T>
+struct IsInt { enum { value = false }; };
+template<>struct IsInt<int> { enum { value = true }; };
+template<>struct IsInt<unsigned int> { enum { value = true }; };
+template<>struct IsInt<size_t> { enum { value = true }; };
+
+template <bool b, class T = void>
+struct disable_if { typedef T type; };
+
+template <class T>
+struct disable_if<true, T> {};
 
 } // local
 
@@ -228,29 +240,31 @@ inline bool AppendUtf16(String16& out, Char c)
 	return false;
 }
 
-} // string
+} } // cybozu::string
 
-/**
-	@brief template class for cybozu::String
-*/
-template<class CharT, class Traits = std::char_traits<CharT>, class Alloc = std::allocator<CharT> >
-class StringT {
+namespace std {
+
+template<>
+class basic_string<cybozu::Char> {
+	struct Box {
+		cybozu::Char c;
+		bool operator==(const Box& rhs) const { return c == rhs.c; }
+		bool operator<(const Box& rhs) const { return c < rhs.c; }
+	};
+	typedef std::basic_string<Box> inString;
 public:
-	//@{ standard typedef
-	typedef std::basic_string<CharT, Traits, Alloc> BasicString;
-	typedef CharT value_type;
+	typedef cybozu::Char value_type;
 	typedef size_t size_type;
 	typedef ptrdiff_t difference_type;
-	typedef CharT& reference;
-	typedef const CharT& const_reference;
-	typedef CharT* pointer;
-	typedef const CharT* const_pointer;
-	typedef typename BasicString::iterator iterator;
-	typedef typename BasicString::const_iterator const_iterator;
+	typedef cybozu::Char& reference;
+	typedef const cybozu::Char& const_reference;
+	typedef cybozu::Char* pointer;
+	typedef const cybozu::Char* const_pointer;
+	typedef cybozu::Char* iterator;
+	typedef const cybozu::Char* const_iterator;
 	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-	//@}
-	static const size_t npos = size_t(-1); //!< standard npos
+	static const size_t npos = size_t(-1);
 
 	/**
 		dump unicode of string for debug
@@ -260,7 +274,7 @@ public:
 	{
 		if (msg) printf("%s", msg);
 		for (size_t i = 0; i < size(); i++) {
-			printf("%08x ", str_[i]);
+			printf("%08x ", str_[i].c);
 		}
 		printf("\n");
 	}
@@ -268,7 +282,7 @@ public:
 	/**
 		construct empty string
 	*/
-	StringT() { }
+	basic_string() { }
 
 	/**
 		construct from str [off, off + count)
@@ -276,7 +290,7 @@ public:
 		@param off [local::in] offset
 		@param count [local::in] count of character(default npos)
 	*/
-	StringT(const StringT& str, size_type off, size_type count = npos)
+	basic_string(const basic_string& str, size_type off, size_type count = npos)
 		: str_(str.str_, off, count)
 	{ }
 
@@ -285,27 +299,27 @@ public:
 		@param str [local::in] original string
 		@param count [local::in] count of character
 	*/
-	StringT(const CharT *str, size_type count)
-		: str_(str, count)
+	basic_string(const cybozu::Char *str, size_type count)
 	{
+		append(str, count);
 	}
 
 	/**
 		construct from [str, NUL)
 		@param str [local::in] original string
 	*/
-	StringT(const CharT *str)
-		: str_(str)
+	basic_string(const cybozu::Char *str)
 	{
+		append(str);
 	}
 	/**
 		construct from count * c
 		@param count [local::in] count of character
 		@param c [local::in] initial character
 	*/
-	StringT(size_type count, CharT c)
-		: str_(count, c)
+	basic_string(size_type count, cybozu::Char c)
 	{
+		append(count, c);
 	}
 
 	/**
@@ -314,21 +328,21 @@ public:
 		@param end [local::in] end of iterator
 	*/
 	template<class Iterator>
-	StringT(Iterator begin, Iterator end)
+	basic_string(Iterator begin, Iterator end, typename cybozu::string::local::disable_if<cybozu::string::local::IsInt<Iterator>::value>::type* = 0)
 	{
 		append(begin, end);
 	}
 
 	// construct from [begin, end), const pointers
-//  StringT(const_pointer begin, const_pointer end);
+//  basic_string(const_pointer begin, const_pointer end);
 	// construct from [begin, end), const_iterators
-//  StringT(const_iterator begin, const_iterator end);
+//  basic_string(const_iterator begin, const_iterator end);
 
 	/**
 		construct by copying str
 		@param str [local::in] original string
 	*/
-	StringT(const StringT& str)
+	basic_string(const basic_string& str)
 		: str_(str.str_)
 	{
 	}
@@ -338,7 +352,7 @@ public:
 		@param str [local::in] original string
 		@param count [local::in] count of character
 	*/
-	StringT(const char *str, size_type count) // A
+	basic_string(const char *str, size_type count) // A
 	{
 		append(str, count);
 	}
@@ -347,7 +361,7 @@ public:
 		construct from [str, NUL)
 		@param str [local::in] original string
 	*/
-	StringT(const char *str) // A
+	basic_string(const char *str) // A
 	{
 		append(str);
 	}
@@ -355,57 +369,48 @@ public:
 		construct by copying str
 		@param str [local::in] original string
 	*/
-	StringT(const std::string& str) // A
+	basic_string(const std::string& str) // A
 	{
 		append(str);
 	}
 
 	/**
-		construt by Char16(same ICU::UChar)
+		construt by cybozu::Char16(same ICU::UChar)
 		@param str [local::in] UTF-16 format string
 	*/
-	StringT(const String16& str) // A
+	basic_string(const cybozu::String16& str) // A
 	{
-		String16::const_iterator begin = str.begin(), end = str.end();
+		cybozu::String16::const_iterator begin = str.begin(), end = str.end();
 		while (begin != end) {
-			Char c;
-			if (!string::GetCharFromUtf16(c, begin, end)) {
-				throw cybozu::Exception("string:StringT:UTF-16");
+			Box b;
+			if (!cybozu::string::GetCharFromUtf16(b.c, begin, end)) {
+				throw cybozu::Exception("string:basic_string:UTF-16");
 			}
-			str_ += c;
+			str_ += b;
 		}
 	}
 	/**
 		construct from [str, NUL)
 		@param str [local::in] original string
 	*/
-	StringT(const Char16 *buf)
+	basic_string(const cybozu::Char16 *buf)
 	{
-		const String16 str(buf);
-		String16::const_iterator begin = str.begin(), end = str.end();
+		const cybozu::String16 str(buf);
+		cybozu::String16::const_iterator begin = str.begin(), end = str.end();
 		while (begin != end) {
-			Char c;
-			if (!string::GetCharFromUtf16(c, begin, end)) {
-				throw cybozu::Exception("string:StringT:UTF-16");
+			Box b;
+			if (!cybozu::string::GetCharFromUtf16(b.c, begin, end)) {
+				throw cybozu::Exception("string:basic_string:UTF-16");
 			}
-			str_ += c;
+			str_ += b;
 		}
-	}
-
-	/**
-		construct by BasicString
-		@param str [local::in] UTF-32 string
-	*/
-	StringT(const BasicString& str) // A
-		: str_(str)
-	{
 	}
 
 	/**
 		assign str
 		@param str [local::in] assign string
 	*/
-	StringT& operator=(const StringT& str)
+	basic_string& operator=(const basic_string& str)
 	{
 		return assign(str);
 	}
@@ -414,7 +419,7 @@ public:
 		assign [str, NUL)
 		@param str [local::in] assign string
 	*/
-	StringT& operator=(const CharT *str)
+	basic_string& operator=(const cybozu::Char *str)
 	{
 		return assign(str);
 	}
@@ -423,16 +428,16 @@ public:
 		assign 1 * c
 		@param c [local::in] initial character
 	*/
-	StringT& operator=(CharT c)
+	basic_string& operator=(cybozu::Char c)
 	{
-		return assign(1, c);
+		return assign(1u, c);
 	}
 
 	/**
 		assign [str, NUL)
 		@param str [local::in] assign string
 	*/
-	StringT& operator=(const char *str) // A
+	basic_string& operator=(const char *str) // A
 	{
 		return assign(str);
 	}
@@ -440,7 +445,7 @@ public:
 		assign str
 		@param str [local::in] assign string
 	*/
-	StringT& operator=(const std::string& str) // A
+	basic_string& operator=(const std::string& str) // A
 	{
 		return assign(str);
 	}
@@ -449,7 +454,7 @@ public:
 		append str
 		@param str [local::in] append string
 	*/
-	StringT& operator+=(const StringT& str)
+	basic_string& operator+=(const basic_string& str)
 	{
 		return append(str);
 	}
@@ -458,7 +463,7 @@ public:
 		append [str, NUL)
 		@param str [local::in] append string
 	*/
-	StringT& operator+=(const CharT *str)
+	basic_string& operator+=(const cybozu::Char *str)
 	{
 		return append(str);
 	}
@@ -467,16 +472,16 @@ public:
 		append 1 * c
 		@param c [local::in] append character
 	*/
-	StringT& operator+=(CharT c)
+	basic_string& operator+=(cybozu::Char c)
 	{
-		return append(1, c);
+		return append(1u, c);
 	}
 
 	/**
 		append str
 		@param str [local::in] append string
 	*/
-	StringT& append(const StringT& str)
+	basic_string& append(const basic_string& str)
 	{
 		str_.append(str.str_); return *this;
 	}
@@ -487,7 +492,7 @@ public:
 		@param off [local::in] string offset
 		@param count [local::in] count of character
 	*/
-	StringT& append(const StringT& str, size_type off, size_type count)
+	basic_string& append(const basic_string& str, size_type off, size_type count)
 	{
 		str_.append(str.str_, off, count); return *this;
 	}
@@ -497,7 +502,7 @@ public:
 		@param str [local::in] append string
 		@param count [local::in] count of character
 	*/
-	StringT& append(const CharT *str, size_type count)
+	basic_string& append(const cybozu::Char *str, size_type count)
 	{
 		return append(str, str + count);
 	}
@@ -506,9 +511,9 @@ public:
 		append [str, NUL)
 		@param str [local::in] append string
 	*/
-	StringT& append(const CharT *str)
+	basic_string& append(const cybozu::Char *str)
 	{
-		str_.append(str); return *this;
+		str_.append((const Box*)str); return *this;
 	}
 
 	/**
@@ -516,9 +521,10 @@ public:
 		@param count [local::in] count of character
 		@param c [local::in] initial character
 	*/
-	StringT& append(size_type count, CharT c)
+	basic_string& append(size_type count, cybozu::Char c)
 	{
-		str_.append(count, c); return *this;
+		Box b; b.c = c;
+		str_.append(count, b); return *this;
 	}
 
 	/**
@@ -527,27 +533,27 @@ public:
 		@param end [local::in] end of iterator
 	*/
 	template<class Iterator>
-	StringT& append(Iterator begin, Iterator end)
+	basic_string& append(Iterator begin, Iterator end, typename cybozu::string::local::disable_if<cybozu::string::local::IsInt<Iterator>::value>::type* = 0)
 	{
 		while (begin != end) {
-			CharT c;
-			c = getOneChar(begin, end);
-			str_.push_back(c);
+			Box b;
+			b.c = getOneChar(begin, end);
+			str_.push_back(b);
 		}
 		return *this;
 	}
 
 	// append [begin, end), const pointers
-//  StringT& append(const_pointer begin, const_pointer end);
+//  basic_string& append(const_pointer begin, const_pointer end);
 	// append [begin, end), const_iterators
-//  StringT& append(const_iterator begin, const_iterator end);
+//  basic_string& append(const_iterator begin, const_iterator end);
 
 	/**
 		append [str, str + count)
 		@param str [local::in] append string
 		@param count [local::in] count of character
 	*/
-	StringT& append(const char *str, size_type count) // A
+	basic_string& append(const char *str, size_type count) // A
 	{
 		return append(str, str + count);
 	}
@@ -556,7 +562,7 @@ public:
 		append [str, NUL)
 		@param str [local::in] append string
 	*/
-	StringT& append(const char *str) // A
+	basic_string& append(const char *str) // A
 	{
 		return append(str, std::strlen(str));
 	}
@@ -564,7 +570,7 @@ public:
 		append str
 		@param str [local::in] append string
 	*/
-	StringT& append(const std::string& str) // A
+	basic_string& append(const std::string& str) // A
 	{
 		return append(str.begin(), str.end());
 	}
@@ -573,7 +579,7 @@ public:
 		assign str
 		@param str [local::in] assign str
 	*/
-	StringT& assign(const StringT& str)
+	basic_string& assign(const basic_string& str)
 	{
 		clear(); return append(str);
 	}
@@ -584,7 +590,7 @@ public:
 		@param off [local::in] offset
 		@param count [local::in] count of character
 	*/
-	StringT& assign(const StringT& str, size_type off, size_type count)
+	basic_string& assign(const basic_string& str, size_type off, size_type count)
 	{
 		clear(); return append(str, off, count);
 	}
@@ -594,7 +600,7 @@ public:
 		@param str [local::in] assign string
 		@param count [local::in] count of character
 	*/
-	StringT& assign(const CharT *str, size_type count)
+	basic_string& assign(const cybozu::Char *str, size_type count)
 	{
 		return assign(str, str + count);
 	}
@@ -603,7 +609,7 @@ public:
 		assign [str, NUL)
 		@param str [local::in] assign string
 	*/
-	StringT& assign(const CharT *str)
+	basic_string& assign(const cybozu::Char *str)
 	{
 		clear(); return append(str);
 	}
@@ -613,7 +619,7 @@ public:
 		@param count [local::in] count of character
 		@param c [local::in] initial character
 	*/
-	StringT& assign(size_type count, CharT c)
+	basic_string& assign(size_type count, cybozu::Char c)
 	{
 		clear(); return append(count, c);
 	}
@@ -624,23 +630,23 @@ public:
 		@param end [local::in] end of iterator
 	*/
 	template<class Iterator>
-	StringT& assign(Iterator begin, Iterator end)
+	basic_string& assign(Iterator begin, Iterator end)
 	{
 		clear(); return append(begin, end);
 	}
 
 	// assign [First, end), const pointers
-//  StringT& assign(const_pointer begin, const_pointer end);
+//  basic_string& assign(const_pointer begin, const_pointer end);
 
 	// assign [First, end), const_iterators
-//  StringT& assign(const_iterator begin, const_iterator end);
+//  basic_string& assign(const_iterator begin, const_iterator end);
 
 	/**
 		assign [str, str + count)
 		@param str [local::in] original string
 		@param count [local::in] count of character
 	*/
-	StringT& assign(const char *str, size_type count) // A
+	basic_string& assign(const char *str, size_type count) // A
 	{
 		return assign(str, str + count);
 	}
@@ -649,7 +655,7 @@ public:
 		assign [str, NUL)
 		@param str [local::in] original string
 	*/
-	StringT& assign(const char *str) // A
+	basic_string& assign(const char *str) // A
 	{
 		clear(); return append(str);
 	}
@@ -657,7 +663,7 @@ public:
 		assign str
 		@param str [local::in] original string
 	*/
-	StringT& assign(const std::string& str) // A
+	basic_string& assign(const std::string& str) // A
 	{
 		clear(); return append(str);
 	}
@@ -667,7 +673,7 @@ public:
 		@param off [local::in] offset
 		@param str [local::in] insert str
 	*/
-	StringT& insert(size_type off, const StringT& str)
+	basic_string& insert(size_type off, const basic_string& str)
 	{
 		str_.insert(off, str.str_); return *this;
 	}
@@ -679,7 +685,7 @@ public:
 		@param rhsOff [local::in] offset of source str
 		@param count [local::in] count of source str
 	*/
-	StringT& insert(size_type off, const StringT& rhs, size_type rhsOff, size_type count)
+	basic_string& insert(size_type off, const basic_string& rhs, size_type rhsOff, size_type count)
 	{
 		str_.insert(off, rhs.str_, rhsOff, count); return *this;
 	}
@@ -690,9 +696,9 @@ public:
 		@param str [local::in] source str
 		@param count [local::in] count of source str
 	*/
-	StringT& insert(size_type off, const CharT *str, size_type count)
+	basic_string& insert(size_type off, const cybozu::Char *str, size_type count)
 	{
-		str_.insert(off, str, count); return *this;
+		str_.insert(off, (const Box*)str, count); return *this;
 	}
 
 	/**
@@ -700,9 +706,9 @@ public:
 		@param off [local::in] offset of destination
 		@param str [local::in] source str
 	*/
-	StringT& insert(size_type off, const CharT *str)
+	basic_string& insert(size_type off, const cybozu::Char *str)
 	{
-		str_.insert(off, str); return *this;
+		str_.insert(off, (const Box*)str); return *this;
 	}
 
 	/**
@@ -711,29 +717,32 @@ public:
 		@param count [local::in] count of source str
 		@param c [local::in] initial character
 	*/
-	StringT& insert(size_type off, size_type count, CharT c)
+	basic_string& insert(size_type off, size_type count, cybozu::Char c)
 	{
-		str_.insert(off, count, c); return *this;
+		Box b; b.c = c;
+		str_.insert(off, count, b); return *this;
 	}
 	/**
 		insert c at here
 		@param here [local::in] offset of destination
 		@param c [local::in] initial character(default 0)
 	*/
-	iterator insert(iterator here, CharT c = 0)
+	iterator insert(iterator here, cybozu::Char c = 0)
 	{
-		return str_.insert(here, c);
+		Box b; b.c = c;
+		return cvt(str_.insert(cvt(here), b));
 	}
 
 	/**
-		insert count * CharT at here
+		insert count * cybozu::Char at here
 		@param here [local::in] offset of destination
 		@param count [local::in] count of str
 		@param c [local::in] initial character
 	*/
-	void insert(iterator here, size_type count, CharT c)
+	void insert(iterator here, size_type count, cybozu::Char c)
 	{
-		str_.insert(here, count, c);
+		Box b; b.c = c;
+		str_.insert(cvt(here), count, b);
 	}
 
 	/**
@@ -745,8 +754,8 @@ public:
 	template<class Iterator>
 	void insert(iterator here, Iterator begin, Iterator end)
 	{
-		StringT str(begin, end);
-		str_.insert(here, str.begin(), str.end());
+		basic_string str(begin, end);
+		str_.insert(cvt(here), str.str_.begin(), str.str_.end());
 	}
 
 	// insert [begin, end) at here, const pointers
@@ -759,7 +768,7 @@ public:
 		@param off [local::in] offset
 		@param count [local::in] count of character(default npos)
 	*/
-	StringT& erase(size_type off = 0, size_type count = npos)
+	basic_string& erase(size_type off = 0, size_type count = npos)
 	{
 		str_.erase(off, count); return *this;
 	}
@@ -770,7 +779,7 @@ public:
 	*/
 	iterator erase(iterator here)
 	{
-		return str_.erase(here);
+		return cvt(str_.erase(cvt(here)));
 	}
 
 	/**
@@ -780,7 +789,7 @@ public:
 	*/
 	iterator erase(iterator begin, iterator end)
 	{
-		return str_.erase(begin, end);
+		return cvt(str_.erase(cvt(begin), cvt(end)));
 	}
 
 	/**
@@ -794,7 +803,7 @@ public:
 		@param n [local::in] count of remove character
 		@param rhs [local::in] append string
 	*/
-	StringT& replace(size_type off, size_type n, const StringT& rhs)
+	basic_string& replace(size_type off, size_type n, const basic_string& rhs)
 	{
 		str_.replace(off, n, rhs.str_); return *this;
 	}
@@ -807,7 +816,7 @@ public:
 		@param rhsOff [local::in] append from
 		@param count [local::in] count of append
 	*/
-	StringT& replace(size_type off, size_type n, const StringT& rhs, size_type rhsOff, size_type count)
+	basic_string& replace(size_type off, size_type n, const basic_string& rhs, size_type rhsOff, size_type count)
 	{
 		str_.replace(off, n, rhs.str_, rhsOff, count); return *this;
 	}
@@ -819,9 +828,9 @@ public:
 		@param str [local::in] append string
 		@param count [local::in] count of append
 	*/
-	StringT& replace(size_type off, size_type n, const CharT *str, size_type count)
+	basic_string& replace(size_type off, size_type n, const cybozu::Char *str, size_type count)
 	{
-		str_.replace(off, n, str, count); return *this;
+		str_.replace(off, n, (const Box*)str, count); return *this;
 	}
 
 	/**
@@ -830,9 +839,9 @@ public:
 		@param n [local::in] count of remove character
 		@param str [local::in] append string
 	*/
-	StringT& replace(size_type off, size_type n, const CharT *str)
+	basic_string& replace(size_type off, size_type n, const cybozu::Char *str)
 	{
-		str_.replace(off, n, str); return *this;
+		str_.replace(off, n, (const Box*)str); return *this;
 	}
 
 	/**
@@ -842,9 +851,10 @@ public:
 		@param count [local::in] count of append
 		@param c [local::in] initial character
 	*/
-	StringT& replace(size_type off, size_type n, size_type count, CharT c)
+	basic_string& replace(size_type off, size_type n, size_type count, cybozu::Char c)
 	{
-		str_.replace(off, n, count, c); return *this;
+		Box b; b.c = c;
+		str_.replace(off, n, count, b); return *this;
 	}
 
 	/**
@@ -853,9 +863,9 @@ public:
 		@param end [local::in] end to remove
 		@param rhs [local::in] append str
 	*/
-	StringT& replace(iterator begin, iterator end, const StringT& rhs)
+	basic_string& replace(iterator begin, iterator end, const basic_string& rhs)
 	{
-		str_.replace(begin, end, rhs.str_); return *this;
+		str_.replace(cvt(begin), cvt(end), rhs.str_); return *this;
 	}
 
 	/**
@@ -865,9 +875,9 @@ public:
 		@param str local::in] append str
 		@param count [local::in] count of append
 	*/
-	StringT& replace(iterator begin, iterator end, const CharT *str, size_type count)
+	basic_string& replace(iterator begin, iterator end, const cybozu::Char *str, size_type count)
 	{
-		str_.replace(begin, end, str, count); return *this;
+		str_.replace(cvt(begin), cvt(end), (const Box*)str, count); return *this;
 	}
 
 	/**
@@ -876,9 +886,9 @@ public:
 		@param end [local::in] end to remove
 		@param str local::in] append str
 	*/
-	StringT& replace(iterator begin, iterator end, const CharT *str)
+	basic_string& replace(iterator begin, iterator end, const cybozu::Char *str)
 	{
-		str_.replace(begin, end, str); return *this;
+		str_.replace(cvt(begin), cvt(end), (const Box*)str); return *this;
 	}
 
 	/**
@@ -888,9 +898,10 @@ public:
 		@param count [local::in] count of append
 		@param c [local::in] initial character
 	*/
-	StringT& replace(iterator begin, iterator end, size_type count, CharT c)
+	basic_string& replace(iterator begin, iterator end, size_type count, cybozu::Char c)
 	{
-		str_.replace(begin, end, count, c); return *this;
+		Box b; b.c = c;
+		str_.replace(cvt(begin), cvt(end), count, b); return *this;
 	}
 
 	/**
@@ -901,101 +912,102 @@ public:
 		@param end2 [local::in] end to append
 	*/
 	template<class Iterator>
-	StringT& replace(iterator begin, iterator end, Iterator begin2, Iterator end2)
+	basic_string& replace(iterator begin, iterator end, Iterator begin2, Iterator end2)
 	{
-		StringT str(begin2, end2);
-		str_.replace(begin, end, str.begin(), str.end());
+		basic_string str2(begin2, end2);
+		str_.replace(cvt(begin), cvt(end), str2.str_.begin(), str2.str_.end());
 		return *this;
 	}
 
 	// replace [begin, end) with [begin2, end2), const pointers
-//  StringT& replace(iterator begin, iterator end, const_pointer begin2, const_pointer end2);
+//  basic_string& replace(iterator begin, iterator end, const_pointer begin2, const_pointer end2);
 
 	// replace [begin, end) with [begin2, end2), const_iterators
-//  StringT& replace(iterator begin, iterator end, const_iterator begin2, const_iterator end2);
+//  basic_string& replace(iterator begin, iterator end, const_iterator begin2, const_iterator end2);
 
 	/**
 		return iterator for beginning of mutable sequence
 	*/
-	iterator begin() { return str_.begin(); }
+	iterator begin() { return cvt(str_.begin()); }
 
 	/**
 		return iterator for beginning of nonmutable sequence
 	*/
-	const_iterator begin() const { return str_.begin(); }
+	const_iterator begin() const { return &(str_.begin()->c); }
 
 	/**
 		return iterator for end of mutable sequence
 	*/
-	iterator end() { return str_.end(); }
+	iterator end() { return cvt(str_.end()); }
 
 	/**
 		return iterator for end of nonmutable sequence
 	*/
-	const_iterator end() const { return str_.end(); }
+	const_iterator end() const { return &(str_.end()->c); }
 
 	/**
 		return iterator for beginning of reversed mutable sequence
 	*/
-	reverse_iterator rbegin() { return str_.rbegin(); }
+	reverse_iterator rbegin() { return reverse_iterator(cvt(str_.end())); }
 
 	/**
 		return iterator for beginning of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rbegin() const { return str_.rbegin(); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(&str_[0].c + str_.size()); }
 
 	/**
 		return iterator for end of reversed mutable sequence
 	*/
-	reverse_iterator rend() { return str_.rend(); }
+	reverse_iterator rend() { return reverse_iterator(&str_[0].c); }
 
 	/**
 		return iterator for end of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rend() const { return str_.rend(); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(&str_[0].c); }
 
 	/**
 		subscript mutable sequence with checking
 		@param off [local::in] offset
 	*/
-	reference at(size_type off) { return str_.at(off); }
+	reference at(size_type off) { return str_.at(off).c; }
 
 	/**
 		get element at off
 		@param off [local::in] offset
 	*/
-	const_reference at(size_type off) const { return str_.at(off); }
+	const_reference at(size_type off) const { return str_.at(off).c; }
 
 	/**
 		subscript mutable sequence
 		@param off [local::in] offset
 	*/
-	reference operator[](size_type off) { return str_[off]; }
+	reference operator[](size_type off) { return str_[off].c; }
 
 	/**
 		subscript nonmutable sequence
 		@param off [local::in] offset
 	*/
-	const_reference operator[](size_type off) const { return str_[off]; }
+	const_reference operator[](size_type off) const { return str_[off].c; }
 
 	/**
 		insert element at end
 		@param c [local::in] append character
 	*/
-	void push_back(CharT c)
+	void push_back(cybozu::Char c)
 	{
-		str_.push_back(c);
+		Box b; b.c = c;
+		str_.push_back(b);
 	}
 
 	/**
 		return pointer to null-terminated nonmutable array
 	*/
-	const CharT *c_str() const { return str_.c_str(); }
+	const cybozu::Char *c_str() const { return &(str_.c_str()->c); }
 
 	/**
 		return pointer to nonmutable array
 	*/
-	const CharT *data() const { return str_.data(); }
+	const cybozu::Char *data() const { return &(str_.data()->c); }
 
 	/**
 		return length of sequence
@@ -1022,9 +1034,10 @@ public:
 		@param newSize [local::in] new length
 		@param c [local::in] initial character
 	*/
-	void resize(size_type newSize, CharT c)
+	void resize(size_type newSize, cybozu::Char c)
 	{
-		str_.resize(newSize, c);
+		Box b; b.c = c;
+		str_.resize(newSize, b);
 	}
 
 	/**
@@ -1050,20 +1063,16 @@ public:
 		@param count [local::in] count of copy
 		@param off [local::in] copy from here
 	*/
-	size_type copy(CharT *dest, size_type count, size_type off = 0) const
+	size_type copy(cybozu::Char *dest, size_type count, size_type off = 0) const
 	{
-#ifdef _MSC_VER
-		return str_._Copy_s(dest, count, count, off);
-#else
-		return str_.copy(dest, count, off);
-#endif
+		return str_.copy((Box*)dest, count, off);
 	}
 
 	/**
 		exchange contents with rhs
 		@param rhs [local::in] swap string
 	*/
-	void swap(StringT& rhs) { str_.swap(rhs.str_); }
+	void swap(basic_string& rhs) { str_.swap(rhs.str_); }
 
 	/**
 		look for rhs beginnng at or after off
@@ -1071,7 +1080,7 @@ public:
 		@param off [local::in] search from here
 		@return position
 	*/
-	size_type find(const StringT& rhs, size_type off = 0) const
+	size_type find(const basic_string& rhs, size_type off = 0) const
 	{
 		return str_.find(rhs.str_, off);
 	}
@@ -1082,9 +1091,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of str
 	*/
-	size_type find(const CharT *str, size_type off, size_type count) const
+	size_type find(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.find(str, off, count);
+		return str_.find((const Box*)str, off, count);
 	}
 
 	/**
@@ -1092,9 +1101,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find(const CharT *str, size_type off = 0) const
+	size_type find(const cybozu::Char *str, size_type off = 0) const
 	{
-		return str_.find(str, off);
+		return str_.find((const Box*)str, off);
 	}
 
 	/**
@@ -1102,9 +1111,10 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find(CharT c, size_type off = 0) const
+	size_type find(cybozu::Char c, size_type off = 0) const
 	{
-		return str_.find(c, off);
+		Box b; b.c = c;
+		return str_.find(b, off);
 	}
 
 	/**
@@ -1112,7 +1122,7 @@ public:
 		@param rhs [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type rfind(const StringT& rhs, size_type off = npos) const
+	size_type rfind(const basic_string& rhs, size_type off = npos) const
 	{
 		return str_.rfind(rhs.str_, off);
 	}
@@ -1123,9 +1133,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of character
 	*/
-	size_type rfind(const CharT *str, size_type off, size_type count) const
+	size_type rfind(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.rfind(str, off, count);
+		return str_.rfind((const Box*)str, off, count);
 	}
 
 	/**
@@ -1133,9 +1143,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type rfind(const CharT *str, size_type off = npos) const
+	size_type rfind(const cybozu::Char *str, size_type off = npos) const
 	{
-		return str_.rfind(str, off);
+		return str_.rfind((const Box*)str, off);
 	}
 
 	/**
@@ -1143,9 +1153,10 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type rfind(CharT c, size_type off = npos) const
+	size_type rfind(cybozu::Char c, size_type off = npos) const
 	{
-		return str_.rfind(c, off);
+		Box b; b.c = c;
+		return str_.rfind(b, off);
 	}
 
 	/**
@@ -1153,7 +1164,7 @@ public:
 		@param rhs [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_of(const StringT& rhs, size_type off = 0) const
+	size_type find_first_of(const basic_string& rhs, size_type off = 0) const
 	{
 		return str_.find_first_of(rhs.str_, off);
 	}
@@ -1164,9 +1175,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of character
 	*/
-	size_type find_first_of(const CharT *str, size_type off, size_type count) const
+	size_type find_first_of(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.find_first_of(str, off, count);
+		return str_.find_first_of((const Box*)str, off, count);
 	}
 
 	/**
@@ -1174,9 +1185,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_of(const CharT *str, size_type off = 0) const
+	size_type find_first_of(const cybozu::Char *str, size_type off = 0) const
 	{
-		return str_.find_first_of(str, off);
+		return str_.find_first_of((const Box*)str, off);
 	}
 
 	/**
@@ -1184,9 +1195,10 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_of(CharT c, size_type off = 0) const
+	size_type find_first_of(cybozu::Char c, size_type off = 0) const
 	{
-		return str_.find_first_of(c, off);
+		Box b; b.c = c;
+		return str_.find_first_of(b, off);
 	}
 
 	/**
@@ -1194,7 +1206,7 @@ public:
 		@param rhs [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_of(const StringT& rhs, size_type off = npos) const
+	size_type find_last_of(const basic_string& rhs, size_type off = npos) const
 	{
 		return str_.find_last_of(rhs.str_, off);
 	}
@@ -1205,9 +1217,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of character
 	*/
-	size_type find_last_of(const CharT *str, size_type off, size_type count) const
+	size_type find_last_of(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.find_last_of(str, off, count);
+		return str_.find_last_of((const Box*)str, off, count);
 	}
 
 	/**
@@ -1215,9 +1227,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_of(const CharT *str, size_type off = npos) const
+	size_type find_last_of(const cybozu::Char *str, size_type off = npos) const
 	{
-		return str_.find_last_of(str, off);
+		return str_.find_last_of((const Box*)str, off);
 	}
 
 	/**
@@ -1225,9 +1237,10 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_of(CharT c, size_type off = npos) const
+	size_type find_last_of(cybozu::Char c, size_type off = npos) const
 	{
-		return str_.find_last_of(c, off);
+		Box b; b.c = c;
+		return str_.find_last_of(b, off);
 	}
 
 	/**
@@ -1235,7 +1248,7 @@ public:
 		@param rhs [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_not_of(const StringT& rhs, size_type off = 0) const
+	size_type find_first_not_of(const basic_string& rhs, size_type off = 0) const
 	{
 		return str_.find_first_not_of(rhs.str_, off);
 	}
@@ -1246,9 +1259,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of character
 	*/
-	size_type find_first_not_of(const CharT *str, size_type off, size_type count) const
+	size_type find_first_not_of(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.find_first_not_of(str, off, count);
+		return str_.find_first_not_of((const Box*)str, off, count);
 	}
 
 	/**
@@ -1256,9 +1269,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_not_of(const CharT *str, size_type off = 0) const
+	size_type find_first_not_of(const cybozu::Char *str, size_type off = 0) const
 	{
-		return str_.find_first_not_of(str, off);
+		return str_.find_first_not_of((const Box*)str, off);
 	}
 
 	/**
@@ -1266,9 +1279,10 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_first_not_of(CharT c, size_type off = 0) const
+	size_type find_first_not_of(cybozu::Char c, size_type off = 0) const
 	{
-		return str_.find_first_not_of(c, off);
+		Box b; b.c = c;
+		return str_.find_first_not_of(b, off);
 	}
 
 	/**
@@ -1276,7 +1290,7 @@ public:
 		@param rhs [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_not_of(const StringT& rhs, size_type off = npos) const
+	size_type find_last_not_of(const basic_string& rhs, size_type off = npos) const
 	{
 		return str_.find_last_not_of(rhs.str_, off);
 	}
@@ -1287,9 +1301,9 @@ public:
 		@param off [local::in] search from here
 		@param count [local::in] count of character
 	*/
-	size_type find_last_not_of(const CharT *str, size_type off, size_type count) const
+	size_type find_last_not_of(const cybozu::Char *str, size_type off, size_type count) const
 	{
-		return str_.find_last_not_of(str, off, count);
+		return str_.find_last_not_of((const Box*)str, off, count);
 	}
 
 	/**
@@ -1297,9 +1311,9 @@ public:
 		@param str [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_not_of(const CharT *str, size_type off = npos) const
+	size_type find_last_not_of(const cybozu::Char *str, size_type off = npos) const
 	{
-		return str_.find_last_not_of(str, off);
+		return str_.find_last_not_of((const Box*)str, off);
 	}
 
 	/**
@@ -1307,24 +1321,27 @@ public:
 		@param c [local::in] target
 		@param off [local::in] search from here
 	*/
-	size_type find_last_not_of(CharT c, size_type off = npos) const
+	size_type find_last_not_of(cybozu::Char c, size_type off = npos) const
 	{
-		return str_.find_last_not_of(c, off);
+		Box b; b.c = c;
+		return str_.find_last_not_of(b, off);
 	}
 	/**
 		return [off, off + count) as new string
 		@param off [local::in] from here
 		@param count [local::in] count of substring
 	*/
-	StringT substr(size_type off = 0, size_type count = npos) const
+	basic_string substr(size_type off = 0, size_type count = npos) const
 	{
-		return str_.substr(off, count);
+		basic_string ret;
+		ret.str_ = str_.substr(off, count);
+		return ret;
 	}
 	/**
 		compare *this with rhs
 		@param rhs [local::in] target
 	*/
-	int compare(const StringT& rhs) const
+	int compare(const basic_string& rhs) const
 	{
 		return str_.compare(rhs.str_);
 	}
@@ -1335,7 +1352,7 @@ public:
 		@param n [local::in] count of lhs
 		@param rhs [local::in] target
 	*/
-	int compare(size_type off, size_type n, const StringT& rhs) const
+	int compare(size_type off, size_type n, const basic_string& rhs) const
 	{
 		return str_.compare(off, n, rhs.str_);
 	}
@@ -1348,7 +1365,7 @@ public:
 		@param rhsOff [local::in] target from here
 		@param count [local::in] count of rhs
 	*/
-	int compare(size_type off, size_type n, const StringT& rhs, size_type rhsOff, size_type count) const
+	int compare(size_type off, size_type n, const basic_string& rhs, size_type rhsOff, size_type count) const
 	{
 		return str_.compare(off, n, rhs.str_, rhsOff, count);
 	}
@@ -1357,9 +1374,9 @@ public:
 		compare [0, _Mysize) with [str, NUL)
 		@param str [local::in] target
 	*/
-	int compare(const CharT *str) const
+	int compare(const cybozu::Char *str) const
 	{
-		return str_.compare(str);
+		return str_.compare((const Box*)str);
 	}
 
 	/**
@@ -1368,9 +1385,9 @@ public:
 		@param n [local::in] count of lhs
 		@param str [local::in] target
 	*/
-	int compare(size_type off, size_type n, const CharT *str) const
+	int compare(size_type off, size_type n, const cybozu::Char *str) const
 	{
-		return str_.compare(off, n, str);
+		return str_.compare(off, n, (const Box*)str);
 	}
 
 	/**
@@ -1380,9 +1397,9 @@ public:
 		@param str [local::in] target
 		@param count [local::in] count of rhs
 	*/
-	int compare(size_type off,size_type n, const CharT *str, size_type count) const
+	int compare(size_type off,size_type n, const cybozu::Char *str, size_type count) const
 	{
-		return str_.compare(off, n, str, count);
+		return str_.compare(off, n, (const Box*)str, count);
 	}
 	/**
 		convert to std::string with UTF-8
@@ -1390,7 +1407,7 @@ public:
 	void toUtf8(std::string& str) const
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
-			if (!string::AppendUtf8(str, str_[i])) {
+			if (!cybozu::string::AppendUtf8(str, str_[i].c)) {
 				throw cybozu::Exception("string:toUtf8") << i;
 			}
 		}
@@ -1404,17 +1421,17 @@ public:
 	/**
 		convert to std::string with UTF-16LE
 	*/
-	void toUtf16(String16& str) const
+	void toUtf16(cybozu::String16& str) const
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
-			if (!string::AppendUtf16(str, str_[i])) {
+			if (!cybozu::string::AppendUtf16(str, str_[i].c)) {
 				throw cybozu::Exception("string:toUtf16") << i;
 			}
 		}
 	}
-	String16 toUtf16() const
+	cybozu::String16 toUtf16() const
 	{
-		String16 str;
+		cybozu::String16 str;
 		toUtf16(str);
 		return str;
 	}
@@ -1426,56 +1443,56 @@ public:
 	bool isValid() const
 	{
 		for (size_t i = 0, n = str_.size(); i < n; i++) {
-			if (!IsValidChar(str_[i])) return false;
+			if (!cybozu::string::IsValidChar(str_[i].c)) return false;
 		}
 		return true;
 	}
-	/**
-		get internal const str(don't use this function)
-	*/
-	const BasicString& get() const { return str_; }
-	/**
-		get internal str(don't use this function)
-	*/
-	BasicString& get() { return str_; }
+	template<class T>bool operator==(const T& rhs) const { return compare(rhs) == 0; }
+	template<class T>bool operator!=(const T& rhs) const { return compare(rhs) != 0; }
+	template<class T>bool operator<=(const T& rhs) const { return compare(rhs) <= 0; }
+	template<class T>bool operator>=(const T& rhs) const { return compare(rhs) >= 0; }
+	template<class T>bool operator<(const T& rhs) const { return compare(rhs) < 0; }
+	template<class T>bool operator>(const T& rhs) const { return compare(rhs) > 0; }
 private:
 	template<class Iterator>
-	CharT getOneChar(Iterator& begin, const Iterator& end)
+	cybozu::Char getOneChar(Iterator& begin, const Iterator& end)
 	{
 		return getOneCharSub(begin, end, *begin);
 	}
 	// dispatch
 	template<class Iterator>
-	CharT getOneCharSub(Iterator& begin, const Iterator&, CharT)
+	cybozu::Char getOneCharSub(Iterator& begin, const Iterator&, cybozu::Char)
 	{
 		return *begin++;
 	}
 	template<class Iterator>
-	CharT getOneCharSub(Iterator& begin, const Iterator& end, char)
+	cybozu::Char getOneCharSub(Iterator& begin, const Iterator& end, char)
 	{
-		CharT c;
+		cybozu::Char c;
 		if (!cybozu::string::GetCharFromUtf8(&c, begin, end)) {
 			throw cybozu::Exception("string:getOneCharSub");
 		}
 		return c;
 	}
-	BasicString str_;
+	static inline size_t getSize(const cybozu::Char *str)
+	{
+		size_t len = 0;
+		while (str[len]) len++;
+		return len;
+	}
+	inString::iterator cvt(iterator i)
+	{
+		size_t offset = i - &str_[0].c;
+		return str_.begin() + offset;
+	}
+	iterator cvt(inString::iterator i) const
+	{
+		return &(i->c);
+	}
+	inString str_;
 };
 
-namespace string {
-typedef StringT<Char> String;
-}
-
-using string::String;
-
-/**
-	getline from std::istream
-	@param is [local::in] input stream
-	@param str [out] one line string
-	@param delim [local::in] delimiter
-	@return is
-*/
-inline std::istream& getline(std::istream& is, cybozu::String& str, const char delim = '\n')
+inline std::istream& getline(std::istream& is, std::basic_string<cybozu::Char>& str, const char delim = '\n')
 {
 	std::string tmp;
 	std::getline(is, tmp, delim);
@@ -1483,13 +1500,7 @@ inline std::istream& getline(std::istream& is, cybozu::String& str, const char d
 	return is;
 }
 
-/**
-	input stream operator as UTF-8
-	@param is [local::in] input stream
-	@param str [out] input string
-	@return is
-*/
-inline std::istream& operator>>(std::istream& is, cybozu::String& str)
+inline std::istream& operator>>(std::istream& is, std::basic_string<cybozu::Char>& str)
 {
 	std::string tmp;
 	is >> tmp;
@@ -1497,76 +1508,35 @@ inline std::istream& operator>>(std::istream& is, cybozu::String& str)
 	return is;
 }
 
-/**
-	output stream operator as UTF-8
-	@param os [local::in] output stream
-	@param str [local::in] output string
-	@return os
-*/
-inline std::ostream& operator<<(std::ostream& os, const cybozu::String& str)
+inline std::ostream& operator<<(std::ostream& os, const std::basic_string<cybozu::Char>& str)
 {
 	return os << str.toUtf8();
 }
 
-/**
-	concatinate string(lhs + rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-	@return concatinated string
-*/
-inline cybozu::String operator+(const cybozu::String& lhs, const cybozu::String& rhs) { return cybozu::String(lhs) += rhs; }
-/**
-	concatinate string(lhs + c)
-	@param lhs [local::in] left string
-	@param c [local::in] right character
-	@return concatinated string
-*/
-inline cybozu::String operator+(const cybozu::String& lhs, const Char c) { return cybozu::String(lhs) += c; }
-/**
-	concatinate string(lhs + str[0, NUL))
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-	@return concatinated string
-*/
-inline cybozu::String operator+(const cybozu::String& lhs, const Char* str) { return cybozu::String(lhs) += str; }
+inline bool operator==(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs == lhs; }
+inline bool operator!=(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs != lhs; }
+inline bool operator<=(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs >= lhs; }
+inline bool operator>=(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs <= lhs; }
+inline bool operator<(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs > lhs; }
+inline bool operator>(const std::string& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs < lhs; }
+#ifdef _MSC_VER
+inline bool operator==(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs == lhs; }
+inline bool operator!=(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs != lhs; }
+inline bool operator<=(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs >= lhs; }
+inline bool operator>=(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs <= lhs; }
+inline bool operator<(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs > lhs; }
+inline bool operator>(const std::wstring& lhs, const std::basic_string<cybozu::Char>& rhs) { return rhs < lhs; }
+#endif
 
-/**
-	compare string(lhs == rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator==(const cybozu::String& lhs, const cybozu::String& rhs) { return lhs.compare(rhs) == 0; }
+inline std::basic_string<cybozu::Char> operator+(const std::basic_string<cybozu::Char>& lhs, const std::basic_string<cybozu::Char>& rhs) { return std::basic_string<cybozu::Char>(lhs) += rhs; }
+inline std::basic_string<cybozu::Char> operator+(const std::basic_string<cybozu::Char>& lhs, const cybozu::Char c) { return std::basic_string<cybozu::Char>(lhs) += c; }
+inline std::basic_string<cybozu::Char> operator+(const std::basic_string<cybozu::Char>& lhs, const cybozu::Char* str) { return std::basic_string<cybozu::Char>(lhs) += str; }
 
-/**
-	compare string(lhs != rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator!=(const cybozu::String& lhs, const cybozu::String& rhs) { return !(lhs == rhs); }
-/**
-	compare string(lhs < rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator<(const cybozu::String& lhs, const cybozu::String& rhs) { return lhs.compare(rhs) < 0; }
-/**
-	compare string(lhs > rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator>(const cybozu::String& lhs, const cybozu::String& rhs) { return lhs.compare(rhs) > 0; }
-/**
-	compare string(lhs <= rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator<=(const cybozu::String& lhs, const cybozu::String& rhs) { return lhs.compare(rhs) <= 0; }
-/**
-	compare string(lhs >= rhs)
-	@param lhs [local::in] left string
-	@param rhs [local::in] right string
-*/
-inline bool operator>=(const cybozu::String& lhs, const cybozu::String& rhs) { return lhs.compare(rhs) >= 0; }
+} // std
+
+namespace cybozu {
+
+typedef std::basic_string<cybozu::Char> String;
 
 inline bool ConvertUtf16ToUtf8(std::string *out, const cybozu::Char16 *begin, const cybozu::Char16 *end)
 {
