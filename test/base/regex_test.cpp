@@ -56,7 +56,7 @@ CYBOZU_TEST_AUTO(regex_replace)
 CYBOZU_TEST_AUTO(regex_replace2)
 {
 	const cybozu::String s(CYBOZU_RE("cybozu Cybozu CYBOZU 坊主"));
-	// icase is not not supported
+	// icase is not supported now
 	cybozu::regex r(CYBOZU_RE("cybozu|坊主") /*, std::regex_constatns::icase */);
 	cybozu::String t = cybozu::regex_replace(s, r, CYBOZU_RE("サイボウズ"));
 	std::cout << t << std::endl;
