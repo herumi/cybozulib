@@ -9,7 +9,6 @@
 	...
 */
 #include <string>
-#include <stdint.h>
 #include <stdio.h>
 #include <cybozu/test.hpp>
 #include <cybozu/regex.hpp>
@@ -31,7 +30,7 @@ CYBOZU_TEST_AUTO(regex_search)
 	CYBOZU_TEST_EQUAL(m.str(), "UTF");
 	CYBOZU_TEST_EQUAL(m.prefix().str(), CYBOZU_RE("こんにちは"));
 	CYBOZU_TEST_EQUAL(m.suffix().str(), CYBOZU_RE("-8です ゔ♡"));
-	CYBOZU_TEST_EQUAL(m.position(), 5u);
+	CYBOZU_TEST_EQUAL((int)m.position(), 5);
 }
 
 CYBOZU_TEST_AUTO(regex_token_iterator)
