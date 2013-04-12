@@ -69,7 +69,10 @@ template<class T>
 struct IsInt { enum { value = false }; };
 template<>struct IsInt<int> { enum { value = true }; };
 template<>struct IsInt<unsigned int> { enum { value = true }; };
+template<>struct IsInt<long> { enum { value = true }; };
+#if !defined(_MSC_VER) || defined(_WIN64)
 template<>struct IsInt<size_t> { enum { value = true }; };
+#endif
 
 template <bool b, class T = void>
 struct disable_if { typedef T type; };

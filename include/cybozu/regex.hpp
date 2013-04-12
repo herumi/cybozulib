@@ -20,7 +20,11 @@
 	#endif
 	#include <boost/regex.hpp>
 #else
+#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_TR1)
+	#define CYBOZU_RE_STD std::tr1
+#else
 	#define CYBOZU_RE_STD std
+#endif
 	#ifdef _MSC_VER
 	#ifdef _DLL_CPPLIB
 		#error "use /MT or /MTd option. /MD and /MDd are not supported"
