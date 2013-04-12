@@ -106,18 +106,6 @@ void ChangeCase(StringT1& out, const StringT2& in, Func f, bool doAppend)
 	std::transform(in.begin(), in.end(), out.begin() + offset, f);
 }
 
-template<class CharT>
-inline CharT ToLowerC(CharT c)
-{
-	return ('A' <= c && c <= 'Z') ? c - 'A' + 'a' : c;
-}
-
-template<class CharT>
-inline CharT ToUpperC(CharT c)
-{
-	return ('a' <= c && c <= 'z') ? c - 'a' + 'A' : c;
-}
-
 template<class CharT>struct SelectString;
 template<> struct SelectString<char> { typedef std::string string_type; };
 template<> struct SelectString<cybozu::Char> { typedef cybozu::String string_type; };
@@ -158,13 +146,13 @@ inline StringT TrimCopy(const StringT& str)
 template<class StringT1, class StringT2>
 void ToLower(StringT1& out, const StringT2& in, bool doAppend = false)
 {
-	string_local::ChangeCase(out, in, cybozu::string_local::ToLowerC<typename StringT1::value_type>, doAppend);
+	string_local::ChangeCase(out, in, cybozu::tolower<typename StringT1::value_type>, doAppend);
 }
 
 template<class StringT1, class StringT2>
 void ToUpper(StringT1& out, const StringT2& in, bool doAppend = false)
 {
-	string_local::ChangeCase(out, in, cybozu::string_local::ToUpperC<typename StringT1::value_type>, doAppend);
+	string_local::ChangeCase(out, in, cybozu::toupper<typename StringT1::value_type>, doAppend);
 }
 
 template<class StringT>
@@ -188,8 +176,8 @@ int CaseCompare(const CharT *lhs, size_t lhsSize, const CharT *rhs, size_t rhsSi
 {
 	size_t n = std::min(lhsSize, rhsSize);
 	for (size_t i = 0; i < n; i++) {
-		CharT cR = cybozu::string_local::ToLowerC(lhs[i]);
-		CharT cL = cybozu::string_local::ToLowerC(rhs[i]);
+		CharT cR = cybozu::tolower(lhs[i]);
+		CharT cL = cybozu::tolower(rhs[i]);
 		if (cR < cL) return -1;
 		if (cR > cL) return 1;
 	}
@@ -203,8 +191,8 @@ bool CaseEqual(const CharT1 *lhs, size_t lhsSize, const CharT2 *rhs, size_t rhsS
 {
 	if (lhsSize != rhsSize) return false;
 	for (size_t i = 0; i < lhsSize; i++) {
-		CharT1 cR = cybozu::string_local::ToLowerC(lhs[i]);
-		CharT2 cL = cybozu::string_local::ToLowerC(rhs[i]);
+		CharT1 cR = cybozu::tolower(lhs[i]);
+		CharT2 cL = cybozu::tolower(rhs[i]);
 		if (cR != cL) return false;
 	}
 	return true;
@@ -253,13 +241,13 @@ bool CaseEqual(const StringT& lhs, const char *rhs)
 template<class CharT>
 const CharT *CaseFind(const CharT *begin, const CharT *end, const char *targetBegin, const char *targetEnd = 0)
 {
-	const size_t n = targetEnd ? targetEnd - targetBegin : strlen(targetBegin);
+	const size_t n = targetEnd ? targetEnd - targetBegin : ::strlen(targetBegin);
 	typename string_local::SelectString<CharT>::string_type t(targetBegin, n);
 	ToLower(t);
 	while (begin + n <= end) {
 		bool found = true;
 		for (size_t i = 0; i < n; i++) {
-			if (string_local::ToLowerC(begin[i]) != t[i]) {
+			if (cybozu::tolower(begin[i]) != t[i]) {
 				found = false;
 				break;
 			}
