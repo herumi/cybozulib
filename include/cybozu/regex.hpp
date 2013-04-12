@@ -51,6 +51,167 @@ inline bool in(unsigned int c, char min, char max)
 } // regex_local
 
 #ifdef CYBOZU_STRING_USE_WIN
+
+namespace std {
+
+template<>
+class ctype<cybozu::Char> : public ctype_base {
+	const std::ctype_base::mask *maskTbl_;
+public:
+	static locale::id id;
+	ctype(size_t refs = 0) : ctype_base(refs)
+	{
+		static struct Custom : public std::ctype<char> {
+			const mask * table() const { return std::ctype<char>::table(); }
+		} custom;
+		maskTbl_ = custom.table();
+	}
+	bool is(std::ctype_base::mask m, cybozu::Char c) const
+	{
+	/*
+		s(48):p(1d7):c(20):u(1):l(2):a(103):d(4):p(10):x(80)
+	printf("u(%x):l(%x):d(%x):p(%x):c(%x):x(%x):s(%x):p(%x):a(%x)\n"
+	, std::ctype_base::upper //  0x001
+	, std::ctype_base::lower //  0x002
+	, std::ctype_base::digit //  0x004
+	, std::ctype_base::punct //  0x010
+	, std::ctype_base::cntrl //  0x020
+	, std::ctype_base::xdigit // 0x080
+	, std::ctype_base::space //  0x048
+	, std::ctype_base::print //  0x1d7
+	, std::ctype_base::alpha //  0x103
+	);exit(1);
+	*/
+		if (c & ~0xFFU) return false;
+		return (maskTbl_[(unsigned char)c] & m) != 0;
+//		static const std::ctype<char>& cache = use_facet<ctype<char> >(std::locale());
+//		return cache.is(m, static_cast<char>(c));
+	}
+	const cybozu::Char* is(const cybozu::Char* begin, const cybozu::Char* end, mask* dest) const
+	{
+		while (begin != end) {
+			*dest++ = maskTbl_[(unsigned char)narrow(*begin)];
+			begin++;
+		}
+		return begin;
+	}
+	const cybozu::Char* scan_is(std::ctype_base::mask m, const cybozu::Char* begin, const cybozu::Char* end) const
+	{
+		while (begin != end && !is(m, *begin)) begin++;
+		return begin;
+	}
+	const cybozu::Char* scan_not(std::ctype_base::mask m, const cybozu::Char* begin, const cybozu::Char* end) const
+	{
+		while (begin != end && is(m, *begin)) begin++;
+		return begin;
+	}
+	cybozu::Char tolower(cybozu::Char c) const
+	{
+		if ('A' <= c && c <= 'Z') return c - 'A' + 'a';
+		return c;
+	}
+	const cybozu::Char* tolower(cybozu::Char* begin, const cybozu::Char* end) const
+	{
+		while (begin != end) {
+			*begin = tolower(*begin);
+			begin++;
+		}
+		return end;
+	}
+	cybozu::Char toupper(cybozu::Char c) const
+	{
+		if ('a' <= c && c <= 'z') return c - 'a' + 'A';
+		return c;
+	}
+	const cybozu::Char* toupper(cybozu::Char* begin, const cybozu::Char* end) const
+	{
+		while (begin != end) {
+			*begin = toupper(*begin);
+			begin++;
+		}
+		return end;
+	}
+	cybozu::Char widen(char c) const
+	{
+		return c;
+	}
+	const char* widen(const char* begin, const char* end, cybozu::Char* to) const
+	{
+		while (begin != end) {
+			*to++ = std::ctype<cybozu::Char>::widen(*begin++);
+		}
+		return end;
+	}
+	char narrow(cybozu::Char c, char dflt = '\0') const
+	{
+		if ((0 <= c && c < 256) || (c == -1)) return static_cast<char>(c);
+		return dflt;
+	}
+	const cybozu::Char* narrow(const cybozu::Char* begin, const cybozu::Char* end, char dflt, char* to) const
+	{
+		while (begin != end) {
+			*to++ = narrow(*begin++, dflt);
+		}
+		return end;
+	}
+	virtual bool do_is(mask m, cybozu::Char c) const
+	{
+		return is(m, c);
+	}
+	virtual const cybozu::Char *do_is(const cybozu::Char *begin, const cybozu::Char *end, mask *dest) const
+	{
+		return is(begin, end, dest);
+	}
+	virtual const cybozu::Char *do_scan_is(mask m, const cybozu::Char *begin, const cybozu::Char *end) const
+	{
+		return scan_is(m, begin, end);
+	}
+	virtual const cybozu::Char *do_scan_not(mask m, const cybozu::Char *begin, const cybozu::Char *end) const
+	{
+		return scan_not(m, begin, end);
+	}
+	virtual cybozu::Char do_tolower(cybozu::Char c) const
+	{
+		return tolower(c);
+	}
+	virtual const cybozu::Char *do_tolower(cybozu::Char *begin, const cybozu::Char *end) const
+	{
+		return tolower(begin, end);
+	}
+	virtual cybozu::Char do_toupper(cybozu::Char c) const
+	{
+		return toupper(c);
+	}
+	virtual const cybozu::Char *do_toupper(cybozu::Char *begin, const cybozu::Char *end) const
+	{
+		return toupper(begin, end);
+	}
+	virtual cybozu::Char do_widen(char c) const
+	{
+		return widen(c);
+	}
+	virtual const char *do_widen(const char *begin, const char *end, cybozu::Char *dest) const
+	{
+		return widen(begin, end, dest);
+	}
+	virtual char do_narrow(cybozu::Char c, char dflt) const
+	{
+		return narrow(c, dflt);
+	}
+	virtual const cybozu::Char *do_narrow(const cybozu::Char *begin, const cybozu::Char *end, char dflt, char *dest) const
+	{
+		return narrow(begin, end, dflt, dest);
+	}
+};
+
+locale::id ctype<cybozu::Char>::id;
+
+#if defined(_DLL_CPPLIB)
+template __PURE_APPDOMAIN_GLOBAL std::locale::id collate<cybozu::Char>::id;
+#endif /* defined(_DLL_CPPLIB) etc. */
+
+} // std
+
 template<>
 	class CYBOZU_RE_STD::regex_traits<cybozu::Char>
 	: public CYBOZU_RE_STD::_Regex_traits<cybozu::Char>
@@ -71,7 +232,7 @@ public:
 		}
 	};
 
- #define _REGEX_CHAR_CLASS_NAME(n, c)   { n, sizeof(n)/sizeof(n[0]) - 1, c }
+#define _REGEX_CHAR_CLASS_NAME(n, c)   { n, sizeof(n)/sizeof(n[0]) - 1, c }
 
 namespace cybozu { namespace string_local {
 
@@ -114,7 +275,7 @@ template<>
 
 #undef _REGEX_CHAR_CLASS_NAME
 
-#endif
+#endif // CYBOZU_STRING_USE_WIN
 
 namespace cybozu {
 
@@ -126,12 +287,10 @@ struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 		: CYBOZU_RE_STD::basic_regex<Char>(p, f)
 	{
 	}
-#ifdef _MSC_VER
-	explicit regex(const wchar_t* p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
+	explicit regex(const Char16* p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(String(p).c_str(), f)
 	{
 	}
-#endif
 	explicit regex(const String& p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(p.c_str(), f)
 	{
@@ -148,14 +307,24 @@ struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 	  : CYBOZU_RE_STD::basic_regex<Char>(that) {}
 };
 
-#if 0
+struct sub_match : public CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator> {
+	cybozu::String str() const
+	{
+		cybozu::String str(CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator>::str());
+		return str;
+	}
+};
+
 struct smatch : public CYBOZU_RE_STD::match_results<cybozu::String::const_iterator> {
 	String str(int sub = 0) const {
 		return CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::str(sub);
 	}
-//	String prefix() const {
-//		return CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::prefix();
-//	}
+	const sub_match& prefix() const {
+		return *(const sub_match*)&(CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::prefix());
+	}
+	const sub_match& suffix() const {
+		return *(const sub_match*)(&CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::suffix());
+	}
 };
 
 struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
@@ -165,15 +334,13 @@ struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iter
    sregex_iterator(const sregex_iterator& that)
 	  : CYBOZU_RE_STD::regex_iterator<String::const_iterator>(that) {}
 #ifndef CYBOZU_STRING_USE_WIN /* return temporary address when using vc tr1? */
-   const smatch& operator*()const
-   { return *static_cast<const smatch*>(&CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator*()); }
-   const smatch* operator->()const
-   { return static_cast<const smatch*>(CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator->()); }
+	const smatch& operator*()const
+	{ return *static_cast<const smatch*>(&CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator*()); }
+	const smatch* operator->()const
+	{ return static_cast<const smatch*>(CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator->()); }
 #endif
 };
-#endif
 
-#if 0
 inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_search(begin, end, m, e, flags);
@@ -195,12 +362,11 @@ inline bool regex_search(const String::const_iterator begin, const String::const
 	smatch m;
 	return regex_search(begin, end, m, e, flags);
 }
-#endif
 
 inline String regex_replace(const String::const_iterator begin, const String::const_iterator end, const regex& e, const String& fmt, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	String result;
-	CYBOZU_RE_STD::regex_replace(std::back_inserter(result), begin, end, e, fmt, flags);
+	CYBOZU_RE_STD::regex_replace(std::back_inserter(result.get()), begin, end, e, fmt.get(), flags);
 	return result;
 }
 
@@ -209,8 +375,6 @@ inline String regex_replace(const String& s, const regex& e, const String& fmt, 
 	return regex_replace(s.begin(), s.end(), e, fmt, flags);
 }
 
-
-#if 0
 inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_match(begin, end, m, e, flags);
@@ -232,150 +396,8 @@ inline bool regex_match(const String& s, const regex& e, CYBOZU_RE_STD::regex_co
 	smatch m;
 	return regex_match(s, m, e, flags);
 }
-#endif
 
-//using CYBOZU_RE_STD::regex_search;
-//typedef basic_regex<cybozu::Char> regex;
-
-using CYBOZU_RE_STD::regex_iterator;
-using CYBOZU_RE_STD::basic_regex;
-using CYBOZU_RE_STD::regex_search;
-using CYBOZU_RE_STD::match_results;
-//using CYBOZU_RE_STD::regex_replace;
-using CYBOZU_RE_STD::regex_match;
 using CYBOZU_RE_STD::regex_token_iterator;
-
-typedef match_results<cybozu::String::const_iterator> smatch;
-typedef regex_iterator<String::const_iterator> sregex_iterator;
 typedef regex_token_iterator<cybozu::String::const_iterator> sregex_token_iterator;
 
 } // cybozu
-
-#ifdef _MSC_VER
-
-namespace std {
-
-template<>
-bool ctype<cybozu::Char>::is(std::ctype_base::mask m, cybozu::Char c) const
-{
-/*
-	s(48):p(1d7):c(20):u(1):l(2):a(103):d(4):p(10):x(80)
-printf("u(%x):l(%x):d(%x):p(%x):c(%x):x(%x):s(%x):p(%x):a(%x)\n"
-, std::ctype_base::upper //  0x001
-, std::ctype_base::lower //  0x002
-, std::ctype_base::digit //  0x004
-, std::ctype_base::punct //  0x010
-, std::ctype_base::cntrl //  0x020
-, std::ctype_base::xdigit // 0x080
-, std::ctype_base::space //  0x048
-, std::ctype_base::print //  0x1d7
-, std::ctype_base::alpha //  0x103
-);exit(1);
-*/
-	if (c & ~0xFFU) return false;
-#if 1
-	static struct Custom : public std::ctype<char> {
-		const mask * table() const { return std::ctype<char>::table(); }
-	} custom;
-	static const mask* maskTbl = custom.table();
-	return (maskTbl[(unsigned char)c] & m) != 0;
-#else
-	static const std::ctype<char>& cache = use_facet<ctype<char> >(std::locale());
-	return cache.is(m, static_cast<char>(c));
-#endif
-}
-
-#if 0
-template<>
-const cybozu::Char* ctype<cybozu::Char>::is(const cybozu::Char* low, const cybozu::Char* high, mask* vec) const
-{
-	return do_is(low, high, vec);
-}
-
-template<>
-const cybozu::Char* ctype<cybozu::Char>::scan_is(std::ctype_base::mask m, const cybozu::Char* low, const cybozu::Char* high) const
-{
-	return do_scan_is(m, low, high);
-}
-
-template<>
-const cybozu::Char* ctype<cybozu::Char>::scan_not(std::ctype_base::mask m, const cybozu::Char* low, const cybozu::Char* high) const
-{
-	return do_scan_not(m, low, high);
-}
-#endif
-
-template<>
-cybozu::Char ctype<cybozu::Char>::toupper(cybozu::Char c) const
-{
-	if ('a' <= c && c <= 'z') return c - 'a' + 'A';
-	return c;
-}
-
-template<>
-const cybozu::Char* ctype<cybozu::Char>::toupper(cybozu::Char* low, const cybozu::Char* high) const
-{
-	while (low != high) {
-		*low = ctype<cybozu::Char>::toupper(*low);
-		low++;
-	}
-	return high;
-}
-
-template<>
-cybozu::Char ctype<cybozu::Char>::tolower(cybozu::Char c) const
-{
-	if ('A' <= c && c <= 'Z') return c - 'A' + 'a';
-	return c;
-}
-template<>
-const cybozu::Char* ctype<cybozu::Char>::tolower(cybozu::Char* low, const cybozu::Char* high) const
-{
-	while (low != high) {
-		*low = ctype<cybozu::Char>::tolower(*low);
-		low++;
-	}
-	return high;
-}
-
-template<>
-cybozu::Char ctype<cybozu::Char>::widen(char c) const
-{
-	return c;
-}
-
-template<>
-const char* ctype<cybozu::Char>::widen(const char* low, const char* high, cybozu::Char* to) const
-{
-	while (low != high) {
-		*to++ = ctype<cybozu::Char>::widen(*low++);
-	}
-	return high;
-}
-
-template<>
-char ctype<cybozu::Char>::narrow(cybozu::Char c, char dfault) const
-{
-	if ((0 <= c && c < 256) || (c == -1)) return static_cast<char>(c);
-	return dfault;
-}
-
-template<>
-const cybozu::Char* ctype<cybozu::Char>::narrow(const cybozu::Char* low, const cybozu::Char* high, char dfault, char* to) const
-{
-	while (low != high) {
-		*to++ = ctype<cybozu::Char>::narrow(*low++, dfault);
-	}
-	return high;
-}
-
-//template<> __PURE_APPDOMAIN_GLOBAL locale::id collate<cybozu::Char>::id;
-
-#if defined(_DLL_CPPLIB)
-template __PURE_APPDOMAIN_GLOBAL locale::id collate<cybozu::Char>::id;
-#endif /* defined(_DLL_CPPLIB) etc. */
-
-} // std
-
-#endif
-
