@@ -204,37 +204,30 @@ public:
 	}
 };
 
-locale::id ctype<cybozu::Char>::id;
+locale::id __declspec(selectany) ctype<cybozu::Char>::id;
 
 #if defined(_DLL_CPPLIB)
-template __PURE_APPDOMAIN_GLOBAL std::locale::id collate<cybozu::Char>::id;
+__PURE_APPDOMAIN_GLOBAL std::locale::id ctype<cybozu::Char>::id;
 #endif /* defined(_DLL_CPPLIB) etc. */
 
 } // std
 
 template<>
-	class CYBOZU_RE_STD::regex_traits<cybozu::Char>
-	: public CYBOZU_RE_STD::_Regex_traits<cybozu::Char>
-	{   // specialization for char
+class CYBOZU_RE_STD::regex_traits<cybozu::Char> : public CYBOZU_RE_STD::_Regex_traits<cybozu::Char> {
 public:
 	int value(cybozu::Char ch, int base) const
-		{   // map character value to numeric value
-		if (base != 8 && '0' <= ch && ch <= '9'
-			|| base == 8 && '0' <= ch && ch <= '7')
-			return (ch - '0');
-		else if (base != 16)
-			;
-		else if ('a' <= ch && ch <= 'f')
-			return (ch - 'a' + 10);
-		else if ('A' <= ch && ch <= 'F')
-			return (ch - 'A' + 10);
-		return (-1);
-		}
-	};
+	{
+		if (base != 8 && '0' <= ch && ch <= '9' || base == 8 && '0' <= ch && ch <= '7') return ch - '0';
+		if (base != 16) return -1;
+		if ('a' <= ch && ch <= 'f') return ch - 'a' + 10;
+		if ('A' <= ch && ch <= 'F') return ch - 'A' + 10;
+		return -1;
+	}
+};
 
-#define _REGEX_CHAR_CLASS_NAME(n, c)   { n, sizeof(n)/sizeof(n[0]) - 1, c }
+#define CYBOZU_RE_CHAR_CLASS_NAME(n, c) { n, sizeof(n)/sizeof(n[0]) - 1, c }
 
-namespace cybozu { namespace string_local {
+namespace cybozu { namespace regex_local {
 
 static const cybozu::Char _alpha[] = { 'a', 'l', 'p', 'h', 'a', 0 };
 static const cybozu::Char _blank[] = { 'b', 'l', 'a', 'n', 'k', 0 };
@@ -254,32 +247,30 @@ static const cybozu::Char _xdigit[]= {'x', 'd', 'i', 'g', 'i', 't', 0 };
 } }
 
 template<>
-	const CYBOZU_RE_STD::_Cl_names<cybozu::Char> CYBOZU_RE_STD::_Regex_traits<cybozu::Char>::_Names[] =
-	{   // map class names to numeric constants
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_alpha, _Regex_traits<cybozu::Char>::_Ch_alnum),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_blank, _Regex_traits<cybozu::Char>::_Ch_blank),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_cntrl, _Regex_traits<cybozu::Char>::_Ch_cntrl),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_d, _Regex_traits<cybozu::Char>::_Ch_digit),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_digit, _Regex_traits<cybozu::Char>::_Ch_digit),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_graph, _Regex_traits<cybozu::Char>::_Ch_graph),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_lower, _Regex_traits<cybozu::Char>::_Ch_lower),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_print, _Regex_traits<cybozu::Char>::_Ch_print),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_punct, _Regex_traits<cybozu::Char>::_Ch_punct),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_space, _Regex_traits<cybozu::Char>::_Ch_space),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_s, _Regex_traits<cybozu::Char>::_Ch_space),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_upper, _Regex_traits<cybozu::Char>::_Ch_upper),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_w, (_STD ctype_base::mask)(-1)),
-	_REGEX_CHAR_CLASS_NAME(cybozu::string_local::_xdigit, _Regex_traits<cybozu::Char>::_Ch_xdigit),
+const CYBOZU_RE_STD::_Cl_names<cybozu::Char> CYBOZU_RE_STD::_Regex_traits<cybozu::Char>::_Names[] = {
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_alpha, _Regex_traits<cybozu::Char>::_Ch_alnum),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_blank, _Regex_traits<cybozu::Char>::_Ch_blank),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_cntrl, _Regex_traits<cybozu::Char>::_Ch_cntrl),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_d, _Regex_traits<cybozu::Char>::_Ch_digit),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_digit, _Regex_traits<cybozu::Char>::_Ch_digit),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_graph, _Regex_traits<cybozu::Char>::_Ch_graph),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_lower, _Regex_traits<cybozu::Char>::_Ch_lower),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_print, _Regex_traits<cybozu::Char>::_Ch_print),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_punct, _Regex_traits<cybozu::Char>::_Ch_punct),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_space, _Regex_traits<cybozu::Char>::_Ch_space),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_s, _Regex_traits<cybozu::Char>::_Ch_space),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_upper, _Regex_traits<cybozu::Char>::_Ch_upper),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_w, (_STD ctype_base::mask)(-1)),
+	CYBOZU_RE_CHAR_CLASS_NAME(cybozu::regex_local::_xdigit, _Regex_traits<cybozu::Char>::_Ch_xdigit),
 	{0, 0, 0},
-	};
+};
 
-#undef _REGEX_CHAR_CLASS_NAME
+#undef CYBOZU_RE_CHAR_CLASS_NAME
 
 #endif // CYBOZU_STRING_USE_WIN
 
 namespace cybozu {
 
-/* constructor from basic_regexp.hpp */
 struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 	typedef size_t size_type;
 	explicit regex(){}
@@ -307,24 +298,22 @@ struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 	  : CYBOZU_RE_STD::basic_regex<Char>(that) {}
 };
 
-struct sub_match : public CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator> {
-	cybozu::String str() const
-	{
-		cybozu::String str(CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator>::str());
+class sub_match : public CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator> {
+	typedef CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator> Base;
+public:
+	cybozu::String str() const {
+		cybozu::String str(Base::str());
 		return str;
 	}
+	operator cybozu::String() const { return str(); }
 };
 
-struct smatch : public CYBOZU_RE_STD::match_results<cybozu::String::const_iterator> {
-	String str(int sub = 0) const {
-		return CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::str(sub);
-	}
-	const sub_match& prefix() const {
-		return *(const sub_match*)&(CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::prefix());
-	}
-	const sub_match& suffix() const {
-		return *(const sub_match*)(&CYBOZU_RE_STD::match_results<cybozu::String::const_iterator>::suffix());
-	}
+class smatch : public CYBOZU_RE_STD::match_results<cybozu::String::const_iterator> {
+	typedef CYBOZU_RE_STD::match_results<cybozu::String::const_iterator> Base;
+public:
+	String str(int sub = 0) const { return Base::str(sub); }
+	const sub_match& prefix() const { return *(const sub_match*)&(Base::prefix()); }
+	const sub_match& suffix() const { return *(const sub_match*)&(Base::suffix()); }
 };
 
 struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
@@ -339,6 +328,41 @@ struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iter
 	const smatch* operator->()const
 	{ return static_cast<const smatch*>(CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator->()); }
 #endif
+};
+
+class sregex_token_iterator : public CYBOZU_RE_STD::regex_token_iterator<cybozu::String::const_iterator> {
+	typedef CYBOZU_RE_STD::regex_token_iterator<cybozu::String::const_iterator> Base;
+	typedef cybozu::String::const_iterator Iterator;
+public:
+	sregex_token_iterator() {}
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, int sub = 0, CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+		: Base(begin, end, re, sub, m)
+	{
+	}
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const std::vector<int>& sub, CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+		: Base(begin, end, re, sub, m)
+	{
+	}
+	template<size_t N>
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const int (&sub)[N], CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+		: Base(begin, end, re, sub, m)
+	{
+	}
+	sregex_token_iterator(const regex_token_iterator& rhs)
+		: Base(rhs)
+	{
+	}
+	const sub_match& operator*() const {
+		return *(const sub_match*)&(Base::operator*());
+	}
+	sregex_token_iterator& operator++() {
+		return *(sregex_token_iterator*)&(Base::operator++());
+	}
+	sregex_token_iterator operator++(int) {
+		sregex_token_iterator prev = *this;
+		++(*this);
+		return prev;
+	}
 };
 
 inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
@@ -397,7 +421,7 @@ inline bool regex_match(const String& s, const regex& e, CYBOZU_RE_STD::regex_co
 	return regex_match(s, m, e, flags);
 }
 
-using CYBOZU_RE_STD::regex_token_iterator;
-typedef regex_token_iterator<cybozu::String::const_iterator> sregex_token_iterator;
+//using CYBOZU_RE_STD::regex_token_iterator;
+//typedef regex_token_iterator<cybozu::String::const_iterator> sregex_token_iterator;
 
 } // cybozu
