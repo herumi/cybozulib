@@ -275,22 +275,24 @@ const CYBOZU_RE_STD::_Cl_names<cybozu::Char> CYBOZU_RE_STD::_Regex_traits<cybozu
 
 namespace cybozu {
 
+namespace regex_constants = CYBOZU_RE_STD::regex_constants;
+
 struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
 	typedef size_t size_type;
 	explicit regex(){}
-	explicit regex(const Char* p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
+	explicit regex(const Char* p, flag_type f = regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(p, f)
 	{
 	}
-	explicit regex(const Char16* p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
+	explicit regex(const Char16* p, flag_type f = regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(String(p).c_str(), f)
 	{
 	}
-	explicit regex(const String& p, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
+	explicit regex(const String& p, flag_type f = regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(p.c_str(), f)
 	{
 	}
-	regex(const Char* p1, const Char* p2, flag_type f = CYBOZU_RE_STD::regex_constants::ECMAScript)
+	regex(const Char* p1, const Char* p2, flag_type f = regex_constants::ECMAScript)
 		: CYBOZU_RE_STD::basic_regex<Char>(p1, p2, f)
 	{
 	}
@@ -322,7 +324,7 @@ public:
 
 struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
    sregex_iterator(){}
-   sregex_iterator(const String::const_iterator a, const String::const_iterator b, const regex& re, CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+   sregex_iterator(const String::const_iterator a, const String::const_iterator b, const regex& re, regex_constants::match_flag_type m = regex_constants::match_default)
 	  : CYBOZU_RE_STD::regex_iterator<String::const_iterator>(a, b, re, m) {}
    sregex_iterator(const sregex_iterator& that)
 	  : CYBOZU_RE_STD::regex_iterator<String::const_iterator>(that) {}
@@ -339,16 +341,16 @@ class sregex_token_iterator : public CYBOZU_RE_STD::regex_token_iterator<cybozu:
 	typedef cybozu::String::const_iterator Iterator;
 public:
 	sregex_token_iterator() {}
-	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, int sub = 0, CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, int sub = 0, regex_constants::match_flag_type m = regex_constants::match_default)
 		: Base(begin, end, re, sub, m)
 	{
 	}
-	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const std::vector<int>& sub, CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const std::vector<int>& sub, regex_constants::match_flag_type m = regex_constants::match_default)
 		: Base(begin, end, re, sub, m)
 	{
 	}
 	template<size_t N>
-	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const int (&sub)[N], CYBOZU_RE_STD::regex_constants::match_flag_type m = CYBOZU_RE_STD::regex_constants::match_default)
+	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const int (&sub)[N], regex_constants::match_flag_type m = regex_constants::match_default)
 		: Base(begin, end, re, sub, m)
 	{
 	}
@@ -369,57 +371,57 @@ public:
 	}
 };
 
-inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_search(begin, end, m, e, flags);
 }
 
-inline bool regex_search(const String& s, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_search(const String& s, smatch& m, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return regex_search(s.begin(), s.end(), m, e, flags);
 }
 
-inline bool regex_search(const String& s, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_search(const String& s, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	smatch m;
 	return regex_search(s, m, e, flags);
 }
 
-inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_search(const String::const_iterator begin, const String::const_iterator end, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	smatch m;
 	return regex_search(begin, end, m, e, flags);
 }
 
-inline String regex_replace(const String::const_iterator begin, const String::const_iterator end, const regex& e, const String& fmt, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline String regex_replace(const String::const_iterator begin, const String::const_iterator end, const regex& e, const String& fmt, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	String result;
 	CYBOZU_RE_STD::regex_replace(std::back_inserter(result.get()), begin, end, e, fmt.get(), flags);
 	return result;
 }
 
-inline String regex_replace(const String& s, const regex& e, const String& fmt, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline String regex_replace(const String& s, const regex& e, const String& fmt, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return regex_replace(s.begin(), s.end(), e, fmt, flags);
 }
 
-inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, smatch& m, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return CYBOZU_RE_STD::regex_match(begin, end, m, e, flags);
 }
 
-inline bool regex_match(const String& s, smatch& m, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_match(const String& s, smatch& m, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return regex_match(s.begin(), s.end(), m, e, flags);
 }
 
-inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_match(const String::const_iterator begin, const String::const_iterator end, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	smatch m;
 	return regex_match(begin, end, m, e, flags);
 }
 
-inline bool regex_match(const String& s, const regex& e, CYBOZU_RE_STD::regex_constants::match_flag_type flags = CYBOZU_RE_STD::regex_constants::match_default)
+inline bool regex_match(const String& s, const regex& e, regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	smatch m;
 	return regex_match(s, m, e, flags);
