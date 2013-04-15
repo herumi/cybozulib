@@ -277,31 +277,23 @@ namespace cybozu {
 
 namespace regex_constants = CYBOZU_RE_STD::regex_constants;
 
-struct regex : public CYBOZU_RE_STD::basic_regex<Char> {
+class regex : public CYBOZU_RE_STD::basic_regex<Char> {
+	typedef CYBOZU_RE_STD::basic_regex<Char> Base;
+public:
 	typedef size_t size_type;
 	explicit regex(){}
 	explicit regex(const Char* p, flag_type f = regex_constants::ECMAScript)
-		: CYBOZU_RE_STD::basic_regex<Char>(p, f)
-	{
-	}
+		: Base(p, f) {}
 	explicit regex(const Char16* p, flag_type f = regex_constants::ECMAScript)
-		: CYBOZU_RE_STD::basic_regex<Char>(String(p).c_str(), f)
-	{
-	}
+		: Base(String(p).c_str(), f) {}
 	explicit regex(const String& p, flag_type f = regex_constants::ECMAScript)
-		: CYBOZU_RE_STD::basic_regex<Char>(p.c_str(), f)
-	{
-	}
+		: Base(p.c_str(), f) {}
 	regex(const Char* p1, const Char* p2, flag_type f = regex_constants::ECMAScript)
-		: CYBOZU_RE_STD::basic_regex<Char>(p1, p2, f)
-	{
-	}
+		: Base(p1, p2, f) {}
 	regex(const Char* p, size_type len, flag_type f)
-		: CYBOZU_RE_STD::basic_regex<Char>(p, len, f)
-	{
-	}
+		: Base(p, len, f) {}
 	regex(const regex& that)
-	  : CYBOZU_RE_STD::basic_regex<Char>(that) {}
+	  : Base(that) {}
 };
 
 class sub_match : public CYBOZU_RE_STD::sub_match<cybozu::String::const_iterator> {
@@ -322,17 +314,17 @@ public:
 	const sub_match& suffix() const { return *(const sub_match*)&(Base::suffix()); }
 };
 
-struct sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
-   sregex_iterator(){}
-   sregex_iterator(const String::const_iterator a, const String::const_iterator b, const regex& re, regex_constants::match_flag_type m = regex_constants::match_default)
-	  : CYBOZU_RE_STD::regex_iterator<String::const_iterator>(a, b, re, m) {}
-   sregex_iterator(const sregex_iterator& that)
-	  : CYBOZU_RE_STD::regex_iterator<String::const_iterator>(that) {}
+class  sregex_iterator : public CYBOZU_RE_STD::regex_iterator<String::const_iterator> {
+	typedef CYBOZU_RE_STD::regex_iterator<String::const_iterator> Base;
+public:
+	sregex_iterator(){}
+	sregex_iterator(const String::const_iterator a, const String::const_iterator b, const regex& re, regex_constants::match_flag_type m = regex_constants::match_default)
+		: Base(a, b, re, m) {}
+   sregex_iterator(const sregex_iterator& rhs)
+		: Base(rhs) {}
 #ifndef CYBOZU_STRING_USE_WIN /* return temporary address when using vc tr1? */
-	const smatch& operator*()const
-	{ return *static_cast<const smatch*>(&CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator*()); }
-	const smatch* operator->()const
-	{ return static_cast<const smatch*>(CYBOZU_RE_STD::regex_iterator<String::const_iterator>(*this).operator->()); }
+	const smatch& operator*()const { return *static_cast<const smatch*>(&Base(*this).operator*()); }
+	const smatch* operator->()const { return static_cast<const smatch*>(Base(*this).operator->()); }
 #endif
 };
 
@@ -342,28 +334,16 @@ class sregex_token_iterator : public CYBOZU_RE_STD::regex_token_iterator<cybozu:
 public:
 	sregex_token_iterator() {}
 	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, int sub = 0, regex_constants::match_flag_type m = regex_constants::match_default)
-		: Base(begin, end, re, sub, m)
-	{
-	}
+		: Base(begin, end, re, sub, m) {}
 	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const std::vector<int>& sub, regex_constants::match_flag_type m = regex_constants::match_default)
-		: Base(begin, end, re, sub, m)
-	{
-	}
+		: Base(begin, end, re, sub, m) {}
 	template<size_t N>
 	sregex_token_iterator(Iterator begin, Iterator end, const regex& re, const int (&sub)[N], regex_constants::match_flag_type m = regex_constants::match_default)
-		: Base(begin, end, re, sub, m)
-	{
-	}
+		: Base(begin, end, re, sub, m) {}
 	sregex_token_iterator(const regex_token_iterator& rhs)
-		: Base(rhs)
-	{
-	}
-	const sub_match& operator*() const {
-		return *(const sub_match*)&(Base::operator*());
-	}
-	sregex_token_iterator& operator++() {
-		return *(sregex_token_iterator*)&(Base::operator++());
-	}
+		: Base(rhs) {}
+	const sub_match& operator*() const { return *(const sub_match*)&(Base::operator*()); }
+	sregex_token_iterator& operator++() { return *(sregex_token_iterator*)&(Base::operator++()); }
 	sregex_token_iterator operator++(int) {
 		sregex_token_iterator prev = *this;
 		++(*this);
