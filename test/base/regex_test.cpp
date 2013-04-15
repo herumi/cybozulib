@@ -66,7 +66,7 @@ CYBOZU_TEST_AUTO(regex_replace)
 CYBOZU_TEST_AUTO(regex_replace2)
 {
 	const cybozu::String s(CYBOZU_RE("cybozu Cybozu CYBOZU 坊主"));
-	cybozu::regex r(CYBOZU_RE("cybozu|坊主"), CYBOZU_RE_STD::regex_constants::icase);
+	cybozu::regex r(CYBOZU_RE("cybozu|坊主"), cybozu::regex_constants::icase);
 	cybozu::String t = cybozu::regex_replace(s, r, CYBOZU_RE("サイボウズ"));
 	CYBOZU_TEST_EQUAL(t, CYBOZU_RE("サイボウズ サイボウズ サイボウズ サイボウズ"));
 }
