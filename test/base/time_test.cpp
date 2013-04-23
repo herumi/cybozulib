@@ -98,6 +98,35 @@ CYBOZU_TEST_AUTO(fromString2)
 	}
 }
 
+CYBOZU_TEST_AUTO(toString)
+{
+	const struct Data {
+		const char *str;
+		const char *strMsec;
+		int year;
+		int month;
+		int day;
+		int hour;
+		int minute;
+		int second;
+		int msec;
+	} tbl[] = {
+		{ "2013-11-05 12:23:56", ".123", 2013, 11, 5, 12, 23, 56, 123 },
+		{ "1970-01-01 00:00:00", ".000", 1970, 1, 1, 0, 0, 0, 0 },
+		{ "2040-02-05 12:30:20", ".999", 2040, 2, 5, 12, 30, 20, 999 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const Data& d = tbl[i];
+		std::time_t time;
+		timeToStr(time, d.year, d.month, d.day, d.hour, d.minute, d.second, d.msec, 0);
+		cybozu::Time tm(time, d.msec);
+		std::string s;
+		tm.toString(s);
+		CYBOZU_TEST_EQUAL(s, std::string(tbl[i].str) + tbl[i].strMsec);
+		tm.toString(s, false);
+		CYBOZU_TEST_EQUAL(s, tbl[i].str);
+	}
+}
 #ifdef _WIN32
 #include <sstream>
 
