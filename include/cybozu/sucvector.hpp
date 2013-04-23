@@ -73,13 +73,13 @@ union ci {
 };
 
 template<class T>
-T load(std::istream& is, const char *msg)
+void load(T& val, std::istream& is, const char *msg)
 {
 	ci<T> ci;
-	if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
-		return ci.i;
+	if (!is.read(ci.c, sizeof(ci.c)) || is.gcount() != sizeof(ci.c)) {
+		throw cybozu::Exception("sucvector_util:load") << msg;
 	}
-	throw cybozu::Exception("sucvector_util:load") << msg;
+	val = ci.i;
 }
 
 template<class T>
@@ -95,7 +95,8 @@ void save(std::ostream& os, T val, const char *msg)
 template<class V>
 void loadVec(V& v, std::istream& is, const char *msg)
 {
-	const size_t size = sucvector_util::load<size_t>(is, msg);
+	size_t size;
+	sucvector_util::load(size, is, msg);
 	v.resize(size);
 	if (is.read(cybozu::cast<char*>(&v[0]), size * sizeof(v[0]))) return;
 	throw cybozu::Exception("sucvector_util:loadVec") << msg;
@@ -104,7 +105,7 @@ void loadVec(V& v, std::istream& is, const char *msg)
 template<class V>
 void saveVec(std::ostream& os, const V& v, const char *msg)
 {
-	save<size_t>(os, v.size(), msg);
+	save(os, v.size(), msg);
 	const size_t size = v.size() * sizeof(v[0]);
 	if (os.write(cybozu::cast<const char*>(&v[0]), size) && os.flush()) return;
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
@@ -192,16 +193,16 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		sucvector_util::save<uint64_t>(os, bitSize_, "bitSize");
-		sucvector_util::save<uint64_t>(os, numTbl_[0], "num0");
-		sucvector_util::save<uint64_t>(os, numTbl_[1], "num1");
+		sucvector_util::save(os, bitSize_, "bitSize");
+		sucvector_util::save(os, numTbl_[0], "num0");
+		sucvector_util::save(os, numTbl_[1], "num1");
 		sucvector_util::saveVec(os, blk_, "blk");
 	}
 	void load(std::istream& is)
 	{
-		bitSize_ = sucvector_util::load<uint64_t>(is, "bitSize");
-		numTbl_[0] = sucvector_util::load<uint64_t>(is, "num0");
-		numTbl_[1] = sucvector_util::load<uint64_t>(is, "num1");
+		sucvector_util::load(bitSize_, is, "bitSize");
+		sucvector_util::load(numTbl_[0], is, "num0");
+		sucvector_util::load(numTbl_[1], is, "num1");
 		sucvector_util::loadVec(blk_, is, "blk");
 		initSelTbl();
 	}
