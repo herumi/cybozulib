@@ -105,9 +105,9 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		sucvector_util::save64bit(os, valBitLen_, "valBitLen");
-		sucvector_util::save64bit(os, maxVal_, "maxVal");
-		sucvector_util::save64bit(os, size_, "size");
+		sucvector_util::save<uint64_t>(os, valBitLen_, "valBitLen");
+		sucvector_util::save<uint64_t>(os, maxVal_, "maxVal");
+		sucvector_util::save<uint64_t>(os, size_, "size");
 		assert(valBitLen_ == svv.size());
 		for (size_t i = 0; i < valBitLen_; i++) {
 			svv[i].save(os);
@@ -122,9 +122,9 @@ public:
 	}
 	void load(std::istream& is)
 	{
-		valBitLen_ = sucvector_util::load64bit(is, "valBitLen");
-		maxVal_ = sucvector_util::load64bit(is, "maxVal");
-		size_ = sucvector_util::load64bit(is, "size");
+		valBitLen_ = sucvector_util::load<uint64_t>(is, "valBitLen");
+		maxVal_ = sucvector_util::load<uint64_t>(is, "maxVal");
+		size_ = sucvector_util::load<uint64_t>(is, "size");
 		svv.resize(valBitLen_);
 		for (size_t i = 0; i < valBitLen_; i++) {
 			svv[i].load(is);
