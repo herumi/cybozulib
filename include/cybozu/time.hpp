@@ -168,16 +168,14 @@ public:
 	{
 		if (doClear) out.clear();
 		char buf[128];
-#ifdef _WIN32
 		struct tm tm;
-		if (_gmtime64_s(&tm, &time_) != 0) {
-			throw cybozu::Exception("time::toString") << time_;
-		}
-		struct tm *ptm = &tm;
+#ifdef _WIN32
+		bool isOK = _gmtime64_s(&tm, &time_) == 0;
 #else
-		struct tm *ptm = gmtime(&time_);
+		bool isOK = gmtime_r(&time_, &tm) != 0;
 #endif
-		if (std::strftime(buf, sizeof(buf), format, ptm) == 0) {
+		if (!isOK) throw cybozu::Exception("time::toString") << time_;
+		if (std::strftime(buf, sizeof(buf), format, &tm) == 0) {
 			throw cybozu::Exception("time::toString::too long") << format << time_;
 		}
 		out += buf;
