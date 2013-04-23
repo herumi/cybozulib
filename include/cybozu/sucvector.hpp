@@ -95,9 +95,7 @@ void save(std::ostream& os, T val, const char *msg)
 template<class V>
 void loadVec(V& v, std::istream& is, const char *msg)
 {
-	const uint64_t size64 = sucvector_util::load<uint64_t>(is, msg);
-	assert(size64 <= ~size_t(0));
-	const size_t size = size_t(size64);
+	const size_t size = sucvector_util::load<size_t>(is, msg);
 	v.resize(size);
 	if (is.read(cybozu::cast<char*>(&v[0]), size * sizeof(v[0]))) return;
 	throw cybozu::Exception("sucvector_util:loadVec") << msg;
@@ -106,12 +104,11 @@ void loadVec(V& v, std::istream& is, const char *msg)
 template<class V>
 void saveVec(std::ostream& os, const V& v, const char *msg)
 {
-	save<uint64_t>(os, v.size(), msg);
+	save<size_t>(os, v.size(), msg);
 	const size_t size = v.size() * sizeof(v[0]);
 	if (os.write(cybozu::cast<const char*>(&v[0]), size) && os.flush()) return;
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
-
 
 /*
 	extra memory
