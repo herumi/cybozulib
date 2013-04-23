@@ -39,7 +39,7 @@ EXTDIR=$(TOPDIR)../cybozulib_ext/
 CFLAGS+= -I$(TOPDIR)include -m$(BIT)
 LDFLAGS+= -L$(TOPDIR)lib -m$(BIT) -Wl,-rpath,'$$ORIGIN/../lib'
 
-MKDEP = sh -ec '$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@' 
+MKDEP = sh -ec '$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@; touch $@'
 
 CLEAN=$(RM) $(TARGET) $(OBJDIR)
 
