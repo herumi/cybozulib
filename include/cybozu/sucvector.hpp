@@ -66,33 +66,36 @@ inline uint32_t select64(uint64_t v, size_t r)
 	return pos + c;
 }
 
+template<class T>
 union ci {
-	uint64_t i;
-	char c[8];
+	T i;
+	char c[sizeof(T)];
 };
 
-inline uint64_t load64bit(std::istream& is, const char *msg)
+template<class T>
+T load(std::istream& is, const char *msg)
 {
-	ci ci;
+	ci<T> ci;
 	if (is.read(ci.c, sizeof(ci.c)) && is.gcount() == sizeof(ci.c)) {
 		return ci.i;
 	}
-	throw cybozu::Exception("sucvector_util:load64bit") << msg;
+	throw cybozu::Exception("sucvector_util:load") << msg;
 }
 
-inline void save64bit(std::ostream& os, uint64_t val, const char *msg)
+template<class T>
+void save(std::ostream& os, T val, const char *msg)
 {
-	ci ci;
+	ci<T> ci;
 	ci.i = val;
 	if (!os.write(ci.c, sizeof(ci.c))) {
-		throw cybozu::Exception("sucvector_util:save64bit") << msg;
+		throw cybozu::Exception("sucvector_util:save") << msg;
 	}
 }
 
 template<class V>
 void loadVec(V& v, std::istream& is, const char *msg)
 {
-	const uint64_t size64 = sucvector_util::load64bit(is, msg);
+	const uint64_t size64 = sucvector_util::load<uint64_t>(is, msg);
 	assert(size64 <= ~size_t(0));
 	const size_t size = size_t(size64);
 	v.resize(size);
@@ -103,7 +106,7 @@ void loadVec(V& v, std::istream& is, const char *msg)
 template<class V>
 void saveVec(std::ostream& os, const V& v, const char *msg)
 {
-	save64bit(os, v.size(), msg);
+	save<uint64_t>(os, v.size(), msg);
 	const size_t size = v.size() * sizeof(v[0]);
 	if (os.write(cybozu::cast<const char*>(&v[0]), size) && os.flush()) return;
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
@@ -192,16 +195,16 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		sucvector_util::save64bit(os, bitSize_, "bitSize");
-		sucvector_util::save64bit(os, numTbl_[0], "num0");
-		sucvector_util::save64bit(os, numTbl_[1], "num1");
+		sucvector_util::save<uint64_t>(os, bitSize_, "bitSize");
+		sucvector_util::save<uint64_t>(os, numTbl_[0], "num0");
+		sucvector_util::save<uint64_t>(os, numTbl_[1], "num1");
 		sucvector_util::saveVec(os, blk_, "blk");
 	}
 	void load(std::istream& is)
 	{
-		bitSize_ = sucvector_util::load64bit(is, "bitSize");
-		numTbl_[0] = sucvector_util::load64bit(is, "num0");
-		numTbl_[1] = sucvector_util::load64bit(is, "num1");
+		bitSize_ = sucvector_util::load<uint64_t>(is, "bitSize");
+		numTbl_[0] = sucvector_util::load<uint64_t>(is, "num0");
+		numTbl_[1] = sucvector_util::load<uint64_t>(is, "num1");
 		sucvector_util::loadVec(blk_, is, "blk");
 		initSelTbl();
 	}
