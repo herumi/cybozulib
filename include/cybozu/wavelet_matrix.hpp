@@ -14,7 +14,8 @@ namespace cybozu {
 /*
 	current version supports only max 32GiB
 */
-class WaveletMatrix {
+template<class SucVector = cybozu::SucVector>
+class WaveletMatrixT {
 	typedef uint32_t size_type;
 	bool getPos(uint64_t v, size_t pos) const
 	{
@@ -49,7 +50,7 @@ class WaveletMatrix {
 			initFromLtTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), offTbl[i] + end, ret + from - end, i + 1);
 		}
 	}
-	typedef std::vector<cybozu::SucVector> SucVecVec;
+	typedef std::vector<SucVector> SucVecVec;
 	uint64_t maxVal_;
 	size_type valBitLen_;
 	size_type size_;
@@ -87,7 +88,7 @@ class WaveletMatrix {
 		}
 	}
 public:
-	WaveletMatrix()
+	WaveletMatrixT()
 		: maxVal_(1)
 		, valBitLen_(0)
 		, size_(0)
@@ -318,5 +319,7 @@ public:
 		}
 	}
 };
+
+typedef WaveletMatrixT<cybozu::SucVector> WaveletMatrix;
 
 } // cybozu
