@@ -11,8 +11,11 @@
 #include <stdio.h>
 
 namespace cybozu {
-
+/*
+	current version supports only max 32GiB
+*/
 class WaveletMatrix {
+	typedef uint32_t size_type;
 	bool getPos(uint64_t v, size_t pos) const
 	{
 		return (v & (uint64_t(1) << pos)) != 0;
@@ -27,7 +30,7 @@ class WaveletMatrix {
 		}
 		return ret;
 	}
-	void initFromTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t i) const
+	void initFromTbl(std::vector<size_type>& tbl, size_t pos, size_t from, size_t i) const
 	{
 		if (i == valBitLen_) {
 			tbl[pos] = from;
@@ -36,7 +39,7 @@ class WaveletMatrix {
 			initFromTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), svv[i].rank(true, from) + offTbl[i], i + 1);
 		}
 	}
-	void initFromLtTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
+	void initFromLtTbl(std::vector<size_type>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
 	{
 		if (i == valBitLen_) {
 			tbl[pos] = ret;
@@ -47,13 +50,13 @@ class WaveletMatrix {
 		}
 	}
 	typedef std::vector<cybozu::SucVector> SucVecVec;
-	uint64_t valBitLen_;
 	uint64_t maxVal_;
-	uint64_t size_;
+	size_type valBitLen_;
+	size_type size_;
 	SucVecVec svv;
-	std::vector<uint64_t> offTbl;
-	std::vector<uint64_t> fromTbl;
-	std::vector<uint64_t> fromLtTbl;
+	std::vector<size_type> offTbl;
+	std::vector<size_type> fromTbl;
+	std::vector<size_type> fromLtTbl;
 	typedef std::vector<uint32_t> Uint32Vec;
 	static const uint64_t posUnit = 256;
 	std::vector<Uint32Vec> selTbl_;
@@ -85,8 +88,8 @@ class WaveletMatrix {
 	}
 public:
 	WaveletMatrix()
-		: valBitLen_(0)
-		, maxVal_(1)
+		: maxVal_(1)
+		, valBitLen_(0)
 		, size_(0)
 	{
 	}
@@ -105,8 +108,8 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		sucvector_util::save(os, valBitLen_, "valBitLen");
 		sucvector_util::save(os, maxVal_, "maxVal");
+		sucvector_util::save(os, valBitLen_, "valBitLen");
 		sucvector_util::save(os, size_, "size");
 		assert(valBitLen_ == svv.size());
 		for (size_t i = 0; i < valBitLen_; i++) {
@@ -122,8 +125,8 @@ public:
 	}
 	void load(std::istream& is)
 	{
-		sucvector_util::load(valBitLen_, is, "valBitLen");
 		sucvector_util::load(maxVal_, is, "maxVal");
+		sucvector_util::load(valBitLen_, is, "valBitLen");
 		sucvector_util::load(size_, is, "size");
 		svv.resize(valBitLen_);
 		for (size_t i = 0; i < valBitLen_; i++) {
