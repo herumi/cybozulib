@@ -69,6 +69,11 @@ void testSub(const cybozu::WaveletMatrix& wm, const std::vector<uint32_t>& v, ui
 	const size_t vn = v.size();
 	for (size_t i = 0; i < vn; i++) {
 		CYBOZU_TEST_EQUAL(wm.get(i), v[i]);
+		uint32_t val;
+		uint64_t p1 = wm.get(&val, i);
+		uint64_t p2 = wm.rank(v[i], i);
+		CYBOZU_TEST_EQUAL(val, v[i]);
+		CYBOZU_TEST_EQUAL(p1, p2);
 	}
 	for (uint32_t val = 0; val < maxVal; val++) {
 		for (size_t pos = 0; pos < vn; pos++) {

@@ -242,6 +242,28 @@ public:
 		return pos - fromTbl[val];
 	}
 	/*
+		get value and rank
+		val = get(pos);
+		return rank(val, pos);
+	*/
+	template<class T>
+	uint64_t get(T* pval, uint64_t pos) const
+	{
+		if (pos > size_) pos = size_;
+		uint64_t ret = 0;
+		for (size_t i = 0; i < valBitLen_; i++) {
+			bool b = svv[i].get(pos);
+			ret = (ret << 1) | uint32_t(b);
+			if (b) {
+				pos = offTbl[i] + svv[i].rank1(pos);
+			} else {
+				pos -= svv[i].rank1(pos);
+			}
+		}
+		*pval = ret;
+		return pos - fromTbl[ret];
+	}
+	/*
 		get number of less than val in [0, pos)
 	*/
 	template<class T>
