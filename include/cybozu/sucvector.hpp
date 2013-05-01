@@ -111,6 +111,8 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
 
+} // cybozu::sucvector_util
+
 /*
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
@@ -351,10 +353,8 @@ public:
    	}
 };
 
-} // cybozu::sucvector_util
-
-typedef cybozu::sucvector_util::SucVectorT<uint32_t> SucVectorLt4G;
-typedef cybozu::sucvector_util::SucVectorT<uint64_t> SucVector;
+typedef cybozu::SucVectorT<uint32_t> SucVectorLt4G;
+typedef cybozu::SucVectorT<uint64_t> SucVector;
 
 } // cybozu
 
