@@ -228,8 +228,16 @@ public:
 		if (pos > size_) pos = size_;
 		for (size_t i = 0; i < valBitLen_; i++) {
 			bool b = (val & (T(1) << (valBitLen_ - 1 - i))) != 0;
+#if 0
 			pos = svv[i].rank(b, pos);
 			if (b) pos += offTbl[i];
+#else
+			if (b) {
+				pos = offTbl[i] + svv[i].rank1(pos);
+			} else {
+				pos -= svv[i].rank1(pos);
+			}
+#endif
 		}
 		return pos - fromTbl[val];
 	}
