@@ -115,8 +115,10 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
-template<bool support1TiB>
+template<class type>
 class SucVectorT {
+	typedef type size_type;
+	static const bool support1TiB = sizeof(size_type) == 8;
 	static const uint64_t maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct Block {
@@ -129,11 +131,11 @@ class SucVectorT {
 			} ab;
 		};
 	};
-	uint64_t bitSize_;
-	uint64_t numTbl_[2];
+	size_type bitSize_;
+	size_type numTbl_[2];
 	std::vector<Block> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
-	static const uint64_t posUnit = 1024;
+	static const size_type posUnit = 1024;
 	Uint32Vec selTbl_[2];
 
 	template<int b>
@@ -351,8 +353,8 @@ public:
 
 } // cybozu::sucvector_util
 
-typedef cybozu::sucvector_util::SucVectorT<false> SucVectorLt4G;
-typedef cybozu::sucvector_util::SucVectorT<true> SucVector;
+typedef cybozu::sucvector_util::SucVectorT<uint32_t> SucVectorLt4G;
+typedef cybozu::sucvector_util::SucVectorT<uint64_t> SucVector;
 
 } // cybozu
 
