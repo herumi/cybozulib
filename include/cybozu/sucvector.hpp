@@ -121,7 +121,7 @@ template<class type>
 class SucVectorT {
 	typedef type size_type;
 	static const bool support1TiB = sizeof(size_type) == 8;
-	static const uint64_t maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
+	static const int maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct Block {
 		uint64_t org[4];
@@ -133,11 +133,11 @@ class SucVectorT {
 			} ab;
 		};
 	};
-	size_type bitSize_;
-	size_type numTbl_[2];
+	uint64_t bitSize_;
+	uint64_t numTbl_[2];
 	std::vector<Block> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
-	static const size_type posUnit = 1024;
+	static const uint64_t posUnit = 1024;
 	Uint32Vec selTbl_[2];
 
 	template<int b>
@@ -350,7 +350,7 @@ public:
 		uint64_t ret = cybozu::sucvector_util::select64(v, size_t(rank));
 		ret += L * 256 + i * 64;
 		return ret;
-   	}
+	}
 };
 
 typedef cybozu::SucVectorT<uint32_t> SucVectorLt4G;
@@ -361,4 +361,3 @@ typedef cybozu::SucVectorT<uint64_t> SucVector;
 #ifdef _WIN32
 	#pragma warning(pop)
 #endif
-
