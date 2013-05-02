@@ -35,7 +35,7 @@ public:
 	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
-		return (v_[q] & (1ULL << r)) != 0;
+		return (v_[q] & (uint64_t(1) << r)) != 0;
 	}
 	void clear()
 	{
@@ -44,12 +44,25 @@ public:
 	}
 	void set(size_t idx, bool b)
 	{
+		if (b) {
+			set(idx);
+		} else {
+			reset(idx);
+		}
+	}
+	// set(idx, true);
+	void set(size_t idx)
+	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
-		uint64_t v = v_[q];
-		v &= ~(1ULL << r);
-		if (b) v |= (1ULL << r);
-		v_[q] = v;
+		v_[q] |= uint64_t(1) << r;
+	}
+	// set(idx, false);
+	void reset(size_t idx)
+	{
+		size_t q = idx / 64;
+		size_t r = idx % 64;
+		v_[q] &= ~(uint64_t(1) << r);
 	}
 	size_t size() const { return bitSize_; }
 	const uint64_t *getBlock() const { return &v_[0]; }
