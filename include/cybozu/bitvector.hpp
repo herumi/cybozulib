@@ -6,7 +6,7 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
-#include <cybozu/inttype.hpp>
+#include <cybozu/exception.hpp>
 #include <vector>
 
 namespace cybozu {
@@ -55,6 +55,7 @@ public:
 	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
+		if (q >= v_.size()) throw cybozu::Exception("BitVector:set bad idx") << idx;
 		v_[q] |= uint64_t(1) << r;
 	}
 	// set(idx, false);
@@ -62,6 +63,7 @@ public:
 	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
+		if (q >= v_.size()) throw cybozu::Exception("BitVector:reset bad idx") << idx;
 		v_[q] &= ~(uint64_t(1) << r);
 	}
 	size_t size() const { return bitSize_; }
