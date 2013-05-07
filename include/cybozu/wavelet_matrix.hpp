@@ -6,7 +6,6 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
-#include <cybozu/bitvector.hpp>
 #include <cybozu/sucvector.hpp>
 #include <stdio.h>
 
@@ -168,14 +167,14 @@ public:
 		Vec cur = vec, next;
 		next.resize(size_);
 		for (size_t i = 0; i < valBitLen; i++) {
-			cybozu::BitVector bv;
-			bv.resize(size_);
+			SucVector& sv = svv[i];
+			sv.resize(size_);
 			size_t zeroPos = 0;
 			size_t onePos = offTbl[i];
 			for (size_t j = 0; j < size_; j++) {
 				bool b = getPos(cur[j], valBitLen - 1 - i);
 				if (b) {
-					bv.set(j, true);
+					sv.set(j);
 				}
 				if (i == valBitLen - 1) continue;
 				if (b) {
@@ -184,7 +183,7 @@ public:
 					next[zeroPos++] = cur[j];
 				}
 			};
-			svv[i].init(bv.getBlock(), bv.getBlockSize() * 64);
+			sv.freeze();
 			next.swap(cur);
 		}
 
@@ -311,6 +310,6 @@ public:
 	}
 };
 
-typedef WaveletMatrixT<cybozu::SucVector> WaveletMatrix;
+typedef WaveletMatrixT<> WaveletMatrix;
 
 } // cybozu
