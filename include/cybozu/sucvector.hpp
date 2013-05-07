@@ -117,7 +117,7 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
-template<class type>
+template<class type, bool withSelect = true>
 class SucVectorT {
 	typedef type size_type;
 	static const bool support1TiB = sizeof(size_type) == 8;
@@ -165,6 +165,7 @@ class SucVectorT {
 	// call after blk_, numTbl_ are initialized
 	void initSelTbl()
 	{
+		if (!withSelect) return;
 		initSelTblSub<false>(selTbl_[0]);
 		initSelTblSub<true>(selTbl_[1]);
 	}
@@ -313,6 +314,7 @@ public:
 	template<bool b>
 	uint64_t selectSub(uint64_t rank) const
 	{
+		if (!withSelect) throw cybozu::Exception("SucVector:selectSub is not supported");
 		const int tablePos = b ? 1 : 0;
 		if (rank >= numTbl_[tablePos]) return NotFound;
 		const Uint32Vec& tbl = selTbl_[tablePos];

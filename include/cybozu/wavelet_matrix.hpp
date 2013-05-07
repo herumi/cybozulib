@@ -14,7 +14,7 @@ namespace cybozu {
 /*
 	current version supports only max 32GiB
 */
-template<class SucVector = cybozu::SucVector>
+template<class SucVector = cybozu::SucVectorT<uint32_t, false> >
 class WaveletMatrixT {
 	typedef uint32_t size_type;
 	bool getPos(uint64_t v, size_t pos) const
