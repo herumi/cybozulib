@@ -132,9 +132,14 @@ class SucVectorT {
 				uint8_t b[4]; // b[0] is used for (b[0] << 32) | a
 			} ab;
 		};
+		void clear()
+		{
+			memset(this, 0, sizeof(Block));
+		}
 	};
 	uint64_t bitSize_;
 	uint64_t numTbl_[2];
+	bool freezed_;
 	std::vector<Block> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
 	static const uint64_t posUnit = 1024;
@@ -187,7 +192,6 @@ class SucVectorT {
 		}
 	}
 public:
-	SucVectorT() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
 	/*
 		data format(endian is depend on CPU:eg. little endian for x86/x64)
 		bitSize  : 8
@@ -211,26 +215,23 @@ public:
 		sucvector_util::loadVec(blk_, is, "blk");
 		initSelTbl();
 	}
-	/*
-		@param buf [in] bit pattern buffer
-		@param bitSize [in] bitSize ; buf size = (bitSize + 63) / 64
-	*/
+	SucVectorT() : bitSize_(0), freezed_(false) { numTbl_[0] = numTbl_[1] = 0; }
 	SucVectorT(const uint64_t *buf, uint64_t bitSize)
 	{
 		init(buf, bitSize);
 	}
+	/*
+		initialize SucVector
+		@param buf [in] bit pattern buffer
+		@param bitSize [in] bitSize ; buf size = (bitSize + 63) / 64
+	*/
 	void init(const uint64_t *buf, uint64_t bitSize)
 	{
-		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
-		assert((bitSize + 63) / 64 <= ~size_t(0));
-		bitSize_ = bitSize;
-		const size_t blkNum = size_t((bitSize + 63) / 64);
-		const size_t tblNum = (blkNum + 3) / 4; // tblNum <= 2^32
-		blk_.resize(tblNum);
+		const size_t blkNum = resize(bitSize, false);
 
 		uint64_t num1 = 0;
 		size_t pos = 0;
-		for (size_t i = 0; i < tblNum; i++) {
+		for (size_t i = 0, n = blk_.size(); i < n; i++) {
 			Block& blk = blk_[i];
 			if (support1TiB) {
 				blk.a64 = num1 % maxBitSize;
@@ -253,6 +254,36 @@ public:
 		numTbl_[0] = blkNum * 64 - num1;
 		numTbl_[1] = num1;
 		initSelTbl();
+		freezed_ = true;
+	}
+	/*
+		initialize SucVector after calling set without BitVector
+		1. resize(bitSize)
+		2. construct bit vector with set(pos)
+		3. freeze()
+	*/
+	size_t resize(size_t bitSize, bool doClear)
+	{
+		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
+		assert((bitSize + 63) / 64 <= ~size_t(0));
+		bitSize_ = bitSize;
+		const size_t blkNum = size_t((bitSize + 63) / 64);
+		const size_t tblNum = (blkNum + 3) / 4; // tblNum <= 2^32
+		blk_.resize(tblNum);
+		if (doClear) {
+			for (size_t i = 0; i < tblNum; i++) {
+				blk_[i].clear();
+			}
+		}
+		return blkNum;
+	}
+	void set(size_t idx)
+	{
+		size_t q = idx / 64;
+		size_t r = idx % 64;
+	}
+	void freeze()
+	{
 	}
 	uint64_t rank1(uint64_t pos) const
 	{
