@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sstream>
 #include <iostream>
 #include <cybozu/itoa.hpp>
 #include <cybozu/test.hpp>
@@ -344,4 +345,41 @@ CYBOZU_TEST_AUTO(itohex)
 	CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned short)0x12cd, false), "12cd");
 	CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned int)0x1234adef, false), "1234adef");
 	CYBOZU_TEST_EQUAL(cybozu::itohex((uint64_t)0xaaaabbbbffffeeeeULL, false), "aaaabbbbffffeeee");
+}
+
+std::string cvtOk(uint64_t x)
+{
+	std::ostringstream os;
+	os << std::hex << x;
+	return os.str();
+}
+
+std::string cvt(uint64_t x)
+{
+	char buf[17];
+	const size_t len = cybozu::itoa_local::convertFromUintToHexWithoutZero(buf, x, false);
+	buf[len] = '\0';
+	return buf;
+}
+
+
+CYBOZU_TEST_AUTO(itohexWithoutZero)
+{
+	for (uint64_t i = 0; i < 35; i++) {
+		std::string a = cvtOk(i);
+		std::string b = cvt(i);
+		CYBOZU_TEST_EQUAL(a, b);
+	}
+	const uint64_t tbl[] = {
+		255, 256, 257,
+		0xffff, 0x10000, 0xffffffff, 0x12345678,
+		uint64_t(0x100000000ull),
+		uint64_t(0x123456789abcdefull),
+		uint64_t(0xffffffffffffffffull),
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		std::string a = cvtOk(tbl[i]);
+		std::string b = cvt(tbl[i]);
+		CYBOZU_TEST_EQUAL(a, b);
+	}
 }
