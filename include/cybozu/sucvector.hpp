@@ -191,6 +191,40 @@ class SucVectorT {
 			tbl[i] = pos;
 		}
 	}
+	void initBlock(const uint64_t *buf, size_t blkNum)
+	{
+		uint64_t num1 = 0;
+		size_t pos = 0;
+		for (size_t i = 0, n = blk_.size(); i < n; i++) {
+			Block& blk = blk_[i];
+			if (support1TiB) {
+				blk.a64 = num1 % maxBitSize;
+			} else {
+				if (num1 > 0xffffffff) throw cybozu::Exception("SucVectorT:too large num1") << num1;
+				blk.ab.a = (uint32_t)num1;
+			}
+			uint32_t subNum1 = 0;
+			for (size_t j = 0; j < 4; j++) {
+				uint64_t v;
+				if (buf) {
+					v = pos < blkNum ? buf[pos++] : 0;
+					blk.org[j] = v;
+				} else {
+					v = blk.org[j];
+				}
+				uint32_t c = cybozu::popcnt(v);
+				num1 += c;
+				if (j > 0) {
+					blk.ab.b[j] = (uint8_t)subNum1;
+				}
+				subNum1 += c;
+			}
+		}
+		numTbl_[0] = blkNum * 64 - num1;
+		numTbl_[1] = num1;
+		initSelTbl();
+		freezed_ = true;
+	}
 public:
 	/*
 		data format(endian is depend on CPU:eg. little endian for x86/x64)
@@ -228,33 +262,7 @@ public:
 	void init(const uint64_t *buf, uint64_t bitSize)
 	{
 		const size_t blkNum = resize(bitSize, false);
-
-		uint64_t num1 = 0;
-		size_t pos = 0;
-		for (size_t i = 0, n = blk_.size(); i < n; i++) {
-			Block& blk = blk_[i];
-			if (support1TiB) {
-				blk.a64 = num1 % maxBitSize;
-			} else {
-				if (num1 > 0xffffffff) throw cybozu::Exception("SucVectorT:too large num1") << num1;
-				blk.ab.a = (uint32_t)num1;
-			}
-			uint32_t subNum1 = 0;
-			for (size_t j = 0; j < 4; j++) {
-				uint64_t v = pos < blkNum ? buf[pos++] : 0;
-				blk.org[j] = v;
-				uint32_t c = cybozu::popcnt(v);
-				num1 += c;
-				if (j > 0) {
-					blk.ab.b[j] = (uint8_t)subNum1;
-				}
-				subNum1 += c;
-			}
-		}
-		numTbl_[0] = blkNum * 64 - num1;
-		numTbl_[1] = num1;
-		initSelTbl();
-		freezed_ = true;
+		initBlock(buf, blkNum);
 	}
 	/*
 		initialize SucVector after calling set without BitVector
@@ -262,9 +270,9 @@ public:
 		2. construct bit vector with set(pos)
 		3. freeze()
 	*/
-	size_t resize(size_t bitSize, bool doClear)
+	size_t resize(size_t bitSize, bool doClear = true)
 	{
-		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
+		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:resize:too large bitSize") << bitSize;
 		assert((bitSize + 63) / 64 <= ~size_t(0));
 		bitSize_ = bitSize;
 		const size_t blkNum = size_t((bitSize + 63) / 64);
@@ -275,15 +283,22 @@ public:
 				blk_[i].clear();
 			}
 		}
+		freezed_ = false;
 		return blkNum;
 	}
 	void set(size_t idx)
 	{
-		size_t q = idx / 64;
-		size_t r = idx % 64;
+		if (freezed_) throw cybozu::Exception("SucVector:set:freezed");
+		if (idx >= bitSize_) throw cybozu::Exception("SucVector:set:bad idx") << idx;
+		const size_t q = idx / 256;
+		const size_t r = idx % 256;
+
+		uint64_t& b = blk_[q].org[r / 64];
+		b |= uint64_t(1) << (r % 64);
 	}
 	void freeze()
 	{
+		initBlock(0, blk_.size());
 	}
 	uint64_t rank1(uint64_t pos) const
 	{
