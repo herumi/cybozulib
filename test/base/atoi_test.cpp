@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <iostream>
 #include <cybozu/atoi.hpp>
-#include <cybozu/itoa.hpp>
 #include <cybozu/test.hpp>
 
 CYBOZU_TEST_AUTO(test_int)
@@ -60,21 +59,10 @@ CYBOZU_TEST_AUTO(test_int)
         { "-0002147483647",-2147483647 },
         { "-0002147483648", -2147483647 - 1 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         int x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
-
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const int numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -146,20 +134,10 @@ CYBOZU_TEST_AUTO(test_short)
         { "-000032767", -32767 },
         { "-000032768", -32768 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         short x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const short numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -220,20 +198,10 @@ CYBOZU_TEST_AUTO(test_unsigned_short)
         { "000065534", 65534 },
         { "000065535", 65535 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         unsigned short x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const unsigned short numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -321,20 +289,10 @@ CYBOZU_TEST_AUTO(test_uint)
         { "002147483646", 2147483646 },
         { "0002147483647", 2147483647 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         unsigned int x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const unsigned numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -454,20 +412,10 @@ CYBOZU_TEST_AUTO(test_int64)
         { "-0002147483647",-2147483647 },
         { "-0002147483648", -2147483647 - 1 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         int64_t x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const int64_t numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -561,20 +509,10 @@ CYBOZU_TEST_AUTO(test_uint64)
         { "002147483646", 2147483646 },
         { "0002147483647", 2147483647 },
     };
-    bool checkFrom = true;
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
         uint64_t x = 0;
         CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
         CYBOZU_TEST_EQUAL(x, okTbl[i].x);
-        if (checkFrom) {
-            if (strcmp(okTbl[i].str, "00000") == 0) {// don't check after "00000"
-                checkFrom = false;
-                continue;
-            }
-            std::string s;
-            cybozu::itoa(s, x);
-            CYBOZU_TEST_EQUAL(s, okTbl[i].str);
-        }
     }
     {
         const uint64_t numTbl[] = { 1, 12, 123, 1234, 12345, 12345, 12345 };
@@ -612,37 +550,13 @@ CYBOZU_TEST_AUTO(test_uint64)
     }
 }
 
-CYBOZU_TEST_AUTO(zeroPadding)
-{
-    const struct {
-        const char *str;
-        int val;
-    } intTbl[] = {
-        { "0000", 0 },
-        { "0001", 1 },
-        { "0012", 12 },
-        { "0123", 123 },
-        { "1234", 1234 },
-        { "12345", 12345 },
-        { "0000", -0 },
-        { "-001", -1 },
-        { "-012", -12 },
-        { "-123", -123 },
-        { "-1234", -1234 },
-        { "-12345", -12345 },
-    };
-    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(intTbl); i++) {
-        CYBOZU_TEST_EQUAL(cybozu::itoaWithZero(intTbl[i].val, 4), intTbl[i].str);
-    }
-}
-
 CYBOZU_TEST_AUTO(itohexchar)
 {
     const struct {
         const char *strL;
         const char *strH;
         unsigned char val;
-    } intTbl[] = {
+    } tbl[] = {
         { "00", "00", 0 },
         { "01", "01", 1 },
         { "02", "02", 2 },
@@ -675,29 +589,12 @@ CYBOZU_TEST_AUTO(itohexchar)
         { "3e", "3E", 62 },
         { "3f", "3F", 63 },
     };
-    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(intTbl); i++) {
-        CYBOZU_TEST_EQUAL(cybozu::itohex(intTbl[i].val), intTbl[i].strH);
-        CYBOZU_TEST_EQUAL(cybozu::itohex(intTbl[i].val, false), intTbl[i].strL);
-        unsigned char a = cybozu::hextoi(intTbl[i].strL);
-        CYBOZU_TEST_EQUAL(a, intTbl[i].val);
-        unsigned char b = cybozu::hextoi(intTbl[i].strH);
-        CYBOZU_TEST_EQUAL(b, intTbl[i].val);
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+        unsigned char a = cybozu::hextoi(tbl[i].strL);
+        CYBOZU_TEST_EQUAL(a, tbl[i].val);
+        unsigned char b = cybozu::hextoi(tbl[i].strH);
+        CYBOZU_TEST_EQUAL(b, tbl[i].val);
     }
-}
-
-CYBOZU_TEST_AUTO(itohex)
-{
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned short)0), "0000");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned int)0), "00000000");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((uint64_t)0), "0000000000000000");
-
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned short)0x12cd), "12CD");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned int)0x1234adef), "1234ADEF");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((uint64_t)0xaaaabbbbffffeeeeULL), "AAAABBBBFFFFEEEE");
-
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned short)0x12cd, false), "12cd");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned int)0x1234adef, false), "1234adef");
-    CYBOZU_TEST_EQUAL(cybozu::itohex((uint64_t)0xaaaabbbbffffeeeeULL, false), "aaaabbbbffffeeee");
 }
 
 CYBOZU_TEST_AUTO(hextoi)
