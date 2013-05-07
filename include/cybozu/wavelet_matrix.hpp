@@ -13,7 +13,7 @@ namespace cybozu {
 /*
 	current version supports only max 32GiB
 */
-template<class SucVector = cybozu::SucVectorT<uint32_t, false> >
+template<bool withSelect = true, class SucVector = cybozu::SucVectorT<uint32_t, false> >
 class WaveletMatrixT {
 	typedef uint32_t size_type;
 	bool getPos(uint64_t v, size_t pos) const
@@ -65,6 +65,7 @@ class WaveletMatrixT {
 	template<class Vec>
 	void initSelTbl(std::vector<Uint32Vec>& tblVec, const Vec& vec) const
 	{
+		if (!withSelect) return;
 		tblVec.resize(maxVal_);
 
 		Uint32Vec iTbl(maxVal_);
@@ -119,8 +120,10 @@ public:
 		sucvector_util::saveVec(os, fromTbl, "fromTbl");
 		sucvector_util::saveVec(os, fromLtTbl, "fromLtTbl");
 
-		for (uint64_t v = 0; v < maxVal_; v++) {
-			sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+		if (withSelect) {
+			for (uint64_t v = 0; v < maxVal_; v++) {
+				sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+			}
 		}
 	}
 	void load(std::istream& is)
@@ -136,9 +139,11 @@ public:
 		sucvector_util::loadVec(fromTbl, is, "fromTbl");
 		sucvector_util::loadVec(fromLtTbl, is, "fromLtTbl");
 
-		selTbl_.resize(maxVal_);
-		for (uint64_t v = 0; v < maxVal_; v++) {
-			sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+		if (withSelect) {
+			selTbl_.resize(maxVal_);
+			for (uint64_t v = 0; v < maxVal_; v++) {
+				sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+			}
 		}
 	}
 	uint64_t size() const { return size_; }
@@ -281,6 +286,7 @@ public:
 	}
 	uint64_t select(uint64_t val, uint64_t rank) const
 	{
+		if (!withSelect) throw cybozu::Exception("WaveletMatrix:select:not support");
 		assert(val < maxVal_);
 		const Uint32Vec& tbl = selTbl_[val];
 		if (rank / posUnit >= tbl.size()) return cybozu::NotFound;
