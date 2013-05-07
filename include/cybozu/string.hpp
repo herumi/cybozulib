@@ -1470,6 +1470,32 @@ public:
 		}
 		return true;
 	}
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+	StringT(StringT&& rhs)
+	{
+		assign(std::forward<StringT>(rhs));
+	}
+	StringT& operator=(StringT&& rhs)
+	{
+		assign(std::forward<StringT>(rhs));
+		return *this;
+	}
+	StringT& assign(StringT&& rhs)
+	{
+		str_.assign(std::forward<BasicString>(rhs.str_));
+		return *this;
+	}
+	const_iterator cbegin() const { return begin(); }
+	const_iterator cend() const { return end(); }
+	const_reverse_iterator crbegin() const { return rbegin(); }
+	const_reverse_iterator crend() const { return rend(); }
+	void shrink_to_fit() { str_.shrink_to_fit(); }
+	void pop_back() { str_.erase(str_.size() - 1, 1); }
+	reference front() { return operator[](0); }
+	const_reference front() const { return str_.front(); }
+	reference back() { return str_.back(); }
+	const_reference back() const { return str_.back(); }
+#endif
 	/**
 		get internal const str(don't use this function)
 	*/
@@ -1568,6 +1594,9 @@ inline bool operator>(const std::wstring& lhs, const String& rhs) { return rhs <
 #endif
 
 inline String operator+(const String& lhs, const String& rhs) { return String(lhs) += rhs; }
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+inline String operator+(String&& lhs, const String& rhs) { return std::move(lhs.append(rhs)); }
+#endif
 
 inline bool ConvertUtf16ToUtf8(std::string *out, const cybozu::Char16 *begin, const cybozu::Char16 *end)
 {
