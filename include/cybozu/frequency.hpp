@@ -6,6 +6,7 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
+#include <assert.h>
 #include <vector>
 #include <algorithm>
 #include <functional>
@@ -79,7 +80,8 @@ public:
 	*/
 	Element getElem(size_t idx) const
 	{
-		if (idx >= N) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
+//		if (idx >= N) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
+		assert(idx < N);
 		return Element(idx2ref_[idx]);
 	}
 	size_t size() const { return size_; }
