@@ -8,6 +8,10 @@
 */
 #include <cybozu/sucvector.hpp>
 #include <stdio.h>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
 
 namespace cybozu {
 /*
@@ -319,3 +323,7 @@ public:
 typedef WaveletMatrixT<> WaveletMatrix;
 
 } // cybozu
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
