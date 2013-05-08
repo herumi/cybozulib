@@ -16,6 +16,7 @@ CYBOZU_TEST_AUTO(char)
 		{ 'b', 2 },
 		{ 'c', 1 },
 	};
+	CYBOZU_TEST_EQUAL(freq.size(), 5u);
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(freq.getFreq(tbl[i].c), tbl[i].n);
 		CYBOZU_TEST_EQUAL(freq.getIdx(tbl[i].c), i);
@@ -40,6 +41,7 @@ CYBOZU_TEST_AUTO(int)
 		{ 9, 1 },
 		{ 0, 1 },
 	};
+	CYBOZU_TEST_EQUAL(freq.size(), 5u);
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(freq.getFreq(tbl[i].c), tbl[i].n);
 		CYBOZU_TEST_EQUAL(freq.getIdx(tbl[i].c), i);
@@ -63,10 +65,10 @@ CYBOZU_TEST_AUTO(string)
 		{ "123", 2 },
 		{ "a", 1 },
 	};
+	CYBOZU_TEST_EQUAL(freq.size(), 4u);
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(freq.getFreq(tbl[i].c), tbl[i].n);
 		CYBOZU_TEST_EQUAL(freq.getIdx(tbl[i].c), i);
 		CYBOZU_TEST_EQUAL(freq.getElem(i), tbl[i].c);
 	}
 }
-
