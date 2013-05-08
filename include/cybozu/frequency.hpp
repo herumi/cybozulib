@@ -23,6 +23,7 @@ class FrequencyVec {
 		Int idx;
 	};
 	static const size_t N = size_t(1) << (sizeof(Element) * 8);
+	size_t size_;
 	FreqIdx m_[N];
 	uint8_t idx2ref_[N];
 	struct Greater {
@@ -41,7 +42,7 @@ public:
 	typedef Element value_type;
 	typedef Int size_type;
 
-	FrequencyVec(){}
+	FrequencyVec() : size_(0) {}
 	template<class Iter>
 	FrequencyVec(Iter begin, Iter end)
 	{
@@ -58,8 +59,11 @@ public:
 		for (size_t i = 0; i < N; i++) idx2ref_[i] = uint8_t(i);
 		Greater greater(m_);
 		std::sort(idx2ref_, idx2ref_ + N, greater);
+		size_ = 0;
 		for (size_t i = 0; i < N; i++) {
-			m_[idx2ref_[i]].idx = (Int)i;
+			FreqIdx& freqIdx = m_[idx2ref_[i]];
+			freqIdx.idx = (Int)i;
+			if (freqIdx.freq) size_++;
 		}
 	}
 	/*
@@ -78,6 +82,7 @@ public:
 		if (idx >= N) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
 		return Element(idx2ref_[idx]);
 	}
+	size_t size() const { return size_; }
 };
 
 } // cybozu::freq_local
@@ -156,6 +161,7 @@ public:
 		if (idx >= idx2ref_.size()) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
 		return idx2ref_[idx]->first;
 	}
+	size_t size() const { return idx2ref_.size(); }
 };
 
 template<class Int>
