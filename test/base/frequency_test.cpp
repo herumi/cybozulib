@@ -1,11 +1,18 @@
 #include <cybozu/test.hpp>
 #include <cybozu/frequency.hpp>
+#include <sstream>
 
 CYBOZU_TEST_AUTO(char)
 {
 	std::string a = "abcaaab\x80\x80\xff\xff\xff";
 	typedef cybozu::freq_local::FrequencyVec<char> Freq;
-	Freq freq(a.begin(), a.end());
+	std::stringstream ss;
+	Freq freq;
+	{
+		Freq freqTmp(a.begin(), a.end());
+		freqTmp.save(ss);
+	}
+	freq.load(ss);
 	const struct {
 		char c;
 		size_t n;
@@ -30,7 +37,13 @@ CYBOZU_TEST_AUTO(int)
 		3, 5, 2, 3, 5, 2, 9, 5, 2, 2, 0,
 	};
 	typedef cybozu::Frequency<int> Freq;
-	Freq freq(inTbl, inTbl + CYBOZU_NUM_OF_ARRAY(inTbl));
+	std::stringstream ss;
+	Freq freq;
+	{
+		Freq freqTmp(inTbl, inTbl + CYBOZU_NUM_OF_ARRAY(inTbl));
+		freqTmp.save(ss);
+	}
+	freq.load(ss);
 	const struct {
 		int  c;
 		size_t n;
@@ -55,7 +68,13 @@ CYBOZU_TEST_AUTO(string)
 		"abc", "123", "a", "abc", "abc", "x", "123", "x",
 	};
 	typedef cybozu::Frequency<std::string> Freq;
-	Freq freq(inTbl, inTbl + CYBOZU_NUM_OF_ARRAY(inTbl));
+	std::stringstream ss;
+	Freq freq;
+	{
+		Freq freqTmp(inTbl, inTbl + CYBOZU_NUM_OF_ARRAY(inTbl));
+		freqTmp.save(ss);
+	}
+	freq.load(ss);
 	const struct {
 		std::string c;
 		size_t n;
