@@ -53,6 +53,9 @@ CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(int)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned int)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(long)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned long)
+#ifdef _MSC_VER
+CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(size_t)
+#endif
 
 #undef CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE
 
@@ -114,7 +117,7 @@ public:
 		size_ = 0;
 		for (size_t i = 0; i < N; i++) {
 			uint8_t c = idx2char_[i];
-			char2idx_[c] = (Int)i;
+			char2idx_[c] = (uint8_t)i;
 			if (freqTbl_[c]) size_++;
 		}
 	}
