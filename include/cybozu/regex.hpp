@@ -2,7 +2,7 @@
 /**
 	@file
 	@brief regex for cybozu::String
-	@note regex version (for win) does not support icase
+	@note VC reqires /MT or /MTd options
 
 	@author MITSUNARI Shigeo
 */
