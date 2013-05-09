@@ -19,21 +19,18 @@ namespace freq_local {
 
 template<class Element, class Int = size_t>
 class FrequencyVec {
-	struct FreqIdx {
-		Int freq;
-		Int idx;
-	};
 	static const size_t N = size_t(1) << (sizeof(Element) * 8);
 	size_t size_;
-	FreqIdx m_[N];
-	uint8_t idx2ref_[N];
+	Int freqTbl_[N];
+	uint8_t char2idx_[N];
+	uint8_t idx2char_[N];
 	struct Greater {
-		const FreqIdx *m_;
-		explicit Greater(const FreqIdx* m) : m_(m) {}
+		const Int *p_;
+		explicit Greater(const Int *p) : p_(p) {}
 		bool operator()(uint8_t lhs, uint8_t rhs) const
 		{
-			Int a = m_[lhs].freq;
-			Int b = m_[rhs].freq;
+			Int a = p_[lhs];
+			Int b = p_[rhs];
 			if (a > b) return true;
 			if (a < b) return false;
 			return a > b;
@@ -52,29 +49,29 @@ public:
 	template<class Iter>
 	void init(Iter begin, Iter end)
 	{
-		memset(m_, 0, sizeof(m_));
+		memset(freqTbl_, 0, sizeof(freqTbl_));
 		while (begin != end) {
-			m_[uint8_t(*begin)].freq++;
+			freqTbl_[uint8_t(*begin)]++;
 			++begin;
 		}
-		for (size_t i = 0; i < N; i++) idx2ref_[i] = uint8_t(i);
-		Greater greater(m_);
-		std::sort(idx2ref_, idx2ref_ + N, greater);
+		for (size_t i = 0; i < N; i++) idx2char_[i] = uint8_t(i);
+		Greater greater(freqTbl_);
+		std::sort(idx2char_, idx2char_ + N, greater);
 		size_ = 0;
 		for (size_t i = 0; i < N; i++) {
-			FreqIdx& freqIdx = m_[idx2ref_[i]];
-			freqIdx.idx = (Int)i;
-			if (freqIdx.freq) size_++;
+			uint8_t c = idx2char_[i];
+			char2idx_[c] = (Int)i;
+			if (freqTbl_[c]) size_++;
 		}
 	}
 	/*
 		element -> freq
 	*/
-	Int getFreq(Element e) const { return m_[uint8_t(e)].freq; }
+	Int getFreq(Element e) const { return freqTbl_[uint8_t(e)]; }
 	/*
 		element -> idx
 	*/
-	Int getIdx(Element e) const { return m_[uint8_t(e)].idx; }
+	Int getIdx(Element e) const { return char2idx_[uint8_t(e)]; }
 	/*
 		idx -> element
 	*/
@@ -82,7 +79,7 @@ public:
 	{
 //		if (idx >= N) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
 		assert(idx < N);
-		return Element(idx2ref_[idx]);
+		return Element(idx2char_[idx]);
 	}
 	size_t size() const { return size_; }
 };
