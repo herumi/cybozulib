@@ -1692,7 +1692,13 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 
 } // boost
 
-namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
+namespace std {
+
+#if defined(_MSC_VER) && (_MSC_VER == 1600)
+	// defined in std ?
+#else
+CYBOZU_NAMESPACE_TR1_BEGIN
+#endif
 
 template<>
 struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
@@ -1702,7 +1708,13 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 	}
 };
 
-CYBOZU_NAMESPACE_TR1_END } // std
+#if defined(_MSC_VER) && (_MSC_VER == 1600)
+	// defined in std ?
+#else
+CYBOZU_NAMESPACE_TR1_END
+#endif
+
+} // std
 
 #ifdef _MSC_VER
 	#pragma warning(pop)
