@@ -124,17 +124,17 @@ public:
 	/*
 		element -> freq
 	*/
-	Int getFreq(Element e) const { return freqTbl_[uint8_t(e)]; }
+	Int getFrequency(Element e) const { return freqTbl_[uint8_t(e)]; }
 	/*
 		element -> idx
 	*/
-	Int getIdx(Element e) const { return char2idx_[uint8_t(e)]; }
+	Int getIndex(Element e) const { return char2idx_[uint8_t(e)]; }
 	/*
 		idx -> element
 	*/
-	Element getElem(size_t idx) const
+	Element getElement(size_t idx) const
 	{
-//		if (idx >= N) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
+//		if (idx >= N) throw cybozu::Exception("Frequency:getElement:bad idx") << idx;
 		assert(idx < N);
 		return Element(idx2char_[idx]);
 	}
@@ -215,15 +215,7 @@ public:
 			m_[*begin].freq++;
 			++begin;
 		}
-#if 1
 		initIdx2Ref();
-#else
-		size_t pos = 0;
-		for (typename Map::const_iterator i = m_.begin(), ie = m_.end(); i != ie; ++i) {
-			idx2ref_[pos++] = i;
-		}
-		std::sort(idx2ref_.begin(), idx2ref_.end(), greater);
-#endif
 		for (size_t i = 0, ie = idx2ref_.size(); i < ie; i++) {
 			idx2ref_[i]->second.idx = (Int)i;
 		}
@@ -231,7 +223,7 @@ public:
 	/*
 		element -> freq
 	*/
-	Int getFreq(const Element& e) const
+	Int getFrequency(const Element& e) const
 	{
 		typename Map::const_iterator i = m_.find(e);
 		return (i != m_.end()) ? i->second.freq : 0;
@@ -239,18 +231,18 @@ public:
 	/*
 		element -> idx
 	*/
-	Int getIdx(const Element& e) const
+	Int getIndex(const Element& e) const
 	{
 		typename Map::const_iterator i = m_.find(e);
-		if (i == m_.end()) throw cybozu::Exception("Frequency:getIdx:not found") << e;
+		if (i == m_.end()) throw cybozu::Exception("Frequency:getIndex:not found") << e;
 		return i->second.idx;
 	}
 	/*
 		idx -> element
 	*/
-	const Element& getElem(size_t idx) const
+	const Element& getElement(size_t idx) const
 	{
-		if (idx >= idx2ref_.size()) throw cybozu::Exception("Frequency:getElem:bad idx") << idx;
+		if (idx >= idx2ref_.size()) throw cybozu::Exception("Frequency:getElement:bad idx") << idx;
 		return idx2ref_[idx]->first;
 	}
 	size_t size() const { return idx2ref_.size(); }
