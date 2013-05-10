@@ -15,7 +15,9 @@
 
 CYBOZU_TEST_AUTO(regex_search)
 {
+	// this setup is necessary
 	std::locale::global(std::locale(std::locale(""), new std::ctype<cybozu::Char>));
+
 	cybozu::String str(CYBOZU_RE("こんにちはUTF-8です ゔ♡"));
 	for (size_t i = 0; i < str.size(); i++) {
 		printf("%04x ", str[i]);
