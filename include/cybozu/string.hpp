@@ -23,6 +23,15 @@
 #include <cybozu/exception.hpp>
 #include <cybozu/hash.hpp>
 
+// to deal with unicode literal(same macro defined in regex.hpp)
+#ifdef _MSC_VER
+	#define CYBOZU_STR_WCHAR wchar_t
+	#define CYBOZU_STR_W(x) L##x // assume UTF-16 string
+#else
+	#define CYBOZU_STR_WCHAR char
+	#define CYBOZU_STR_W(x) x // assume UTF-8 string
+#endif
+
 namespace cybozu {
 
 #ifdef __GNUC__
