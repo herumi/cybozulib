@@ -13,6 +13,7 @@ CYBOZU_TEST_AUTO(bsf)
 		{ 4, 2 },
 		{ 0xffffffff, 0 },
 		{ 0x80000000, 31 },
+		{ 0x80000010, 4 },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(cybozu::bsf(tbl[i].x), tbl[i].val);
@@ -33,31 +34,7 @@ CYBOZU_TEST_AUTO(bsr)
 		{ 0xfffff, 19 },
 		{ 0xffffffff, 31 },
 		{ 0x80000000, 31 },
-	};
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		CYBOZU_TEST_EQUAL(cybozu::bsr(tbl[i].x), tbl[i].val);
-	}
-}
-
-#if defined(__WIN64) || defined(__x86_64__)
-CYBOZU_TEST_AUTO(bsr64)
-{
-	const struct {
-		uint64_t x;
-		int val;
-	} tbl[] = {
-		{ 1, 0 },
-		{ 2, 1 },
-		{ 3, 1 },
-		{ 4, 2 },
-		{ 0xfff, 11 },
-		{ 0xfffff, 19 },
-		{ 0xffffffff, 31 },
-		{ 0x80000000, 31 },
-		{ 0x100000000ULL, 32 },
-		{ 0x1100000000ULL, 36 },
-		{ 0xffffffffffffffffULL, 63 },
-		{ 0x8000000000000000ULL, 63 },
+		{ 0x80000010, 31 },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(cybozu::bsr(tbl[i].x), tbl[i].val);
@@ -79,10 +56,35 @@ CYBOZU_TEST_AUTO(bsf64)
 		{ 0x100000000ULL, 32 },
 		{ 0xffffffffffffffffULL, 0 },
 		{ 0x8000000000000000ULL, 63 },
+		{ 0x8000000000000010ULL, 4 },
+		{ 0x8000001000000000ULL, 36 },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		CYBOZU_TEST_EQUAL(cybozu::bsf(tbl[i].x), tbl[i].val);
 	}
 }
-#endif
 
+CYBOZU_TEST_AUTO(bsr64)
+{
+	const struct {
+		uint64_t x;
+		int val;
+	} tbl[] = {
+		{ 1, 0 },
+		{ 2, 1 },
+		{ 3, 1 },
+		{ 4, 2 },
+		{ 0xfff, 11 },
+		{ 0xfffff, 19 },
+		{ 0xffffffff, 31 },
+		{ 0x80000000, 31 },
+		{ 0x100000000ULL, 32 },
+		{ 0x1100000000ULL, 36 },
+		{ 0xffffffffffffffffULL, 63 },
+		{ 0x8000000000000000ULL, 63 },
+		{ 0x8000001000000000ULL, 63 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::bsr(tbl[i].x), tbl[i].val);
+	}
+}

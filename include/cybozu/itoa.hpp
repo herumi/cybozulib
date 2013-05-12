@@ -12,7 +12,8 @@
 
 namespace cybozu {
 
-inline size_t getHexLength(uint64_t x)
+template<class T>
+size_t getHexLength(T x)
 {
 	return x == 0 ? 1 : cybozu::bsr(x) / 4 + 1;
 }
