@@ -24,8 +24,6 @@ struct Tag {};
 
 template<>
 struct Tag<4> {
-	typedef int type;
-
 	template<class T>
 	static inline T AtomicAddSub(T *p, T y)
 	{
@@ -59,8 +57,6 @@ struct Tag<4> {
 
 template<>
 struct Tag<8> {
-	typedef int64_t type;
-
 #if (CYBOZU_OS_BIT == 64)
 	template<class T>
 	static inline T AtomicAddSub(T *p, T y)
