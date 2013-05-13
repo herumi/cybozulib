@@ -17,125 +17,108 @@ namespace atoi_local {
 template<typename T, size_t n>
 T convertToInt(bool *b, const char *p, size_t size, const char (&max)[n], T min, T overflow1, char overflow2)
 {
-	if (b) *b = true;
-	const char *keepP = p;
-	const size_t keepSize = size;
-	bool isMinus = false;
-	if (*p == '-') {
-		isMinus = true;
-		p++;
-		size--;
-	}
 	if (size > 0 && *p) {
-		// skip leading zero
-		while (size > 0 && *p == '0') {
-			p++;
-			size--;
+		bool isMinus = false;
+		size_t i = 0;
+		if (*p == '-') {
+			isMinus = true;
+			i++;
 		}
-		// check minimum
-		if (isMinus && size >= n - 1 && memcmp(max, p, n - 1) == 0) {
-			return min;
-		}
-		T x = 0;
-		for (;;) {
-			char c = *p;
-			if (size == 0 || c == '\0') {
-				return isMinus ? -x : x;
+		if (i < size && p[i]) {
+			// skip leading zero
+			while (i < size && p[i] == '0') i++;
+			// check minimum
+			if (isMinus && size - i >= n - 1 && memcmp(max, &p[i], n - 1) == 0) {
+				if (b) *b = true;
+				return min;
 			}
-			unsigned int y = c - '0';
-			if (y <= 9) {
-				if (x > overflow1 || (x == overflow1 && c >= overflow2)) {
-					break;
+			T x = 0;
+			for (;;) {
+				unsigned char c;
+				if (i == size || (c = (unsigned char)p[i]) == '\0') {
+					if (b) *b = true;
+					return isMinus ? -x : x;
 				}
-				x *= 10;
-				x += (unsigned char)y;
-			} else {
-				break;
+				unsigned int y = c - '0';
+				if (y > 9 || x > overflow1 || (x == overflow1 && c >= overflow2)) {
+	break;
+}
+				x = x * 10 + T(y);
+				i++;
 			}
-			p++;
-			size--;
 		}
 	}
 	if (b) {
 		*b = false;
 		return 0;
 	} else {
-		throw cybozu::Exception("atoi::convertToInt") << cybozu::exception::makeString(keepP, keepSize);
+		throw cybozu::Exception("atoi::convertToInt") << cybozu::exception::makeString(p, size);
 	}
 }
 
 template<typename T>
 T convertToUint(bool *b, const char *p, size_t size, T overflow1, char overflow2)
 {
-	if (b) *b = true;
-	const char *keepP = p;
-	const size_t keepSize = size;
 	if (size > 0 && *p) {
+		size_t i = 0;
 		// skip leading zero
-		while (size > 0 && *p == '0') {
-			p++;
-			size--;
-		}
+		while (i < size && p[i] == '0') i++;
 		T x = 0;
 		for (;;) {
-			char c = *p;
-			if (size == 0 || c == '\0') {
+			unsigned char c;
+			if (i == size || (c = (unsigned char)p[i]) == '\0') {
+				if (b) *b = true;
 				return x;
 			}
 			unsigned int y = c - '0';
-			if (y <= 9) {
-				if (x > overflow1 || (x == overflow1 && c >= overflow2)) {
-					break;
-				}
-				x *= 10;
-				x += (unsigned char)y;
-			} else {
+			if (y > 9 || x > overflow1 || (x == overflow1 && c >= overflow2)) {
 				break;
 			}
-			p++;
-			size--;
+			x = x * 10 + T(y);
+			i++;
 		}
 	}
 	if (b) {
 		*b = false;
 		return 0;
 	} else {
-		throw cybozu::Exception("atoi::convertToUint") << cybozu::exception::makeString(keepP, keepSize);
+		throw cybozu::Exception("atoi::convertToUint") << cybozu::exception::makeString(p, size);
 	}
 }
 
 template<typename T>
 T convertHexToInt(bool *b, const char *p, size_t size)
 {
-	bool isOK = true;
-	T x = 0;
-	size_t i = 0;
-	while (i < size) {
-		char c = p[i];
-		if (c == '\0') {
-			break;
+	if (size > 0 && *p) {
+		size_t i = 0;
+		T x = 0;
+		for (;;) {
+			unsigned int c;
+			if (i == size || (c = (unsigned char)p[i]) == '\0') {
+				if (b) *b = true;
+				return x;
+			}
+			if (c - 'A' <= 'F' - 'A') {
+				c = (c - 'A') + 10;
+			} else if (c - 'a' <= 'f' - 'a') {
+				c = (c - 'a') + 10;
+			} else if (c - '0' <= '9' - '0') {
+				c = c - '0';
+			} else {
+				break;
+			}
+			// avoid overflow
+			if (x >= T(1) << (sizeof(T) * 8 - 4)) break;
+			x = x * 16 + c;
+			i++;
 		}
-		if (i >= sizeof(T) * 2) {
-			isOK = false;
-			break;
-		}
-		if ('A' <= c && c <= 'F') {
-			c = (c - 'A') + 10;
-		} else if ('a' <= c && c <= 'f') {
-			c = (c - 'a') + 10;
-		} else if ('0' <= c && c <= '9') {
-			c = c - '0';
-		} else {
-			isOK = false;
-			break;
-		}
-		x = x * 16 + (unsigned int)c;
-		i++;
 	}
-	if (i == 0) isOK = false;
-	if (b) *b = isOK;
-	if (isOK) return x;
-	throw cybozu::Exception("atoi::convertHexToInt") << cybozu::exception::makeString(p, size);
+	if (b) {
+		*b = false;
+		return 0;
+	} else {
+		throw cybozu::Exception("atoi::convertHexToInt") << cybozu::exception::makeString(p, size);
+	}
 }
 
 } // atoi_local

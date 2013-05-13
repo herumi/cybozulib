@@ -601,9 +601,16 @@ CYBOZU_TEST_AUTO(hextoi)
 {
     CYBOZU_TEST_EQUAL((unsigned char)cybozu::hextoi("ff"), 0xff);
     CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ff"), 0xff);
+    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ff"), 0xff);
     CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ffff"), 0xffff);
     CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("ffffffff"), 0xffffffff);
     CYBOZU_TEST_EQUAL((uint64_t)cybozu::hextoi("ffffffff"), uint64_t(0xffffffffULL));
+    CYBOZU_TEST_EQUAL((unsigned char)cybozu::hextoi("00000ff"), 0xff);
+    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ff"), 0xff);
+    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ff"), 0xff);
+    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ffff"), 0xffff);
+    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("00000ffffffff"), 0xffffffff);
+    CYBOZU_TEST_EQUAL((uint64_t)cybozu::hextoi("00000ffffffff"), uint64_t(0xffffffffULL));
 
     CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("123xxx", 3), 0x123U);
     CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("1234xx", 4), 0x1234U);
