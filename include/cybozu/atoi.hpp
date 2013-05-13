@@ -109,7 +109,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 			}
 			// avoid overflow
 			if (x >= T(1) << (sizeof(T) * 8 - 4)) break;
-			x = x * 16 + c;
+			x = x * 16 + T(c);
 			i++;
 		}
 	}
