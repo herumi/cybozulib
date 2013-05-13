@@ -53,6 +53,7 @@ CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(int)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned int)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(long)
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned long)
+CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(wchar_t)
 #ifdef _MSC_VER
 CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(size_t)
 #endif
@@ -67,6 +68,7 @@ void load(std::string& t, std::istream& is)
 	t.resize(size);
 	load(&t[0], size, is, "string");
 }
+
 template<>
 void save(std::ostream& os, const std::string& t)
 {
