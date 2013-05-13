@@ -84,24 +84,6 @@ void convertFromUint(std::string& out, T x)
 	}
 }
 
-/**
-	convert to to zero padding hex
-*/
-template<typename T>
-void convertFromUintToHexWithZero(char *out, T x, bool upCase)
-{
-	const size_t len = sizeof(T) * 2;
-	static const char *hexTbl[] = {
-		"0123456789abcdef",
-		"0123456789ABCDEF"
-	};
-	const char *tbl = hexTbl[upCase];
-	for (size_t i = 0; i < len; i++) {
-		out[len - i - 1] = tbl[x % 16];
-		x /= 16;
-	}
-}
-
 template<typename T>
 void itohexLocal(std::string& out, T x, bool upCase, bool withZero)
 {
