@@ -97,6 +97,11 @@ public:
 			return 1;
 		}
 	}
+	static inline AutoRun& getInstance()
+	{
+		static AutoRun instance;
+		return instance;
+	}
 private:
 	Func init_;
 	Func term_;
@@ -106,9 +111,9 @@ private:
 	UnitTestList list_;
 };
 
-AutoRun autoRun;
+static AutoRun& autoRun = AutoRun::getInstance();
 
-void test(bool ret, const std::string& msg, const std::string& param, const char *file, int line)
+inline void test(bool ret, const std::string& msg, const std::string& param, const char *file, int line)
 {
 	autoRun.set(ret);
 	if (!ret) {
@@ -122,24 +127,24 @@ bool isEqual(const T& lhs, const U& rhs)
 	return lhs == rhs;
 }
 
-bool isEqual(const char *lhs, const char *rhs)
+inline bool isEqual(const char *lhs, const char *rhs)
 {
 	return strcmp(lhs, rhs) == 0;
 }
-bool isEqual(char *lhs, const char *rhs)
+inline bool isEqual(char *lhs, const char *rhs)
 {
 	return strcmp(lhs, rhs) == 0;
 }
-bool isEqual(const char *lhs, char *rhs)
+inline bool isEqual(const char *lhs, char *rhs)
 {
 	return strcmp(lhs, rhs) == 0;
 }
-bool isEqual(char *lhs, char *rhs)
+inline bool isEqual(char *lhs, char *rhs)
 {
 	return strcmp(lhs, rhs) == 0;
 }
 // avoid to compare float directly
-bool isEqual(float lhs, float rhs)
+inline bool isEqual(float lhs, float rhs)
 {
 	union fi {
 		float f;
@@ -150,7 +155,7 @@ bool isEqual(float lhs, float rhs)
 	return lfi.i == rfi.i;
 }
 // avoid to compare double directly
-bool isEqual(double lhs, double rhs)
+inline bool isEqual(double lhs, double rhs)
 {
 	union di {
 		double d;
