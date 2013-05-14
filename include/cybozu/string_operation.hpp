@@ -288,8 +288,8 @@ bool CaseEqualStartWith(const StringT& lhs, const char (&rhs)[N])
 	maxNum is maximum number of split str
 	out must have clear() and push_back()
 */
-template<class Out, class StringT, class CharT>
-size_t Split(Out& out, const StringT& inStr, CharT splitChar = ',', size_t maxNum = 0x7fffffff)
+template<class Out, class StringT>
+size_t Split(Out& out, const StringT& inStr, typename StringT::value_type splitChar = ',', size_t maxNum = 0x7fffffff)
 {
 	typedef StringT String;
 	size_t splitNum = 0;
