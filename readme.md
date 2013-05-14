@@ -16,4 +16,8 @@ directory position
 
 --
 
+sais.hxx
+-----
+sais.hxx is written by Yuta Mori.
+
 Copyright (c) 2012 Cybozu Labs, Inc. All rights reserved.
