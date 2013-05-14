@@ -39,7 +39,7 @@ namespace cybozu {
 	typedef wchar_t Char; //!< Char for Linux
 	typedef unsigned short Char16; /* unsigned is necessary for gcc */
 #else
-	typedef unsigned int Char; //!< Char for Windows
+	typedef int Char; //!< Char for Windows
 	typedef wchar_t Char16;
 #endif
 
