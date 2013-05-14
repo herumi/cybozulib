@@ -155,6 +155,13 @@ public:
 		freq_local::save(os, char2idx_, N, "char2idx");
 		freq_local::save(os, idx2char_, N, "idx2char");
 	}
+	void put() const
+	{
+		for (size_t i = 0; i < size_; i++) {
+			uint8_t c = idx2char_[i];
+			printf("%d %d %d\n", (int)i, c, freqTbl_[c]);
+		}
+	}
 };
 
 } // cybozu::freq_local
@@ -267,6 +274,13 @@ public:
 		for (typename Map::const_iterator i = m_.begin(), ie = m_.end(); i != ie; ++i) {
 			freq_local::save(os, i->first);
 			freq_local::save(os, i->second);
+		}
+	}
+	void put() const
+	{
+		for (size_t i = 0, n = idx2ref_.size(); i < n; i++) {
+			typename Map::const_iterator j = idx2ref_[i];
+			std::cout << i << ' ' << j->first << ' ' << j->second.freq << std::endl;
 		}
 	}
 };
