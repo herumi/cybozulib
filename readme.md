@@ -15,9 +15,9 @@ directory position
               /cybozulib_ext ; necessary for Windows if use zlib or openssl
 
 --
+Copyright (c) 2012 Cybozu Labs, Inc. All rights reserved.
 
 sais.hxx
 -----
 sais.hxx is written by Yuta Mori.
 
-Copyright (c) 2012 Cybozu Labs, Inc. All rights reserved.
