@@ -275,6 +275,16 @@ const CYBOZU_RE_STD::_Cl_names<cybozu::Char> CYBOZU_RE_STD::_Regex_traits<cybozu
 
 #undef CYBOZU_RE_CHAR_CLASS_NAME
 
+namespace regex_local {
+__declspec(selectany) struct Init {
+	Init()
+	{
+		std::locale::global(std::locale(std::locale(""), new std::ctype<cybozu::Char>));
+	}
+} gInit;
+
+} // regex_local
+
 #endif // CYBOZU_STRING_USE_WIN
 
 namespace cybozu {
