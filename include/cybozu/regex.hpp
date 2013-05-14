@@ -30,9 +30,13 @@
 		#error "use /MT or /MTd option. /MD and /MDd are not supported"
 	#endif
 		#define CYBOZU_STRING_USE_WIN
+		#pragma warning(push)
 		#pragma warning(disable : 4018) // signed/unsigned mismatch
 	#endif
 	#include <regex>
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
 #endif
 
 #ifdef _MSC_VER
