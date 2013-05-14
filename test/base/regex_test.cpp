@@ -1,4 +1,7 @@
-﻿/*
+﻿#ifdef _MSC_VER
+	#pragma warning(disable : 4566)
+#endif
+/*
 	don't remove BOM(EF BB BF) for VC
 	現状の制約
 	UTF-8のリテラルを書きたいときはBOMつきのUTF-8で保存。文字列はCYBOZU_RE()でくるむ
