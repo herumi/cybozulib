@@ -6,7 +6,7 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
-#include <cybozu/inttype.hpp>
+#include <cybozu/exception.hpp>
 #include <vector>
 
 namespace cybozu {
@@ -35,7 +35,8 @@ public:
 	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
-		return (v_[q] & (1ULL << r)) != 0;
+		if (q >= v_.size()) throw cybozu::Exception("BitVector:get bad idx") << idx;
+		return (v_[q] & (uint64_t(1) << r)) != 0;
 	}
 	void clear()
 	{
@@ -44,12 +45,27 @@ public:
 	}
 	void set(size_t idx, bool b)
 	{
+		if (b) {
+			set(idx);
+		} else {
+			reset(idx);
+		}
+	}
+	// set(idx, true);
+	void set(size_t idx)
+	{
 		size_t q = idx / 64;
 		size_t r = idx % 64;
-		uint64_t v = v_[q];
-		v &= ~(1ULL << r);
-		if (b) v |= (1ULL << r);
-		v_[q] = v;
+		if (q >= v_.size()) throw cybozu::Exception("BitVector:set bad idx") << idx;
+		v_[q] |= uint64_t(1) << r;
+	}
+	// set(idx, false);
+	void reset(size_t idx)
+	{
+		size_t q = idx / 64;
+		size_t r = idx % 64;
+		if (q >= v_.size()) throw cybozu::Exception("BitVector:reset bad idx") << idx;
+		v_[q] &= ~(uint64_t(1) << r);
 	}
 	size_t size() const { return bitSize_; }
 	const uint64_t *getBlock() const { return &v_[0]; }

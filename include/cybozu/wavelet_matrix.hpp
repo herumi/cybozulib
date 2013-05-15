@@ -6,13 +6,20 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
-#include <cybozu/bitvector.hpp>
 #include <cybozu/sucvector.hpp>
 #include <stdio.h>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
 
 namespace cybozu {
-
-class WaveletMatrix {
+/*
+	current version supports only max 32GiB
+*/
+template<bool withSelect = true, class SucVector = cybozu::SucVectorT<uint32_t, false> >
+class WaveletMatrixT {
+	typedef uint32_t size_type;
 	bool getPos(uint64_t v, size_t pos) const
 	{
 		return (v & (uint64_t(1) << pos)) != 0;
@@ -27,33 +34,33 @@ class WaveletMatrix {
 		}
 		return ret;
 	}
-	void initFromTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t i) const
+	void initFromTbl(std::vector<size_type>& tbl, size_t pos, size_t from, size_t i) const
 	{
 		if (i == valBitLen_) {
-			tbl[pos] = from;
+			tbl[pos] = (size_type)from;
 		} else {
 			initFromTbl(tbl, pos, svv[i].rank(false, from), i + 1);
 			initFromTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), svv[i].rank(true, from) + offTbl[i], i + 1);
 		}
 	}
-	void initFromLtTbl(std::vector<size_t>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
+	void initFromLtTbl(std::vector<size_type>& tbl, size_t pos, size_t from, size_t ret, size_t i) const
 	{
 		if (i == valBitLen_) {
-			tbl[pos] = ret;
+			tbl[pos] = (size_type)ret;
 		} else {
 			size_t end = svv[i].rank1(from);
 			initFromLtTbl(tbl, pos, from - end, ret, i + 1);
 			initFromLtTbl(tbl, pos + (size_t(1) << (valBitLen_ - 1 - i)), offTbl[i] + end, ret + from - end, i + 1);
 		}
 	}
-	typedef std::vector<cybozu::SucVector> SucVecVec;
-	uint64_t valBitLen_;
+	typedef std::vector<SucVector> SucVecVec;
 	uint64_t maxVal_;
-	uint64_t size_;
+	size_t valBitLen_;
+	size_t size_;
 	SucVecVec svv;
-	std::vector<uint64_t> offTbl;
-	std::vector<uint64_t> fromTbl;
-	std::vector<uint64_t> fromLtTbl;
+	std::vector<size_type> offTbl;
+	std::vector<size_type> fromTbl;
+	std::vector<size_type> fromLtTbl;
 	typedef std::vector<uint32_t> Uint32Vec;
 	static const uint64_t posUnit = 256;
 	std::vector<Uint32Vec> selTbl_;
@@ -62,6 +69,7 @@ class WaveletMatrix {
 	template<class Vec>
 	void initSelTbl(std::vector<Uint32Vec>& tblVec, const Vec& vec) const
 	{
+		if (!withSelect) return;
 		tblVec.resize(maxVal_);
 
 		Uint32Vec iTbl(maxVal_);
@@ -84,9 +92,9 @@ class WaveletMatrix {
 		}
 	}
 public:
-	WaveletMatrix()
-		: valBitLen_(0)
-		, maxVal_(1)
+	WaveletMatrixT()
+		: maxVal_(1)
+		, valBitLen_(0)
 		, size_(0)
 	{
 	}
@@ -105,8 +113,8 @@ public:
 	*/
 	void save(std::ostream& os) const
 	{
-		sucvector_util::save(os, valBitLen_, "valBitLen");
 		sucvector_util::save(os, maxVal_, "maxVal");
+		sucvector_util::save(os, valBitLen_, "valBitLen");
 		sucvector_util::save(os, size_, "size");
 		assert(valBitLen_ == svv.size());
 		for (size_t i = 0; i < valBitLen_; i++) {
@@ -116,14 +124,16 @@ public:
 		sucvector_util::saveVec(os, fromTbl, "fromTbl");
 		sucvector_util::saveVec(os, fromLtTbl, "fromLtTbl");
 
-		for (uint64_t v = 0; v < maxVal_; v++) {
-			sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+		if (withSelect) {
+			for (uint64_t v = 0; v < maxVal_; v++) {
+				sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+			}
 		}
 	}
 	void load(std::istream& is)
 	{
-		sucvector_util::load(valBitLen_, is, "valBitLen");
 		sucvector_util::load(maxVal_, is, "maxVal");
+		sucvector_util::load(valBitLen_, is, "valBitLen");
 		sucvector_util::load(size_, is, "size");
 		svv.resize(valBitLen_);
 		for (size_t i = 0; i < valBitLen_; i++) {
@@ -133,16 +143,17 @@ public:
 		sucvector_util::loadVec(fromTbl, is, "fromTbl");
 		sucvector_util::loadVec(fromLtTbl, is, "fromLtTbl");
 
-		selTbl_.resize(maxVal_);
-		for (uint64_t v = 0; v < maxVal_; v++) {
-			sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+		if (withSelect) {
+			selTbl_.resize(maxVal_);
+			for (uint64_t v = 0; v < maxVal_; v++) {
+				sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+			}
 		}
 	}
 	uint64_t size() const { return size_; }
-	template<class T>
-	uint64_t size(T val) const
+	uint64_t size(uint64_t val) const
 	{
-		assert(uint64_t(val) < maxVal_);
+		assert(val < maxVal_);
 		return rank(val, size_);
 	}
 	template<class Vec>
@@ -158,21 +169,21 @@ public:
 		// count zero bit
 		offTbl.resize(valBitLen_);
 		for (size_t i = 0, n = offTbl.size(); i < n; i++) {
-			offTbl[i] = countZero(vec, valBitLen - 1 - i);
+			offTbl[i] = (size_type)countZero(vec, valBitLen - 1 - i);
 		}
 
 		// construct svv
 		Vec cur = vec, next;
 		next.resize(size_);
 		for (size_t i = 0; i < valBitLen; i++) {
-			cybozu::BitVector bv;
-			bv.resize(size_);
+			SucVector& sv = svv[i];
+			sv.resize(size_);
 			size_t zeroPos = 0;
 			size_t onePos = offTbl[i];
 			for (size_t j = 0; j < size_; j++) {
 				bool b = getPos(cur[j], valBitLen - 1 - i);
 				if (b) {
-					bv.set(j, true);
+					sv.set(j);
 				}
 				if (i == valBitLen - 1) continue;
 				if (b) {
@@ -181,7 +192,7 @@ public:
 					next[zeroPos++] = cur[j];
 				}
 			};
-			svv[i].init(bv.getBlock(), bv.getBlockSize() * 64);
+			sv.freeze();
 			next.swap(cur);
 		}
 
@@ -221,25 +232,48 @@ public:
 		@note shotcut idea to reduce computing 'from' by @echizen_tm
 		see http://ja.scribd.com/doc/102636443/Wavelet-Matrix
 	*/
-	template<class T>
-	uint64_t rank(T val, uint64_t pos) const
+	uint64_t rank(uint64_t val, uint64_t pos) const
 	{
-		assert(uint64_t(val) < maxVal_);
+		assert(val < maxVal_);
 		if (pos > size_) pos = size_;
 		for (size_t i = 0; i < valBitLen_; i++) {
-			bool b = (val & (T(1) << (valBitLen_ - 1 - i))) != 0;
-			pos = svv[i].rank(b, pos);
-			if (b) pos += offTbl[i];
+			bool b = (val & (uint64_t(1) << (valBitLen_ - 1 - i))) != 0;
+			if (b) {
+				pos = offTbl[i] + svv[i].rank1(pos);
+			} else {
+				pos -= svv[i].rank1(pos);
+			}
 		}
 		return pos - fromTbl[val];
 	}
 	/*
-		get number of less than val in [0, pos)
+		get value and rank
+		val = get(pos);
+		return rank(val, pos);
 	*/
 	template<class T>
-	uint64_t rankLt(T val, uint64_t pos) const
+	uint64_t get(T* pval, uint64_t pos) const
 	{
-		assert(uint64_t(val) < maxVal_);
+		if (pos > size_) pos = size_;
+		uint64_t ret = 0;
+		for (size_t i = 0; i < valBitLen_; i++) {
+			bool b = svv[i].get(pos);
+			ret = (ret << 1) | uint32_t(b);
+			if (b) {
+				pos = offTbl[i] + svv[i].rank1(pos);
+			} else {
+				pos -= svv[i].rank1(pos);
+			}
+		}
+		*pval = (T)ret;
+		return pos - fromTbl[ret];
+	}
+	/*
+		get number of less than val in [0, pos)
+	*/
+	uint64_t rankLt(uint64_t val, uint64_t pos) const
+	{
+		assert(val < maxVal_);
 		if (pos > size_) pos = size_;
 		uint64_t ret = 0;
 		for (size_t i = 0; i < valBitLen_; i++) {
@@ -254,10 +288,10 @@ public:
 		}
 		return ret - fromLtTbl[val];
 	}
-	template<class T>
-	uint64_t select(T val, uint64_t rank) const
+	uint64_t select(uint64_t val, uint64_t rank) const
 	{
-		assert(uint64_t(val) < maxVal_);
+		if (!withSelect) throw cybozu::Exception("WaveletMatrix:select:not support");
+		assert(val < maxVal_);
 		const Uint32Vec& tbl = selTbl_[val];
 		if (rank / posUnit >= tbl.size()) return cybozu::NotFound;
 		const size_t pos = size_t(rank / posUnit);
@@ -286,4 +320,10 @@ public:
 	}
 };
 
+typedef WaveletMatrixT<> WaveletMatrix;
+
 } // cybozu
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

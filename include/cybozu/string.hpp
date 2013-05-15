@@ -23,6 +23,15 @@
 #include <cybozu/exception.hpp>
 #include <cybozu/hash.hpp>
 
+// to deal with unicode literal(same macro defined in regex.hpp)
+#ifdef _MSC_VER
+	#define CYBOZU_STR_WCHAR wchar_t
+	#define CYBOZU_STR_W(x) L##x // assume UTF-16 string
+#else
+	#define CYBOZU_STR_WCHAR char
+	#define CYBOZU_STR_W(x) x // assume UTF-8 string
+#endif
+
 namespace cybozu {
 
 #ifdef __GNUC__
@@ -30,7 +39,7 @@ namespace cybozu {
 	typedef wchar_t Char; //!< Char for Linux
 	typedef unsigned short Char16; /* unsigned is necessary for gcc */
 #else
-	typedef unsigned int Char; //!< Char for Windows
+	typedef int Char; //!< Char for Windows
 	typedef wchar_t Char16;
 #endif
 
@@ -1470,6 +1479,32 @@ public:
 		}
 		return true;
 	}
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+	StringT(StringT&& rhs)
+	{
+		assign(std::forward<StringT>(rhs));
+	}
+	StringT& operator=(StringT&& rhs)
+	{
+		assign(std::forward<StringT>(rhs));
+		return *this;
+	}
+	StringT& assign(StringT&& rhs)
+	{
+		str_.assign(std::forward<BasicString>(rhs.str_));
+		return *this;
+	}
+	const_iterator cbegin() const { return begin(); }
+	const_iterator cend() const { return end(); }
+	const_reverse_iterator crbegin() const { return rbegin(); }
+	const_reverse_iterator crend() const { return rend(); }
+	void shrink_to_fit() { str_.shrink_to_fit(); }
+	void pop_back() { str_.erase(str_.size() - 1, 1); }
+	reference front() { return operator[](0); }
+	const_reference front() const { return str_.front(); }
+	reference back() { return str_.back(); }
+	const_reference back() const { return str_.back(); }
+#endif
 	/**
 		get internal const str(don't use this function)
 	*/
@@ -1568,6 +1603,9 @@ inline bool operator>(const std::wstring& lhs, const String& rhs) { return rhs <
 #endif
 
 inline String operator+(const String& lhs, const String& rhs) { return String(lhs) += rhs; }
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+inline String operator+(String&& lhs, const String& rhs) { return std::move(lhs.append(rhs)); }
+#endif
 
 inline bool ConvertUtf16ToUtf8(std::string *out, const cybozu::Char16 *begin, const cybozu::Char16 *end)
 {
@@ -1663,7 +1701,13 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 
 } // boost
 
-namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
+namespace std {
+
+#if defined(_MSC_VER) && (_MSC_VER == 1600)
+	// defined in std ?
+#else
+CYBOZU_NAMESPACE_TR1_BEGIN
+#endif
 
 template<>
 struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
@@ -1673,7 +1717,13 @@ struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t>
 	}
 };
 
-CYBOZU_NAMESPACE_TR1_END } // std
+#if defined(_MSC_VER) && (_MSC_VER == 1600)
+	// defined in std ?
+#else
+CYBOZU_NAMESPACE_TR1_END
+#endif
+
+} // std
 
 #ifdef _MSC_VER
 	#pragma warning(pop)

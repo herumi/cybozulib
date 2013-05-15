@@ -1542,7 +1542,7 @@ CYBOZU_TEST_AUTO(utf16)
 {
 	// abc a-i-u-
 	const cybozu::Char16 utf16[6] = { 0x61, 0x62, 0x63, 0x3042, 0x3044, 0x3046 };
-	const char utf8[12] = { 0x61, 0x62, 0x63, 0xE3, 0x81, 0x82, 0xE3, 0x81, 0x84, 0xE3, 0x81, 0x86 };
+	const char utf8[12] = { 0x61, 0x62, 0x63, (char)0xE3, (char)0x81, (char)0x82, (char)0xE3, (char)0x81, (char)0x84, (char)0xE3, (char)0x81, (char)0x86 };
 	cybozu::String16 s;
 	cybozu::ConvertUtf8ToUtf16(&s, utf8, utf8 + 12);
 	CYBOZU_TEST_EQUAL(s.size(), 6u);
@@ -1687,3 +1687,19 @@ CYBOZU_TEST_AUTO(greater)
 	CYBOZU_TEST_ASSERT(e <= a);
 #endif
 }
+
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+CYBOZU_TEST_AUTO(move)
+{
+	cybozu::String a, b;
+	b = "abc";
+	a = b;
+	CYBOZU_TEST_EQUAL(a, "abc");
+	CYBOZU_TEST_EQUAL(a, b);
+	a = "123";
+	a = std::move(b);
+	CYBOZU_TEST_EQUAL(a, "abc");
+	a.pop_back();
+	CYBOZU_TEST_EQUAL(a, "ab");
+}
+#endif

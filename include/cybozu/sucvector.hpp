@@ -111,13 +111,17 @@ void saveVec(std::ostream& os, const V& v, const char *msg)
 	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
 
+} // cybozu::sucvector_util
+
 /*
 	extra memory
 	(32 + 8 * 4) / 256 = 1/4 bit per bit for rank
 */
-template<bool support1TiB>
+template<class type, bool withSelect = true>
 class SucVectorT {
-	static const uint64_t maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
+	typedef type size_type;
+	static const bool support1TiB = sizeof(size_type) == 8;
+	static const int maxBitLen = support1TiB ? 32 + 8 : 32; // don't increase this value
 	static const uint64_t maxBitSize = uint64_t(1) << maxBitLen;
 	struct Block {
 		uint64_t org[4];
@@ -128,9 +132,14 @@ class SucVectorT {
 				uint8_t b[4]; // b[0] is used for (b[0] << 32) | a
 			} ab;
 		};
+		void clear()
+		{
+			memset(this, 0, sizeof(Block));
+		}
 	};
 	uint64_t bitSize_;
 	uint64_t numTbl_[2];
+	bool freezed_;
 	std::vector<Block> blk_;
 	typedef std::vector<uint32_t> Uint32Vec;
 	static const uint64_t posUnit = 1024;
@@ -161,6 +170,7 @@ class SucVectorT {
 	// call after blk_, numTbl_ are initialized
 	void initSelTbl()
 	{
+		if (!withSelect) return;
 		initSelTblSub<false>(selTbl_[0]);
 		initSelTblSub<true>(selTbl_[1]);
 	}
@@ -181,8 +191,41 @@ class SucVectorT {
 			tbl[i] = pos;
 		}
 	}
+	void initBlock(const uint64_t *buf, size_t blkNum)
+	{
+		uint64_t num1 = 0;
+		size_t pos = 0;
+		for (size_t i = 0, n = blk_.size(); i < n; i++) {
+			Block& blk = blk_[i];
+			if (support1TiB) {
+				blk.a64 = num1 % maxBitSize;
+			} else {
+				if (num1 > 0xffffffff) throw cybozu::Exception("SucVectorT:too large num1") << num1;
+				blk.ab.a = (uint32_t)num1;
+			}
+			uint32_t subNum1 = 0;
+			for (size_t j = 0; j < 4; j++) {
+				uint64_t v;
+				if (buf) {
+					v = pos < blkNum ? buf[pos++] : 0;
+					blk.org[j] = v;
+				} else {
+					v = blk.org[j];
+				}
+				uint32_t c = cybozu::popcnt(v);
+				num1 += c;
+				if (j > 0) {
+					blk.ab.b[j] = (uint8_t)subNum1;
+				}
+				subNum1 += c;
+			}
+		}
+		numTbl_[0] = blkNum * 64 - num1;
+		numTbl_[1] = num1;
+		initSelTbl();
+		freezed_ = true;
+	}
 public:
-	SucVectorT() : bitSize_(0) { numTbl_[0] = numTbl_[1] = 0; }
 	/*
 		data format(endian is depend on CPU:eg. little endian for x86/x64)
 		bitSize  : 8
@@ -206,48 +249,56 @@ public:
 		sucvector_util::loadVec(blk_, is, "blk");
 		initSelTbl();
 	}
-	/*
-		@param buf [in] bit pattern buffer
-		@param bitSize [in] bitSize ; buf size = (bitSize + 63) / 64
-	*/
+	SucVectorT() : bitSize_(0), freezed_(false) { numTbl_[0] = numTbl_[1] = 0; }
 	SucVectorT(const uint64_t *buf, uint64_t bitSize)
 	{
 		init(buf, bitSize);
 	}
+	/*
+		initialize SucVector
+		@param buf [in] bit pattern buffer
+		@param bitSize [in] bitSize ; buf size = (bitSize + 63) / 64
+	*/
 	void init(const uint64_t *buf, uint64_t bitSize)
 	{
-		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:too large bitSize") << bitSize;
+		const size_t blkNum = resize(bitSize, false);
+		initBlock(buf, blkNum);
+	}
+	/*
+		initialize SucVector after calling set without BitVector
+		1. resize(bitSize)
+		2. construct bit vector with set(pos)
+		3. freeze()
+	*/
+	size_t resize(size_t bitSize, bool doClear = true)
+	{
+		if (bitSize > maxBitSize) throw cybozu::Exception("SucVectorT:resize:too large bitSize") << bitSize;
 		assert((bitSize + 63) / 64 <= ~size_t(0));
 		bitSize_ = bitSize;
 		const size_t blkNum = size_t((bitSize + 63) / 64);
 		const size_t tblNum = (blkNum + 3) / 4; // tblNum <= 2^32
 		blk_.resize(tblNum);
-
-		uint64_t num1 = 0;
-		size_t pos = 0;
-		for (size_t i = 0; i < tblNum; i++) {
-			Block& blk = blk_[i];
-			if (support1TiB) {
-				blk.a64 = num1 % maxBitSize;
-			} else {
-				if (num1 > 0xffffffff) throw cybozu::Exception("SucVectorT:too large num1") << num1;
-				blk.ab.a = (uint32_t)num1;
-			}
-			uint32_t subNum1 = 0;
-			for (size_t j = 0; j < 4; j++) {
-				uint64_t v = pos < blkNum ? buf[pos++] : 0;
-				blk.org[j] = v;
-				uint32_t c = cybozu::popcnt(v);
-				num1 += c;
-				if (j > 0) {
-					blk.ab.b[j] = (uint8_t)subNum1;
-				}
-				subNum1 += c;
+		if (doClear) {
+			for (size_t i = 0; i < tblNum; i++) {
+				blk_[i].clear();
 			}
 		}
-		numTbl_[0] = blkNum * 64 - num1;
-		numTbl_[1] = num1;
-		initSelTbl();
+		freezed_ = false;
+		return blkNum;
+	}
+	void set(size_t idx)
+	{
+		if (freezed_) throw cybozu::Exception("SucVector:set:freezed");
+		if (idx >= bitSize_) throw cybozu::Exception("SucVector:set:bad idx") << idx;
+		const size_t q = idx / 256;
+		const size_t r = idx % 256;
+
+		uint64_t& b = blk_[q].org[r / 64];
+		b |= uint64_t(1) << (r % 64);
+	}
+	void freeze()
+	{
+		initBlock(0, blk_.size());
 	}
 	uint64_t rank1(uint64_t pos) const
 	{
@@ -309,6 +360,7 @@ public:
 	template<bool b>
 	uint64_t selectSub(uint64_t rank) const
 	{
+		if (!withSelect) throw cybozu::Exception("SucVector:selectSub is not supported");
 		const int tablePos = b ? 1 : 0;
 		if (rank >= numTbl_[tablePos]) return NotFound;
 		const Uint32Vec& tbl = selTbl_[tablePos];
@@ -346,17 +398,14 @@ public:
 		uint64_t ret = cybozu::sucvector_util::select64(v, size_t(rank));
 		ret += L * 256 + i * 64;
 		return ret;
-   	}
+	}
 };
 
-} // cybozu::sucvector_util
-
-typedef cybozu::sucvector_util::SucVectorT<false> SucVectorLt4G;
-typedef cybozu::sucvector_util::SucVectorT<true> SucVector;
+typedef cybozu::SucVectorT<uint32_t> SucVectorLt4G;
+typedef cybozu::SucVectorT<uint64_t> SucVector;
 
 } // cybozu
 
 #ifdef _WIN32
 	#pragma warning(pop)
 #endif
-

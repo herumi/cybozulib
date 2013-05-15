@@ -8,8 +8,33 @@
 #include <limits.h>
 #include <string>
 #include <cybozu/inttype.hpp>
+#include <cybozu/bit_operation.hpp>
 
 namespace cybozu {
+
+template<class T>
+size_t getHexLength(T x)
+{
+	return x == 0 ? 1 : cybozu::bsr(x) / 4 + 1;
+}
+/*
+	convert x to hex string with len
+	@note out should have getHexLength(x) size
+	out is not NUL terminated
+*/
+template<class T>
+void itohex(char *out, size_t len, T x, bool upCase = true)
+{
+	static const char *hexTbl[] = {
+		"0123456789abcdef",
+		"0123456789ABCDEF"
+	};
+	const char *tbl = hexTbl[upCase];
+	for (size_t i = 0; i < len; i++) {
+		out[len - i - 1] = tbl[x % 16];
+		x /= 16;
+	}
+}
 
 namespace itoa_local {
 
@@ -59,23 +84,12 @@ void convertFromUint(std::string& out, T x)
 	}
 }
 
-/**
-	convert to to zero padding hex
-*/
 template<typename T>
-void convertFromUintToHexWithZero(std::string& out, T x, bool upCase)
+void itohexLocal(std::string& out, T x, bool upCase, bool withZero)
 {
-	const size_t len = sizeof(T) * 2;
-	out.resize(len);
-	static const char *hexTbl[] = {
-		"0123456789abcdef",
-		"0123456789ABCDEF"
-	};
-	const char *tbl = hexTbl[upCase];
-	for (size_t i = 0; i < len; i++) {
-		out[len - i - 1] = tbl[x % 16];
-		x /= 16;
-	}
+	const size_t size = withZero ? sizeof(T) * 2 : getHexLength(x);
+	out.resize(size);
+	itohex(&out[0], size, x, upCase);
 }
 
 } // itoa_local
@@ -132,31 +146,31 @@ inline std::string itoa(T x)
 	return ret;
 }
 
-inline void itohex(std::string& out, unsigned char x, bool upCase = true)
+inline void itohex(std::string& out, unsigned char x, bool upCase = true, bool withZero = true)
 {
-	itoa_local::convertFromUintToHexWithZero(out, x, upCase);
+	itoa_local::itohexLocal(out, x, upCase, withZero);
 }
 
-inline void itohex(std::string& out, unsigned short x, bool upCase = true)
+inline void itohex(std::string& out, unsigned short x, bool upCase = true, bool withZero = true)
 {
-	itoa_local::convertFromUintToHexWithZero(out, x, upCase);
+	itoa_local::itohexLocal(out, x, upCase, withZero);
 }
 
-inline void itohex(std::string& out, unsigned int x, bool upCase = true)
+inline void itohex(std::string& out, unsigned int x, bool upCase = true, bool withZero = true)
 {
-	itoa_local::convertFromUintToHexWithZero(out, x, upCase);
+	itoa_local::itohexLocal(out, x, upCase, withZero);
 }
 
-inline void itohex(std::string& out, uint64_t x, bool upCase = true)
+inline void itohex(std::string& out, uint64_t x, bool upCase = true, bool withZero = true)
 {
-	itoa_local::convertFromUintToHexWithZero(out, x, upCase);
+	itoa_local::itohexLocal(out, x, upCase, withZero);
 }
 
 template<typename T>
-inline std::string itohex(T x, bool upCase = true)
+inline std::string itohex(T x, bool upCase = true, bool withZero = true)
 {
 	std::string out;
-	itohex(out, x, upCase);
+	itohex(out, x, upCase, withZero);
 	return out;
 }
 

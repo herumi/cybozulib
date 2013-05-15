@@ -1,4 +1,7 @@
-﻿/*
+﻿#ifdef _MSC_VER
+	#pragma warning(disable : 4566)
+#endif
+/*
 	don't remove BOM(EF BB BF) for VC
 	現状の制約
 	UTF-8のリテラルを書きたいときはBOMつきのUTF-8で保存。文字列はCYBOZU_RE()でくるむ
@@ -15,7 +18,6 @@
 
 CYBOZU_TEST_AUTO(regex_search)
 {
-	std::locale::global(std::locale(std::locale(""), new std::ctype<cybozu::Char>));
 	cybozu::String str(CYBOZU_RE("こんにちはUTF-8です ゔ♡"));
 	for (size_t i = 0; i < str.size(); i++) {
 		printf("%04x ", str[i]);

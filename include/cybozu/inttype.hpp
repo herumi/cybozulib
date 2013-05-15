@@ -70,7 +70,7 @@
 #define CYBOZU_CPP_VERSION_CPP11 2
 
 #if (__cplusplus >= 201103) || (_MSC_VER >= 1500) || defined(__GXX_EXPERIMENTAL_CXX0X__)
-	#if defined(_MSC_VER) && (_MSC_VER < 1600)
+	#if defined(_MSC_VER) && (_MSC_VER <= 1600)
 		#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_TR1
 	#else
 		#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_CPP11

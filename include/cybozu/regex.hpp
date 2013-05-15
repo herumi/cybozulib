@@ -2,7 +2,7 @@
 /**
 	@file
 	@brief regex for cybozu::String
-	@note regex version (for win) does not support icase
+	@note VC reqires /MT or /MTd options
 
 	@author MITSUNARI Shigeo
 */
@@ -30,9 +30,13 @@
 		#error "use /MT or /MTd option. /MD and /MDd are not supported"
 	#endif
 		#define CYBOZU_STRING_USE_WIN
+		#pragma warning(push)
 		#pragma warning(disable : 4018) // signed/unsigned mismatch
 	#endif
 	#include <regex>
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
 #endif
 
 #ifdef _MSC_VER
@@ -270,6 +274,16 @@ const CYBOZU_RE_STD::_Cl_names<cybozu::Char> CYBOZU_RE_STD::_Regex_traits<cybozu
 };
 
 #undef CYBOZU_RE_CHAR_CLASS_NAME
+
+namespace regex_local {
+__declspec(selectany) struct Init {
+	Init()
+	{
+		std::locale::global(std::locale(std::locale(""), new std::ctype<cybozu::Char>));
+	}
+} gInit;
+
+} // regex_local
 
 #endif // CYBOZU_STRING_USE_WIN
 
