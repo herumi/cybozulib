@@ -6,6 +6,9 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <cybozu/inttype.hpp>
+#ifdef _MSC_VER
+	#include <intrin.h>
+#endif
 
 namespace cybozu {
 
