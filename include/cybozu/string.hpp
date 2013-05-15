@@ -1607,7 +1607,8 @@ inline String operator+(const String& lhs, const String& rhs) { return String(lh
 inline String operator+(String&& lhs, const String& rhs) { return std::move(lhs.append(rhs)); }
 #endif
 
-inline bool ConvertUtf16ToUtf8(std::string *out, const cybozu::Char16 *begin, const cybozu::Char16 *end)
+template<class Iter16>
+bool ConvertUtf16ToUtf8(std::string *out, Iter16 begin, Iter16 end)
 {
 	out->clear();
 	out->reserve((end - begin) * 3);
@@ -1623,7 +1624,8 @@ inline bool ConvertUtf16ToUtf8(std::string *out, const cybozu::String16& in)
 	return ConvertUtf16ToUtf8(out, &in[0], &in[0] + in.size());
 }
 
-inline bool ConvertUtf8ToUtf16(cybozu::String16 *out, const char *begin, const char *end)
+template<class Iter8>
+bool ConvertUtf8ToUtf16(cybozu::String16 *out, Iter8 begin, Iter8 end)
 {
 	out->clear();
 	out->reserve((end - begin) / 2);
