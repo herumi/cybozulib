@@ -4,7 +4,7 @@
 #include <cybozu/mmap.hpp>
 #include <cybozu/string.hpp>
 #include <cybozu/hash.hpp>
-#include <cybozu/cpuclock.hpp>
+#include <cybozu/benchmark.hpp>
 #include <set>
 
 #ifdef USE_UTF32
