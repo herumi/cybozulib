@@ -447,9 +447,11 @@ inline bool regex_match(const String& s, const regex& e, regex_constants::match_
 #ifdef _MSC_VER
 namespace regex_local {
 
+std::locale __declspec(selectany) g_loc = std::locale(std::locale(""), new std::ctype<cybozu::Char>);
+
 inline bool init()
 {
-	std::locale::global(std::locale(std::locale(""), new std::ctype<cybozu::Char>));
+	std::locale::global(g_loc);
 	return true;
 }
 
