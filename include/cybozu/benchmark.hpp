@@ -84,15 +84,15 @@ inline void putClk(const char *msg, const cybozu::CpuClock& clk, int N)
 }
 
 /*
-	loop counter is given
-	CYBOZU_BENCH_C(<msg>, <counter>, <func>, <param1>, <param2>, ...);
+	loop counter N is given
+	CYBOZU_BENCH_N(<msg>, <counter>, <func>, <param1>, <param2>, ...);
 	if msg != 0 then print '<msg> <clk>\n' else '<clk>'
 */
-#define CYBOZU_BENCH_C(msg, C, func, ...) \
+#define CYBOZU_BENCH_C(msg, N, func, ...) \
 { \
 	cybozu::CpuClock clk; \
 	clk.begin(); \
-	for (int j = 0; j < C; j++) func(__VA_ARGS__); \
+	for (int j = 0; j < N; j++) func(__VA_ARGS__); \
 	clk.end(); \
 	cybozu::benchmark_local::putClk(msg, clk, N); \
 }
