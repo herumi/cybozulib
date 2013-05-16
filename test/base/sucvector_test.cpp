@@ -1,6 +1,7 @@
 #include <cybozu/test.hpp>
 #include <cybozu/sucvector.hpp>
 #include <cybozu/xorshift.hpp>
+#include <cybozu/benchmark.hpp>
 #include <sstream>
 #include <time.h>
 
@@ -241,21 +242,27 @@ CYBOZU_TEST_AUTO(select64)
 }
 
 #ifdef NDEBUG
-template<class F>
-void benchSelect64(F& f)
-{
-	cybozu::XorShift rg;
-	const int N = 100000;
-	uint64_t ret = 0;
-	clock_t begin = clock();
-	for (int i = 0; i < N; i++) {
-		uint64_t v = rg.get64();
-		int x = rg.get32() % 64;
-		ret += f(v, x);
+
+template<class R, class P1, class P2>
+struct BenchSelect {
+	cybozu::XorShift rg_;
+	uint64_t ret_;
+	R (*f_)(P1, P2);
+	BenchSelect(const char *msg, R (*f)(P1, P2))
+		: ret_(0)
+		, f_(f)
+	{
+		printf("%s", msg);
+		CYBOZU_BENCH("", run);
+		printf(" %x\n", (int)ret_);
 	}
-	double t = (clock() - begin) / double(CLOCKS_PER_SEC) / N * 1e9;
-	printf("ret=%x, %.2fnsec\n", (int)ret, t);
-}
+	void run()
+	{
+		uint64_t v = rg_.get64();
+		int x = rg_.get32() % 64;
+		ret_ += f_(v, x);
+	}
+};
 
 template<class T, class F>
 void bench(const T& sv, const F& f, size_t N)
@@ -289,14 +296,12 @@ void benchAll(size_t bitN)
 	puts("select");
 	bench(sv, &Suc::select, 1000000);
 }
+
 CYBOZU_TEST_AUTO(select64Bench)
 {
-	puts("select64C");
-	benchSelect64(select64C);
-	puts("cybozu::sucvector_util::select64");
-	benchSelect64(cybozu::sucvector_util::select64);
-	puts("select64n");
-	benchSelect64(select64n);
+	BenchSelect<uint64_t, uint64_t, uint64_t>("select64C  ", select64C);
+	BenchSelect<uint32_t, uint64_t, size_t>  ("cy:select64", cybozu::sucvector_util::select64);
+	BenchSelect<uint64_t, uint64_t, uint64_t>("select64n  ", select64n);
 
 	puts("SucVectorLt4G");
 	benchAll<cybozu::SucVectorLt4G>(31);
