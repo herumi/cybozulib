@@ -58,12 +58,14 @@ inline void putClk(const char *msg, const cybozu::CpuClock& clk, int N)
 	} else {
 		printf("%6.2f  clk", t);
 	}
+//	printf("(%d)", (int)clk.getCount() * N);
 	if (msg && *msg) printf("\n");
 }
 
 } // benchmark_local
 
 /*
+	loop counter is automatically determined
 	CYBOZU_BENCH(<msg>, <func>, <param1>, <param2>, ...);
 	if msg != 0 then print '<msg> <clk>\n' else '<clk>'
 */
@@ -78,6 +80,20 @@ inline void putClk(const char *msg, const cybozu::CpuClock& clk, int N)
 		clk.end(); \
 		if (clk.getClock() > MAX_CLK) break; \
 	} \
+	cybozu::benchmark_local::putClk(msg, clk, N); \
+}
+
+/*
+	loop counter is given
+	CYBOZU_BENCH_C(<msg>, <counter>, <func>, <param1>, <param2>, ...);
+	if msg != 0 then print '<msg> <clk>\n' else '<clk>'
+*/
+#define CYBOZU_BENCH_C(msg, C, func, ...) \
+{ \
+	cybozu::CpuClock clk; \
+	clk.begin(); \
+	for (int j = 0; j < C; j++) func(__VA_ARGS__); \
+	clk.end(); \
 	cybozu::benchmark_local::putClk(msg, clk, N); \
 }
 
