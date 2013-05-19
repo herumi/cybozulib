@@ -147,7 +147,7 @@ public:
 	clk.begin(); \
 	for (int j = 0; j < N; j++) func(__VA_ARGS__); \
 	clk.end(); \
-	cybozu::benchmark_local::putClk(msg, clk, N); \
+	clk.put(msg, N); \
 }
 
 } // cybozu
