@@ -119,7 +119,7 @@ public:
 	}
 public:
 	FMindexT()
-		: skip_(4)
+		: skip_(8)
 		, charNum_(0)
 	{
 	}
