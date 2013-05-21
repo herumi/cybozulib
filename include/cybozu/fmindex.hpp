@@ -198,6 +198,11 @@ public:
 		}
 		return false;
 	}
+	template<class Int>
+	bool getRange(Int* pbegin, Int* pend, const char *key) const
+	{
+		return getRange(pbegin, pend, std::string(key));
+	}
 	size_t convertPosition(size_t bwtPos) const
 	{
 		size_t t = 0;
