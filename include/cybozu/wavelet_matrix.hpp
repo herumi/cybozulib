@@ -192,7 +192,7 @@ public:
 					next[zeroPos++] = cur[j];
 				}
 			};
-			sv.freeze();
+			sv.ready();
 			next.swap(cur);
 		}
 
