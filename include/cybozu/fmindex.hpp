@@ -156,7 +156,7 @@ public:
 				alignedSa.push_back(sa[i]);
 			}
 		}
-		alignedPos.freeze();
+		alignedPos.ready();
 	}
 
 	/*

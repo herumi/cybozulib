@@ -268,7 +268,7 @@ public:
 		initialize SucVector after calling set without BitVector
 		1. resize(bitSize)
 		2. construct bit vector with set(pos)
-		3. freeze()
+		3. ready()
 	*/
 	size_t resize(size_t bitSize, bool doClear = true)
 	{
@@ -296,7 +296,7 @@ public:
 		uint64_t& b = blk_[q].org[r / 64];
 		b |= uint64_t(1) << (r % 64);
 	}
-	void freeze()
+	void ready()
 	{
 		initBlock(0, blk_.size());
 	}
