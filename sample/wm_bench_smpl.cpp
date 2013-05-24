@@ -1,7 +1,7 @@
 #include <cybozu/wavelet_matrix.hpp>
 #include <cybozu/xorshift.hpp>
 #include <algorithm>
-#include <cybozu/time.hpp>
+#include <cybozu/benchmark.hpp>
 #include <stdlib.h>
 
 struct Naive {
@@ -42,49 +42,48 @@ public:
 	}
 };
 
-template<class T, class RG>
-void bench_get(const T& wm, RG& rg, size_t C, size_t N)
+void add(size_t& ret, size_t x)
 {
-	size_t ret = 0;
-	double begin = cybozu::GetCurrentTimeSec();
-	for (size_t i = 0; i < C; i++) {
-		size_t pos = rg() & (N - 1);
-		ret += wm.get(pos);
-	}
-	double t = cybozu::GetCurrentTimeSec() - begin;
-	printf("get     %08x %9.2fusec\n", (int)ret, t / C * 1e6);
+	ret += x;
 }
 
 template<class T, class RG>
-void bench_rank(const T& wm, RG& rg, size_t C, size_t N)
+void bench_get(const T& wm, RG& rg, size_t N)
 {
 	size_t ret = 0;
-	double begin = cybozu::GetCurrentTimeSec();
-	for (size_t i = 0; i < C; i++) {
-		size_t pos = rg() & (N - 1);
-		uint8_t c = uint8_t(rg());
-		ret += wm.rank(c, pos);
-	}
-	double t = cybozu::GetCurrentTimeSec() - begin;
-	printf("rank    %08x %9.2fusec\n", (int)ret, t / C * 1e6);
+	printf("get   ");
+	CYBOZU_BENCH("", add, ret, wm.get(rg() & (N - 1)));
+	printf(" ret=%u\n", (int)ret);
 }
 
 template<class T, class RG>
-void bench_rankLt(const T& wm, RG& rg, size_t C, size_t N)
+void bench_rank(const T& wm, RG& rg, size_t N)
 {
 	size_t ret = 0;
-	double begin = cybozu::GetCurrentTimeSec();
-	for (size_t i = 0; i < C; i++) {
-		size_t pos = rg() & (N - 1);
-		uint8_t c = uint8_t(rg());
-		ret += wm.rankLt(c, pos);
-	}
-	double t = cybozu::GetCurrentTimeSec() - begin;
-	printf("rankLt  %08x %9.2fusec\n", (int)ret, t / C * 1e6);
+	printf("rank  ");
+	CYBOZU_BENCH("", add, ret, wm.rank(uint8_t(rg()), rg() & (N - 1)));
+	printf(" ret=%u\n", (int)ret);
+}
+
+template<class T, class RG>
+void bench_rankLt(const T& wm, RG& rg, size_t N)
+{
+	size_t ret = 0;
+	printf("rank  ");
+	CYBOZU_BENCH("", add, ret, wm.rankLt(uint8_t(rg()), rg() & (N - 1)));
+	printf(" ret=%u\n", (int)ret);
+}
+
+template<class T, class RG>
+void oneSelect(size_t& ret, const T& wm, RG& rg, const std::vector<int>& maxTbl)
+{
+	uint8_t c = uint8_t(rg());
+	size_t pos = rg() % maxTbl[c];
+	ret += wm.select(c, pos);
 }
 
 template<class T, class Vec8, class RG>
-void bench_select(const T& wm, const Vec8& v, RG& rg, size_t C)
+void bench_select(const T& wm, const Vec8& v, RG& rg)
 {
 	size_t ret = 0;
 	std::vector<int> maxTbl;
@@ -92,14 +91,9 @@ void bench_select(const T& wm, const Vec8& v, RG& rg, size_t C)
 	for (int i = 0; i < 256; i++) {
 		maxTbl[i] = (int)wm.size(i) + 1;
 	}
-	double begin = cybozu::GetCurrentTimeSec();
-	for (size_t i = 0; i < C; i++) {
-		uint8_t c = uint8_t(rg());
-		size_t pos = rg() % maxTbl[c];
-		ret += wm.select(c, pos);
-	}
-	double t = cybozu::GetCurrentTimeSec() - begin;
-	printf("select  %08x %9.2fusec\n", (int)ret, t / C * 1e6);
+	printf("select");
+	CYBOZU_BENCH("", oneSelect, ret, wm, rg, maxTbl);
+	printf(" ret=%u\n", (int)ret);
 	Naive nv(v);
 /*
 	over pos=67108805, i=1024, v=58
@@ -130,10 +124,10 @@ void bench(const cybozu::WaveletMatrix& wm, const Vec8& v, size_t N)
 {
 	cybozu::XorShift rg;
 	puts("wm");
-	bench_get(wm, rg, 1000000, N);
-	bench_rank(wm, rg, 1000000, N);
-	bench_rankLt(wm, rg, 1000000, N);
-	bench_select(wm, v, rg, 100000);
+	bench_get(wm, rg, N);
+	bench_rank(wm, rg, N);
+	bench_rankLt(wm, rg, N);
+	bench_select(wm, v, rg);
 #if 0
 	bench_get(nv, "nv", 1000000, N);
 	bench_rank(nv, "nv", 10, N);
