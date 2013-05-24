@@ -124,21 +124,20 @@ public:
 */
 #define CYBOZU_BENCH(msg, func, ...) \
 { \
-	const uint64_t MAX_CLK = cybozu::CpuClock::maxClk; \
-	const int N = cybozu::CpuClock::loopN1; \
+	const uint64_t maxClk = cybozu::CpuClock::maxClk; \
 	cybozu::CpuClock clk; \
 	for (int i = 0; i < cybozu::CpuClock::loopN2; i++) { \
 		clk.begin(); \
-		for (int j = 0; j < N; j++) func(__VA_ARGS__); \
+		for (int j = 0; j < cybozu::CpuClock::loopN1; j++) func(__VA_ARGS__); \
 		clk.end(); \
-		if (clk.getClock() > MAX_CLK) break; \
+		if (clk.getClock() > maxClk) break; \
 	} \
-	clk.put(msg, N); \
+	clk.put(msg, cybozu::CpuClock::loopN1); \
 }
 
 /*
 	loop counter N is given
-	CYBOZU_BENCH_N(<msg>, <counter>, <func>, <param1>, <param2>, ...);
+	loopN1(<msg>, <counter>, <func>, <param1>, <param2>, ...);
 	if msg != 0 then print '<msg> <clk>\n' else '<clk>'
 */
 #define CYBOZU_BENCH_C(msg, N, func, ...) \
