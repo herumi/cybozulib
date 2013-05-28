@@ -298,7 +298,7 @@ public:
 	}
 	void ready()
 	{
-		initBlock(0, blk_.size());
+		initBlock(0, blk_.size() * 4);
 	}
 	uint64_t rank1(uint64_t pos) const
 	{
