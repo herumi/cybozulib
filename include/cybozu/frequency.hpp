@@ -99,20 +99,33 @@ public:
 	typedef Element value_type;
 	typedef Int size_type;
 
-	FrequencyVec() : size_(0) {}
+	FrequencyVec() { clear(); }
 	template<class Iter>
 	FrequencyVec(Iter begin, Iter end)
 	{
+		clear();
 		init(begin, end);
+	}
+	void clear()
+	{
+		size_ = 0;
+		memset(freqTbl_, 0, sizeof(freqTbl_));
 	}
 	template<class Iter>
 	void init(Iter begin, Iter end)
 	{
-		memset(freqTbl_, 0, sizeof(freqTbl_));
 		while (begin != end) {
-			freqTbl_[uint8_t(*begin)]++;
+			append(*begin);
 			++begin;
 		}
+		ready();
+	}
+	void append(const Element e)
+	{
+		freqTbl_[uint8_t(e)]++;
+	}
+	void ready()
+	{
 		for (size_t i = 0; i < N; i++) idx2char_[i] = uint8_t(i);
 		Greater greater(freqTbl_);
 		std::sort(idx2char_, idx2char_ + N, greater);
@@ -211,19 +224,33 @@ class Frequency {
 		std::sort(idx2ref_.begin(), idx2ref_.end(), greater);
 	}
 public:
-	Frequency(){}
+	Frequency(){ clear(); }
 	template<class Iter>
 	Frequency(Iter begin, Iter end)
 	{
+		clear();
 		init(begin, end);
+	}
+	void clear()
+	{
+		m_.clear();
+		idx2ref_.clear();
 	}
 	template<class Iter>
 	void init(Iter begin, Iter end)
 	{
 		while (begin != end) {
-			m_[*begin].freq++;
+			append(*begin);
 			++begin;
 		}
+		ready();
+	}
+	void append(const Element& e)
+	{
+		m_[e].freq++;
+	}
+	void ready()
+	{
 		initIdx2Ref();
 		for (size_t i = 0, ie = idx2ref_.size(); i < ie; i++) {
 			idx2ref_[i]->second.idx = (Int)i;

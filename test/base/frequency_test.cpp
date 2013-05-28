@@ -2,6 +2,23 @@
 #include <cybozu/frequency.hpp>
 #include <sstream>
 
+template<class Element>
+struct Tbl {
+	Element c;
+	size_t n;
+};
+
+template<class Freq, class T, size_t N>
+void verify(const Freq& freq, const T (&tbl)[N])
+{
+	CYBOZU_TEST_EQUAL(freq.size(), N);
+	for (size_t i = 0; i < N; i++) {
+		CYBOZU_TEST_EQUAL(freq.getFrequency(tbl[i].c), tbl[i].n);
+		CYBOZU_TEST_EQUAL(freq.getIndex(tbl[i].c), i);
+		CYBOZU_TEST_EQUAL(freq.getElement(i), tbl[i].c);
+	}
+}
+
 CYBOZU_TEST_AUTO(char)
 {
 	std::string a = "abcaaab\x80\x80\xff\xff\xff";
@@ -13,22 +30,20 @@ CYBOZU_TEST_AUTO(char)
 		freqTmp.save(ss);
 	}
 	freq.load(ss);
-	const struct {
-		char c;
-		size_t n;
-	} tbl[] = {
+	const Tbl<char> tbl[] = {
 		{ 'a', 4 },
 		{ '\xff', 3 },
 		{ '\x80', 2 },
 		{ 'b', 2 },
 		{ 'c', 1 },
 	};
-	CYBOZU_TEST_EQUAL(freq.size(), 5u);
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		CYBOZU_TEST_EQUAL(freq.getFrequency(tbl[i].c), tbl[i].n);
-		CYBOZU_TEST_EQUAL(freq.getIndex(tbl[i].c), i);
-		CYBOZU_TEST_EQUAL(freq.getElement(i), tbl[i].c);
+	verify(freq, tbl);
+	Freq freq2;
+	for (size_t i = 0; i < a.size(); i++) {
+		freq2.append(a[i]);
 	}
+	freq2.ready();
+	verify(freq2, tbl);
 }
 
 CYBOZU_TEST_AUTO(int)
@@ -44,22 +59,20 @@ CYBOZU_TEST_AUTO(int)
 		freqTmp.save(ss);
 	}
 	freq.load(ss);
-	const struct {
-		int  c;
-		size_t n;
-	} tbl[] = {
+	const Tbl<int> tbl[] = {
 		{ 2, 4 },
 		{ 5, 3 },
 		{ 3, 2 },
 		{ 9, 1 },
 		{ 0, 1 },
 	};
-	CYBOZU_TEST_EQUAL(freq.size(), 5u);
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		CYBOZU_TEST_EQUAL(freq.getFrequency(tbl[i].c), tbl[i].n);
-		CYBOZU_TEST_EQUAL(freq.getIndex(tbl[i].c), i);
-		CYBOZU_TEST_EQUAL(freq.getElement(i), tbl[i].c);
+	verify(freq, tbl);
+	Freq freq2;
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(inTbl); i++) {
+		freq2.append(inTbl[i]);
 	}
+	freq2.ready();
+	verify(freq2, tbl);
 }
 
 CYBOZU_TEST_AUTO(string)
@@ -75,19 +88,17 @@ CYBOZU_TEST_AUTO(string)
 		freqTmp.save(ss);
 	}
 	freq.load(ss);
-	const struct {
-		std::string c;
-		size_t n;
-	} tbl[] = {
+	const Tbl<std::string> tbl[] = {
 		{ "abc", 3 },
 		{ "x", 2 },
 		{ "123", 2 },
 		{ "a", 1 },
 	};
-	CYBOZU_TEST_EQUAL(freq.size(), 4u);
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		CYBOZU_TEST_EQUAL(freq.getFrequency(tbl[i].c), tbl[i].n);
-		CYBOZU_TEST_EQUAL(freq.getIndex(tbl[i].c), i);
-		CYBOZU_TEST_EQUAL(freq.getElement(i), tbl[i].c);
+	verify(freq, tbl);
+	Freq freq2;
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(inTbl); i++) {
+		freq2.append(inTbl[i]);
 	}
+	freq2.ready();
+	verify(freq2, tbl);
 }
