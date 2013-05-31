@@ -6,10 +6,9 @@
 	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 */
 #include <string>
-#include <memory.h>
 #include <iosfwd>
+#include <cybozu/exception.hpp>
 #include <cybozu/stream_fwd.hpp>
-#include <typeinfo>
 
 namespace cybozu {
 
@@ -124,24 +123,5 @@ public:
 		return true;
 	}
 };
-
-#if 0
-template<>
-struct InputStreamTag<std::istream> {
-	static inline size_t read(std::istream& is, char *buf, size_t size, const char *msg = "")
-	{
-		if (!is.read(buf, size)) throw cybozu::Exception("InputStreamTag<std::istream>:read") << size << msg;
-		return (size_t)is.gcount();
-	}
-};
-
-template<>
-struct OutputStreamTag<std::ostream> {
-	static inline void write(std::ostream& os, const char *buf, size_t size, const char *msg = "")
-	{
-		if (!os.write(buf, size)) throw cybozu::Exception("OutputStreamTag<std::ostream>:write") << size << msg;
-	}
-};
-#endif
 
 } // cybozu
