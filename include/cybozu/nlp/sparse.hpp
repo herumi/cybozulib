@@ -3,7 +3,7 @@
 	@file
 	@brief sparse vector
 
-	Copyright (C) 2010 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
 */
 #include <vector>
@@ -12,10 +12,6 @@
 #include <assert.h>
 
 namespace cybozu { namespace nlp {
-
-struct SparseException : cybozu::Exception {
-	SparseException() : cybozu::Exception("nlp::sparse") { }
-};
 
 namespace option {
 
@@ -40,14 +36,10 @@ public:
 	void set(size_t pos)
 	{
 		if (!v_.empty() && pos <= v_[v_.size() - 1]) {
-			cybozu::nlp::SparseException e;
-			e << "PositionTbl:set" << "bad order pos" << pos;
-			throw e;
+			throw cybozu::Exception("SparseException:PositionTbl:set:bad order pos") << pos;
 		}
 		if (pos > 0xffffffffU) {
-			cybozu::nlp::SparseException e;
-			e << "PositionTbl:set" << "too large pos" << pos;
-			throw e;
+			throw cybozu::Exception("SparseException:PositionTbl:set:too large pos") << pos;
 		}
 		v_.push_back((unsigned int)pos);
 	}
@@ -127,14 +119,10 @@ public:
 			addDummy_ = false;
 		}
 		if (!v_.empty() && pos <= lastPos_) {
-			cybozu::nlp::SparseException e;
-			e << "CompressedPositionTbl:set" << "bad order pos" << pos;
-			throw e;
+			throw cybozu::Exception("SparseException:CompressedPositionTbl:set:bad order pos") << pos;
 		}
 		if (pos - lastPos_ >= (1 << 30)) {
-			cybozu::nlp::SparseException e;
-			e << "CompressedPositionTbl:set" << "too large pos" << pos;
-			throw e;
+			throw cybozu::Exception("SparseException:CompressedPositionTbl:set:too large pos") << pos;
 		}
 		unsigned int diff = (unsigned int)(pos - lastPos_);
 		lastPos_ = pos;
@@ -266,32 +254,7 @@ public:
 		return true;
 	}
 	bool operator!=(const SparseVector& rhs) const { return !operator==(rhs); }
-	template<class OutputStream>
-	void serialize(OutputStream& os) const
-	{
-		const SparseVector& x = *this;
-		cybozu::serialize(os, x.size());
-		for (const_iterator i = x.begin(), ie = x.end(); i != ie; ++i) {
-			cybozu::serialize(os, i->pos());
-			cybozu::serialize(os, i->val());
-		}
-	}
-	template<class InputStream>
-	void deserialize(InputStream& is)
-	{
-		SparseVector& x = *this;
-		size_t len;
-		cybozu::deserialize(is, len);
-		x.clear();
-		x.reserve(len);
-		for (size_t i = 0; i < len; i++) {
-			size_t pos;
-			T val;
-			cybozu::deserialize(is, pos);
-			cybozu::deserialize(is, val);
-			x.push_back(pos, val);
-		}
-	}
+
 	void swap(SparseVector& rhs)
 	{
 		posTbl_.swap(rhs.posTbl_);
@@ -536,4 +499,33 @@ void InnerProduct(Ret *pret, const SparseVector<L, Ltbl>& lhs, const SparseVecto
 	*pret = ret;
 }
 
-} } // cybozu::nlp
+} // cybozu::nlp
+
+template<class InputStream, class T, class PosTbl, int d>
+void load(cybozu::nlp::SparseVector<T, PosTbl, d>& x, InputStream& is, const char *msg = "")
+{
+	size_t size;
+	cybozu::load(size, is, "SparseVector:load:size");
+	x.clear();
+	x.reserve(size);
+	for (size_t i = 0; i < size; i++) {
+		size_t pos;
+		T val;
+		cybozu::load(pos, is, msg);
+		cybozu::load(val, is, msg);
+		x.push_back(pos, val);
+	}
+}
+
+template<class OutputStream, class T, class PosTbl, int d>
+void save(OutputStream& os, const cybozu::nlp::SparseVector<T, PosTbl, d>& x, const char *msg = "")
+{
+	typedef cybozu::nlp::SparseVector<T, PosTbl, d> SparseVec;
+	cybozu::save(os, x.size(), "SparseVector:save:size");
+	for (typename SparseVec::const_iterator i = x.begin(), ie = x.end(); i != ie; ++i) {
+		cybozu::save(os, i->pos(), msg);
+		cybozu::save(os, i->val(), msg);
+	}
+}
+
+} // cybozu

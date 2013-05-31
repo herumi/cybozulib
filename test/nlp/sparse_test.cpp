@@ -41,12 +41,10 @@ void test_push_back()
 		j++;
 	}
 	{
-		std::string str;
-		cybozu::RefStringOutputStream os(str);
-		cybozu::serialize(os, v1);
+		std::stringstream ss;
+		cybozu::save(ss, v1);
 		IntVec1 out1;
-		cybozu::MemoryInputStream is(str);
-		cybozu::deserialize(is, out1);
+		cybozu::load(out1, ss);
 		CYBOZU_TEST_ASSERT(v1 == out1);
 	}
 }
