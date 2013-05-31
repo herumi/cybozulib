@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <map>
+#include <cybozu/file.hpp>
 #include <cybozu/csv.hpp>
 #include <cybozu/nlp/plsi.hpp>
 #include <cybozu/string_operation.hpp>
