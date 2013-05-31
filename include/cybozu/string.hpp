@@ -961,42 +961,42 @@ public:
 	/**
 		return iterator for beginning of mutable sequence
 	*/
-	iterator begin() { return str_.begin(); }
+	iterator begin() throw() { return str_.begin(); }
 
 	/**
 		return iterator for beginning of nonmutable sequence
 	*/
-	const_iterator begin() const { return str_.begin(); }
+	const_iterator begin() const throw() { return str_.begin(); }
 
 	/**
 		return iterator for end of mutable sequence
 	*/
-	iterator end() { return str_.end(); }
+	iterator end() throw() { return str_.end(); }
 
 	/**
 		return iterator for end of nonmutable sequence
 	*/
-	const_iterator end() const { return str_.end(); }
+	const_iterator end() const throw() { return str_.end(); }
 
 	/**
 		return iterator for beginning of reversed mutable sequence
 	*/
-	reverse_iterator rbegin() { return str_.rbegin(); }
+	reverse_iterator rbegin() throw() { return str_.rbegin(); }
 
 	/**
 		return iterator for beginning of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rbegin() const { return str_.rbegin(); }
+	const_reverse_iterator rbegin() const throw() { return str_.rbegin(); }
 
 	/**
 		return iterator for end of reversed mutable sequence
 	*/
-	reverse_iterator rend() { return str_.rend(); }
+	reverse_iterator rend() throw() { return str_.rend(); }
 
 	/**
 		return iterator for end of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rend() const { return str_.rend(); }
+	const_reverse_iterator rend() const throw() { return str_.rend(); }
 
 	/**
 		subscript mutable sequence with checking
@@ -1044,17 +1044,17 @@ public:
 	/**
 		return length of sequence
 	*/
-	size_type length() const { return str_.length(); }
+	size_type length() const throw() { return str_.length(); }
 
 	/**
 		return length of sequence
 	*/
-	size_type size() const { return str_.size(); }
+	size_type size() const throw() { return str_.size(); }
 
 	/**
 		return maximum possible length of sequence
 	*/
-	size_type max_size() const { return str_.max_size(); }
+	size_type max_size() const throw() { return str_.max_size(); }
 
 	/**
 		determine new length, padding with null elements as needed
@@ -1074,7 +1074,7 @@ public:
 	/**
 		return current length of allocated storage
 	*/
-	size_type capacity() const { return str_.capacity(); }
+	size_type capacity() const throw() { return str_.capacity(); }
 
 	/**
 		determine new minimum length of allocated storage
@@ -1086,7 +1086,7 @@ public:
 		test if sequence is empty
 		@return true if empty
 	*/
-	bool empty() const { return str_.empty(); }
+	bool empty() const throw() { return str_.empty(); }
 
 	/**
 		copy [off, off + count) to [dest, dest + count)
@@ -1480,24 +1480,24 @@ public:
 		return true;
 	}
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
-	StringT(StringT&& rhs)
+	StringT(StringT&& rhs) throw()
 	{
 		assign(std::forward<StringT>(rhs));
 	}
-	StringT& operator=(StringT&& rhs)
+	StringT& operator=(StringT&& rhs) throw()
 	{
 		assign(std::forward<StringT>(rhs));
 		return *this;
 	}
-	StringT& assign(StringT&& rhs)
+	StringT& assign(StringT&& rhs) throw()
 	{
 		str_.assign(std::forward<BasicString>(rhs.str_));
 		return *this;
 	}
-	const_iterator cbegin() const { return begin(); }
-	const_iterator cend() const { return end(); }
-	const_reverse_iterator crbegin() const { return rbegin(); }
-	const_reverse_iterator crend() const { return rend(); }
+	const_iterator cbegin() const throw() { return begin(); }
+	const_iterator cend() const throw() { return end(); }
+	const_reverse_iterator crbegin() const throw() { return rbegin(); }
+	const_reverse_iterator crend() const throw() { return rend(); }
 	void shrink_to_fit() { str_.shrink_to_fit(); }
 	void pop_back() { str_.erase(str_.size() - 1, 1); }
 	reference front() { return operator[](0); }
@@ -1601,6 +1601,8 @@ inline bool operator>=(const std::wstring& lhs, const String& rhs) { return rhs 
 inline bool operator<(const std::wstring& lhs, const String& rhs) { return rhs > lhs; }
 inline bool operator>(const std::wstring& lhs, const String& rhs) { return rhs < lhs; }
 #endif
+
+inline void swap(String& lhs, String& rhs) { lhs.swap(rhs); }
 
 inline String operator+(const String& lhs, const String& rhs) { return String(lhs) += rhs; }
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
