@@ -9,6 +9,7 @@
 #include <iostream>
 #include <assert.h>
 #include <cybozu/stream.hpp>
+#include <cybozu/line_stream.hpp>
 
 namespace cybozu {
 
@@ -21,15 +22,6 @@ const int noEndLine = 2;
 } // base64
 
 namespace base64_local {
-
-template<class OutputStream>
-void Write(OutputStream& os, const char *buf, size_t size)
-{
-	size_t writeSize = static_cast<size_t>(os.write(buf, size));
-	if (writeSize != size) {
-		throw cybozu::Exception("base64::Write") << cybozu::exception::makeString(buf, size) << size;
-	}
-}
 
 static inline void addEndLine(char *outBuf, size_t& outBufSize, int mode)
 {
@@ -50,6 +42,7 @@ static inline void addEndLine(char *outBuf, size_t& outBufSize, int mode)
 template<class OutputStream, class InputStream>
 void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, int mode = base64::useCRLF)
 {
+	typedef typename cybozu::OutputStreamTag<OutputStream> Out;
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
 		throw cybozu::Exception("base64::EncodeToBase64:bad line size") << maxLineSize;
@@ -93,7 +86,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 			}
 			assert(outBufSize <= sizeof(outBuf));
 		}
-		base64_local::Write(os, outBuf, outBufSize);
+		Out::write(os, outBuf, outBufSize);
 		outBufSize = 0;
 	}
 	if (idx > 0) {
@@ -109,7 +102,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 		base64_local::addEndLine(outBuf, outBufSize, mode);
 	}
 	if (outBufSize > 0) {
-		base64_local::Write(os, outBuf, outBufSize);
+		Out::write(os, outBuf, outBufSize);
 	}
 }
 
@@ -126,6 +119,7 @@ class Base64Decoder {
 	unsigned int cur_;
 	Base64Decoder(const Base64Decoder&);
 	void operator=(const Base64Decoder&);
+	typedef typename cybozu::OutputStreamTag<OutputStream> Out;
 public:
 	Base64Decoder(OutputStream& os)
 		: os_(os)
@@ -179,7 +173,7 @@ public:
 				idx_ = 0;
 			}
 			if (outBufSize_ == sizeof(outBuf_)) {
-				base64_local::Write(os_, outBuf_, outBufSize_);
+				Out::write(os_, outBuf_, outBufSize_);
 				outBufSize_ = 0;
 			}
 		}
@@ -191,7 +185,7 @@ public:
 	void flush()
 	{
 		if (outBufSize_ > 0) {
-			base64_local::Write(os_, outBuf_, outBufSize_);
+			Out::write(os_, outBuf_, outBufSize_);
 			outBufSize_ = 0;
 		}
 	}
