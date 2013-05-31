@@ -24,7 +24,9 @@ struct Data {
 	{
 		return sd_ == rhs.sd_ && is_ == rhs.is_ && fv_ == rhs.fv_ && sv_ == rhs.sv_;
 	}
-	// friend declaration of load and save function
+	/*
+		1. friend declaration of load and save function
+	*/
 	template<class InputStream>
 	friend void load(Data& x, InputStream& is);
 	template<class OutputStream>
@@ -32,7 +34,7 @@ struct Data {
 };
 
 /*
-	define load and save function in cybozu namespace
+	2. define load and save function in *** cybozu *** namespace
 */
 namespace cybozu {
 
@@ -53,6 +55,37 @@ void save(OutputStream& os, const Data& x)
 	cybozu::save(os, x.fv_);
 	cybozu::save(os, x.sv_);
 }
+
+} // cybozu
+
+struct Data2 {
+	Data d;
+	int a;
+	bool operator==(const Data2& rhs) const
+	{
+		return d == rhs.d && a == rhs.a;
+	}
+	template<class InputStream>
+	friend void load(Data& x, InputStream& is);
+	template<class OutputStream>
+	friend void save(OutputStream& os, const Data& x);
+};
+
+namespace cybozu {
+
+template<class InputStream>
+void load(Data2& x, InputStream& is)
+{
+	cybozu::load(x.d, is);
+	cybozu::load(x.a, is);
+}
+template<class OutputStream>
+void save(OutputStream& os, const Data2& x)
+{
+	cybozu::save(os, x.d);
+	cybozu::save(os, x.a);
+}
+
 } // cybozu
 
 int main()
@@ -72,7 +105,7 @@ int main()
 	x.sv_.push_back("xxx");
 	x.sv_.push_back("doremi");
 
-	// save data to std::ofstream
+	// save data by std::ofstream
 	{
 		std::ofstream os(file, std::ios::binary);
 		cybozu::save(os, x);
@@ -85,14 +118,23 @@ int main()
 		cybozu::load(y, is);
 		puts(x == y ? "ok" : "ng");
 	}
+	Data2 x2;
+	x2.d = x;
+	x2.d.sd_["aaaaa"] = 1.2;
+	x2.a = 98765432;
+	// save data by cybozu::File
+	{
+		cybozu::File os(file, std::ios::out);
+		cybozu::save(os, x2);
+	}
 	// load data from cybozu::Mmap
 	{
 		cybozu::Mmap m(file);
 		cybozu::MemoryInputStream is(m.get(), m.size());
 
-		Data y;
-		cybozu::load(y, is);
-		puts(x == y ? "ok" : "ng");
+		Data2 y2;
+		cybozu::load(y2, is);
+		puts(x2 == y2 ? "ok" : "ng");
 	}
 }
 
