@@ -8,7 +8,7 @@
 #include <string>
 #include <memory.h>
 #include <iosfwd>
-#include <cybozu/file.hpp>
+#include <cybozu/stream_fwd.hpp>
 #include <typeinfo>
 
 namespace cybozu {
@@ -125,6 +125,7 @@ public:
 	}
 };
 
+#if 0
 template<>
 struct InputStreamTag<std::istream> {
 	static inline size_t read(std::istream& is, char *buf, size_t size, const char *msg = "")
@@ -141,21 +142,6 @@ struct OutputStreamTag<std::ostream> {
 		if (!os.write(buf, size)) throw cybozu::Exception("OutputStreamTag<std::ostream>:write") << size << msg;
 	}
 };
-
-template<>
-struct InputStreamTag<cybozu::File> {
-	static inline size_t read(cybozu::File& is, char *buf, size_t size, const char * = "")
-	{
-		return (size_t)is.read(buf, size);
-	}
-};
-
-template<>
-struct OutputStreamTag<cybozu::File> {
-	static inline void write(cybozu::File& os, const char *buf, size_t size, const char *msg = "")
-	{
-		if ((size_t)os.write(buf, size) != size) throw cybozu::Exception("OutputStreamTag<cybozu::File>:write") << size << msg;
-	}
-};
+#endif
 
 } // cybozu

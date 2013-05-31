@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <sys/stat.h> // for stat
 #include <cybozu/exception.hpp>
+#include <cybozu/stream_fwd.hpp>
 #include <vector>
 #include <ios>
 #ifdef _WIN32
@@ -473,4 +474,22 @@ bool GetFilesInDir(T &list, const std::string& dir)
 #endif
 }
 
-} } // cybozu::file
+} // cybozu::file
+
+template<>
+struct InputStreamTag<cybozu::File> {
+	static inline size_t read(cybozu::File& is, char *buf, size_t size, const char * = "")
+	{
+		return (size_t)is.read(buf, size);
+	}
+};
+
+template<>
+struct OutputStreamTag<cybozu::File> {
+	static inline void write(cybozu::File& os, const char *buf, size_t size, const char *msg = "")
+	{
+		if ((size_t)os.write(buf, size) != size) throw cybozu::Exception("OutputStreamTag<cybozu::File>:write") << size << msg;
+	}
+};
+
+} // cybozu

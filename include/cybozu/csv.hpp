@@ -8,6 +8,7 @@
 
 #include <string>
 #include <list>
+#include <fstream>
 #include <cybozu/stream.hpp>
 
 namespace cybozu {
@@ -28,6 +29,7 @@ template<class InputStream, size_t MAX_LINE_SIZE = 10 * 1024 * 1024>
 class CsvReaderT {
 	CsvReaderT(const CsvReaderT&);
 	void operator=(const CsvReaderT&);
+	typedef cybozu::InputStreamTag<InputStream> In;
 public:
 	/**
 		@param is [in] input stream
@@ -153,7 +155,7 @@ private:
 		if (pos_ < bufSize_) {
 			return buf_[pos_++];
 		}
-		bufSize_ = is_.read(buf_, sizeof(buf_));
+		bufSize_ = In::read(is_, buf_, sizeof(buf_));
 		if (bufSize_ > 0) {
 			pos_ = 1;
 			return buf_[0];
@@ -181,6 +183,7 @@ template<class OutputStream>
 class CsvWriterT {
 	CsvWriterT(const CsvWriterT&);
 	void operator=(const CsvWriterT&);
+	typedef cybozu::OutputStreamTag<OutputStream> Out;
 public:
 	/**
 		@param os [in] output stream
@@ -238,22 +241,19 @@ private:
 	}
 	void writeToStream(const char *str, size_t size)
 	{
-		ssize_t writeSize = os_.write(str, size);
-		if (size != static_cast<size_t>(writeSize)) {
-			throw cybozu::Exception("csv::CsvWriterT::writeToStream") << cybozu::exception::makeString(str, size) << size;
-		}
+		Out::write(os_, str, size);
 	}
 	OutputStream& os_;
 	char sep_;
 };
 
 class CsvReader {
-	cybozu::FileInputStream is_;
-	cybozu::CsvReaderT<cybozu::FileInputStream> csv_;
+	std::ifstream ifs_;
+	cybozu::CsvReaderT<std::ifstream> csv_;
 public:
 	CsvReader(const std::string& name, char sep = ',')
-		: is_(name)
-		, csv_(is_, sep)
+		: ifs_(name.c_str(), std::ios::binary)
+		, csv_(ifs_, sep)
 	{
 	}
 	/**
@@ -271,12 +271,12 @@ public:
 };
 
 class CsvWriter {
-	cybozu::FileOutputStream os_;
-	cybozu::CsvWriterT<cybozu::FileOutputStream> csv_;
+	std::ofstream ofs_;
+	cybozu::CsvWriterT<std::ofstream> csv_;
 public:
 	CsvWriter(const std::string& name, char sep = ',')
-		: os_(name)
-		, csv_(os_, sep)
+		: ofs_(name.c_str(), std::ios::binary)
+		, csv_(ofs_, sep)
 	{
 	}
 	/**

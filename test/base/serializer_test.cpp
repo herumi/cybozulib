@@ -167,8 +167,6 @@ CYBOZU_TEST_AUTO(StrVec)
 		Set(x, tbl[i].v, tbl[i].n);
 		SaveAndLoad(y, x);
 		verify(x, y);
-		SaveAndLoadVec(z, x);
-		verify(x, z);
 	}
 }
 
