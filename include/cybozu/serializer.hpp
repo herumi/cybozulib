@@ -74,6 +74,7 @@ CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(double)
 
 #undef CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER
 
+// only for std::vector<POD>
 template<class V, class InputStream>
 void loadPodVec(V& v, InputStream& is, const char *msg = "")
 {
@@ -83,6 +84,7 @@ void loadPodVec(V& v, InputStream& is, const char *msg = "")
 	loadRange(&v[0], size, is, msg);
 }
 
+// only for std::vector<POD>
 template<class V, class OutputStream>
 void savePodVec(OutputStream& os, const V& v, const char *msg = "")
 {

@@ -24,7 +24,8 @@ CYBOZU_TEST_AUTO(separator)
 
 CYBOZU_TEST_AUTO(output1)
 {
-	cybozu::StringOutputStream os;
+	std::string str;
+	cybozu::StringOutputStream os(str);
 	cybozu::CsvWriterT<cybozu::StringOutputStream> csv(os);
 	std::vector<std::string> vec;
 	vec.push_back("123");
@@ -33,18 +34,19 @@ CYBOZU_TEST_AUTO(output1)
 	vec.push_back("xx\"yy");
 	vec.push_back("1123\"\"d");
 	csv.write(vec.begin(), vec.end());
-	CYBOZU_TEST_EQUAL(os.str_, "\"123\",\"\",\"a\r\nb\nc\",\"xx\"\"yy\",\"1123\"\"\"\"d\"\r\n");
+	CYBOZU_TEST_EQUAL(str, "\"123\",\"\",\"a\r\nb\nc\",\"xx\"\"yy\",\"1123\"\"\"\"d\"\r\n");
 }
 
 CYBOZU_TEST_AUTO(output2)
 {
-	cybozu::StringOutputStream os;
+	std::string str;
+	cybozu::StringOutputStream os(str);
 	cybozu::CsvWriterT<cybozu::StringOutputStream> csv(os, '\t');
 	std::vector<std::string> vec;
 	vec.push_back("\x8A\xBF\x8E\x9A");
 	vec.push_back("\x95\xCF\x8A\xB7");
 	csv.write(vec.begin(), vec.end());
-	CYBOZU_TEST_EQUAL(os.str_, "\"\x8A\xBF\x8E\x9A\"\t\"\x95\xCF\x8A\xB7\"\r\n");
+	CYBOZU_TEST_EQUAL(str, "\"\x8A\xBF\x8E\x9A\"\t\"\x95\xCF\x8A\xB7\"\r\n");
 }
 
 CYBOZU_TEST_AUTO(input)
@@ -132,9 +134,9 @@ CYBOZU_TEST_AUTO(input_err)
 		{ "123,45,67,8,9,0,1,234,56,7890", "too large size" },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		cybozu::MemoryInputStream is(tbl[i].in);
+		cybozu::StringInputStream is(tbl[i].in);
 
-		cybozu::CsvReaderT<cybozu::MemoryInputStream, 20> csv(is);
+		cybozu::CsvReaderT<cybozu::StringInputStream, 20> csv(is);
 		std::vector<std::string> vec;
 		CYBOZU_TEST_EXCEPTION_MESSAGE(csv.read(vec), cybozu::Exception, tbl[i].msg);
 	}
