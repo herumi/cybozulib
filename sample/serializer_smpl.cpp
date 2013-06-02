@@ -25,38 +25,25 @@ struct Data {
 		return sd_ == rhs.sd_ && is_ == rhs.is_ && fv_ == rhs.fv_ && sv_ == rhs.sv_;
 	}
 	/*
-		1. friend declaration of load and save function
+		define load and save function
 	*/
 	template<class InputStream>
-	friend void load(Data& x, InputStream& is);
+	void load(InputStream& is)
+	{
+		cybozu::load(sd_, is);
+		cybozu::load(is_, is);
+		cybozu::load(fv_, is);
+		cybozu::load(sv_, is);
+	}
 	template<class OutputStream>
-	friend void save(OutputStream& os, const Data& x);
+	void save(OutputStream& os) const
+	{
+		cybozu::save(os, sd_);
+		cybozu::save(os, is_);
+		cybozu::save(os, fv_);
+		cybozu::save(os, sv_);
+	}
 };
-
-/*
-	2. define load and save function in *** cybozu *** namespace
-*/
-namespace cybozu {
-
-template<class InputStream>
-void load(Data& x, InputStream& is)
-{
-	cybozu::load(x.sd_, is);
-	cybozu::load(x.is_, is);
-	cybozu::load(x.fv_, is);
-	cybozu::load(x.sv_, is);
-}
-
-template<class OutputStream>
-void save(OutputStream& os, const Data& x)
-{
-	cybozu::save(os, x.sd_);
-	cybozu::save(os, x.is_);
-	cybozu::save(os, x.fv_);
-	cybozu::save(os, x.sv_);
-}
-
-} // cybozu
 
 struct Data2 {
 	Data d;
@@ -66,25 +53,21 @@ struct Data2 {
 		return d == rhs.d && a == rhs.a;
 	}
 	template<class InputStream>
-	friend void load(Data& x, InputStream& is);
+	void load(InputStream& is)
+	{
+		cybozu::load(d, is);
+		cybozu::load(a, is);
+	}
 	template<class OutputStream>
-	friend void save(OutputStream& os, const Data& x);
+	void save(OutputStream& os) const
+	{
+		cybozu::save(os, d);
+		cybozu::save(os, a);
+	}
 };
 
 namespace cybozu {
 
-template<class InputStream>
-void load(Data2& x, InputStream& is)
-{
-	cybozu::load(x.d, is);
-	cybozu::load(x.a, is);
-}
-template<class OutputStream>
-void save(OutputStream& os, const Data2& x)
-{
-	cybozu::save(os, x.d);
-	cybozu::save(os, x.a);
-}
 
 } // cybozu
 
@@ -137,4 +120,3 @@ int main()
 		puts(x2 == y2 ? "ok" : "ng");
 	}
 }
-
