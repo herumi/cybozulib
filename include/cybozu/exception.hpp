@@ -14,6 +14,9 @@
 	#include <string.h> // for strerror_r
 #endif
 #include <cybozu/inttype.hpp>
+#ifdef CYBOZU_USE_STACKTRACE
+	#include <cybozu/stacktrace.hpp>
+#endif
 
 namespace cybozu {
 
@@ -58,6 +61,10 @@ public:
 	explicit Exception(const std::string& name = "")
 		: str_(name)
 	{
+#ifdef CYBOZU_USE_STACKTRACE
+		str_ += ';';
+		str_ += cybozu::StackTrace().toString();
+#endif
 	}
 	~Exception() throw() {}
 	const char *what() const throw() { return str_.c_str(); }
