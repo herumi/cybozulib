@@ -363,12 +363,13 @@ CYBOZU_TEST_AUTO(hashHash)
 	x["4232\""] = c;
 
 	SaveAndLoad(y, x);
-	std::map<std::string, Str2Double> xx, yy;
+	typedef std::map<std::string, Str2Double> Map2;
+	Map2 xx, yy;
 	CopyMap(xx, x);
 	CopyMap(yy, y);
 	CYBOZU_TEST_EQUAL(x.size(), y.size());
 	if (x.size() == y.size()) {
-		for (Map::const_iterator i = x.begin(), ie = x.end(), j = y.begin(); i != ie; ++i, ++j) {
+		for (Map2::const_iterator i = xx.begin(), ie = xx.end(), j = yy.begin(); i != ie; ++i, ++j) {
 			CYBOZU_TEST_EQUAL(i->first, j->first);
 			std::map<std::string, double> xxx, yyy;
 			CopyMap(xxx, i->second);
