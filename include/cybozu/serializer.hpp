@@ -8,6 +8,13 @@
 #include <cybozu/string.hpp>
 #include <cybozu/stream.hpp>
 
+#ifdef _MSC_VER
+	#pragma warning(push)
+	#pragma warning(disable : 4127)
+#endif
+
+//#define CYBOZU_SERIALIZER_FIXED_SIZE_INTEGER
+
 namespace cybozu {
 
 namespace serializer_local {
@@ -15,7 +22,7 @@ namespace serializer_local {
 template<class T>
 union ci {
 	T i;
-	char c[sizeof(T)];
+	uint8_t c[sizeof(T)];
 };
 
 } // serializer_local
@@ -61,25 +68,134 @@ void save(OutputStream& os, const T& x)
 	x.save(os);
 }
 
-#define CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(type) \
+
+#define CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(type) \
 template<class InputStream>void load(type& x, InputStream& is) { loadPod(x, is); } \
 template<class OutputStream>void save(OutputStream& os, type x) { savePod(os, x); }
 
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(bool)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(char)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(short)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(int)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(long)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(long long)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(unsigned char)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(unsigned short)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(unsigned int)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(unsigned long)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(unsigned long long)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(float)
-CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER(double)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(bool)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(char)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(short)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(unsigned char)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(unsigned short)
 
-#undef CYBOZU_SERIALIZER_MAKE_POD_SERIALIZER
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(float)
+CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(double)
+
+#ifdef CYBOZU_SERIALIZER_FIXED_SIZE_INTEGER
+
+#define CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(type) CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(type)
+
+#else
+
+namespace serializer_local {
+
+template<class S, class T>
+bool isRecoverable(T x)
+{
+	return T(S(x)) == x;
+}
+/*
+	data structure H:D of integer x
+	H:header(1byte)
+	0x80 ; D = 1 byte zero ext
+	0x81 ; D = 2 byte zero ext
+	0x82 ; D = 4 byte zero ext
+	0x83 ; D = 8 byte zero ext
+	0x84 ; D = 1 byte signed ext
+	0x85 ; D = 2 byte signed ext
+	0x86 ; D = 4 byte signed ext
+	0x87 ; D = 8 byte signed ext
+	other; x = signed H, D = none
+*/
+template<class OutputStream, class T>
+void saveVariableInt(OutputStream& os, const T& x)
+{
+	if (isRecoverable<int8_t>(x)) {
+		uint8_t u8 = uint8_t(x);
+		if (unsigned(u8 - 0x80) <= 7) {
+			savePod(os, uint8_t(0x84));
+		}
+		savePod(os, u8);
+	} else if (isRecoverable<uint8_t>(x)) {
+		savePod(os, uint8_t(0x80));
+		savePod(os, uint8_t(x));
+	} else if (isRecoverable<uint16_t>(x) || isRecoverable<int16_t>(x)) {
+		savePod(os, uint8_t(isRecoverable<uint16_t>(x) ? 0x81 : 0x85));
+		savePod(os, uint16_t(x));
+	} else if (isRecoverable<uint32_t>(x) || isRecoverable<int32_t>(x)) {
+		savePod(os, uint8_t(isRecoverable<uint32_t>(x) ? 0x82 : 0x86));
+		savePod(os, uint32_t(x));
+	} else {
+		assert(sizeof(T) == 8);
+		savePod(os, uint8_t(0x83));
+		savePod(os, uint64_t(x));
+	}
+}
+
+template<class InputStream, class T>
+void loadVariableInt(T& x, InputStream& is)
+{
+	uint8_t h;
+	loadPod(h, is);
+	if (h == 0x80) {
+		uint8_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x81) {
+		uint16_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x82) {
+		uint32_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x83) {
+		if (sizeof(T) == 4) throw cybozu::Exception("loadVariableInt:bad header") << h;
+		uint64_t v;
+		loadPod(v, is);
+		x = (T)v;
+	} else if (h == 0x84) {
+		int8_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x85) {
+		int16_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x86) {
+		int32_t v;
+		loadPod(v, is);
+		x = v;
+	} else if (h == 0x87) {
+		if (sizeof(T) == 4) throw cybozu::Exception("loadVariableInt:bad header") << h;
+		int64_t v;
+		loadPod(v, is);
+		x = (T)v;
+	} else {
+		x = (int8_t)h;
+	}
+}
+
+} // serializer_local
+
+#define CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(type) \
+template<class InputStream>void load(type& x, InputStream& is) { serializer_local::loadVariableInt(x, is); } \
+template<class OutputStream>void save(OutputStream& os, type x) { serializer_local::saveVariableInt(os, x); }
+
+#endif
+
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(int)
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(long)
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(long long)
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(unsigned int)
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(unsigned long)
+CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER(unsigned long long)
+
+#undef CYBOZU_SERIALIZER_MAKE_INT_SERIALIZER
+#undef CYBOZU_SERIALIZER_MAKE_UNT_SERIALIZER
+#undef CYBOZU_SERIALIZER_MAKE_SERIALIZER_F
+#undef CYBOZU_SERIALIZER_MAKE_SERIALIZER_V
 
 // only for std::vector<POD>
 template<class V, class InputStream>
@@ -222,3 +338,7 @@ void save(OutputStream& os, const Container<K, V, Hash, Pred, Alloc>& x)
 }
 
 } // cybozu
+
+#ifdef _MSC_VER
+	#pragma warning(pop)
+#endif
