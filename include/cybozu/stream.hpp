@@ -50,7 +50,7 @@ size_t readSub(InputStream& is, char *buf, size_t size, typename enable_if<!is_c
 */
 template<class InputStream>
 struct InputStreamTag {
-	static inline size_t read(InputStream& is, char *buf, size_t size, const char * = "")
+	static inline size_t read(InputStream& is, char *buf, size_t size)
 	{
 		return stream_local::readSub<InputStream>(is, buf, size);
 	}
@@ -58,9 +58,9 @@ struct InputStreamTag {
 
 template<class OutputStream>
 struct OutputStreamTag {
-	static inline void write(OutputStream& os, const char *buf, size_t size, const char *msg = "")
+	static inline void write(OutputStream& os, const char *buf, size_t size)
 	{
-		if (!os.write(buf, size)) throw cybozu::Exception("OutputStream:write") << size << msg;
+		if (!os.write(buf, size)) throw cybozu::Exception("OutputStream:write") << size;
 	}
 };
 

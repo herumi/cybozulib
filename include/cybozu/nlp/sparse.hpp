@@ -269,6 +269,31 @@ public:
 		}
 		return ret;
 	}
+	template<class InputStream>
+	void load(InputStream& is)
+	{
+		size_t size;
+		cybozu::load(size, is);
+		clear();
+		reserve(size);
+		for (size_t i = 0; i < size; i++) {
+			size_t pos;
+			T val;
+			cybozu::load(pos, is);
+			cybozu::load(val, is);
+			push_back(pos, val);
+		}
+	}
+
+	template<class OutputStream>
+	void save(OutputStream& os) const
+	{
+		cybozu::save(os, size());
+		for (const_iterator i = begin(), ie = end(); i != ie; ++i) {
+			cybozu::save(os, i->pos());
+			cybozu::save(os, i->val());
+		}
+	}
 };
 
 template<class V1, class V2>
@@ -500,32 +525,5 @@ void InnerProduct(Ret *pret, const SparseVector<L, Ltbl>& lhs, const SparseVecto
 }
 
 } // cybozu::nlp
-
-template<class InputStream, class T, class PosTbl, int d>
-void load(cybozu::nlp::SparseVector<T, PosTbl, d>& x, InputStream& is, const char *msg = "")
-{
-	size_t size;
-	cybozu::load(size, is, "SparseVector:load:size");
-	x.clear();
-	x.reserve(size);
-	for (size_t i = 0; i < size; i++) {
-		size_t pos;
-		T val;
-		cybozu::load(pos, is, msg);
-		cybozu::load(val, is, msg);
-		x.push_back(pos, val);
-	}
-}
-
-template<class OutputStream, class T, class PosTbl, int d>
-void save(OutputStream& os, const cybozu::nlp::SparseVector<T, PosTbl, d>& x, const char *msg = "")
-{
-	typedef cybozu::nlp::SparseVector<T, PosTbl, d> SparseVec;
-	cybozu::save(os, x.size(), "SparseVector:save:size");
-	for (typename SparseVec::const_iterator i = x.begin(), ie = x.end(); i != ie; ++i) {
-		cybozu::save(os, i->pos(), msg);
-		cybozu::save(os, i->val(), msg);
-	}
-}
 
 } // cybozu
