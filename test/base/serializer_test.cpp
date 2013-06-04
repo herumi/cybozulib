@@ -67,6 +67,62 @@ CYBOZU_TEST_AUTO(integer)
 	testInteger<unsigned long long>();
 }
 
+const uint32_t limitInt32tbl[] = {
+	0, 1, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 150, 191, 192, 255,
+	256, 257, 65535,
+	65536, 16777215,
+	16777216, 2147483647, uint32_t(2147483648u), uint32_t(4294967295u),
+};
+
+const uint64_t limitInt64tbl[] = {
+	0, 1, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 150, 191, 192, 255,
+	256, 257, 65535,
+	65536, 16777215,
+	16777216, 2147483647, 2147483648u, 4294967295u,
+	uint64_t(4294967296ULL),
+	uint64_t((1ULL << 40) - 1),
+	uint64_t(1ULL << 40),
+	uint64_t((1ULL << 48) - 1),
+	uint64_t(1ULL << 48),
+	uint64_t(1ULL << 56),
+	uint64_t((1ULL << 56) - 1),
+	uint64_t(1ULL << 63),
+	uint64_t(18446744073709551615ULL),
+};
+
+template<class T, class S, size_t N>
+void testLimitInt(const S (&tbl)[N])
+{
+	for (size_t i = 0; i < N; i++) {
+		{
+			T x = T(tbl[i]), y;
+			SaveAndLoad(y, x);
+			CYBOZU_TEST_EQUAL(x, y);
+		}
+		{
+			T x = T(~tbl[i] + 1), y;
+			SaveAndLoad(y, x);
+			CYBOZU_TEST_EQUAL(x, y);
+		}
+	}
+}
+
+void dump(const std::string& str)
+{
+	for (size_t i = 0; i < str.size(); i++) {
+		printf("%02x ", (uint8_t)str[i]);
+	}
+	printf("\n");
+}
+
+CYBOZU_TEST_AUTO(limit)
+{
+	testLimitInt<int>(limitInt32tbl);
+	testLimitInt<uint32_t>(limitInt32tbl);
+	testLimitInt<int64_t>(limitInt64tbl);
+	testLimitInt<uint64_t>(limitInt64tbl);
+}
+
 CYBOZU_TEST_AUTO(bool)
 {
 	for (int i = 0; i < 2; i++) {
