@@ -1,50 +1,33 @@
 #include <cybozu/test.hpp>
 #include <cybozu/zlib.hpp>
 #include <cybozu/file.hpp>
+#include <cybozu/stream.hpp>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
 
-struct OutputStream {
-	std::ostringstream os_;
-	size_t write(const char *str, size_t size)
-	{
-		os_.write(str, size);
-		return os_ ? size : 0;
-	}
-};
-
-struct InputStream {
-	std::stringstream is_;
-	size_t read(char *str, size_t size)
-	{
-		is_.read(str, size);
-		return is_.gcount();
-	}
-};
-
 CYBOZU_TEST_AUTO(test1_deflate)
 {
-	typedef cybozu::ZlibCompressorT<OutputStream> Compressor;
-	typedef cybozu::ZlibDecompressorT<InputStream> Decompressor;
+	typedef cybozu::ZlibCompressorT<std::stringstream> Compressor;
+	typedef cybozu::ZlibDecompressorT<std::stringstream> Decompressor;
 	const std::string in = "this is a pen";
-	OutputStream os;
 
+	std::stringstream os;
 	{
 		Compressor comp(os);
-		comp.exec(in.c_str(), in.size());
+		comp.write(in.c_str(), in.size());
 		comp.flush();
 	}
-	const std::string enc = os.os_.str();
+	const std::string enc = os.str();
 
 	const char encTbl[] = "\x78\x9c\x2b\xc9\xc8\x2c\x56\x00\xa2\x44\x85\x82\xd4\x3c\x00\x21\x0c\x04\x99";
 
 	const std::string encOk(encTbl, encTbl + sizeof(encTbl) - 1);
 	CYBOZU_TEST_EQUAL(enc, encOk);
 
-	InputStream is;
-	is.is_ << encOk;
+	std::stringstream is;
+	is << encOk;
 
 	{
 		Decompressor dec(is);
@@ -61,27 +44,27 @@ CYBOZU_TEST_AUTO(test1_deflate)
 
 CYBOZU_TEST_AUTO(test2_deflate)
 {
-	typedef cybozu::ZlibCompressorT<OutputStream, 1> Compressor;
-	typedef cybozu::ZlibDecompressorT<InputStream, 1> Decompressor;
+	typedef cybozu::ZlibCompressorT<std::stringstream, 1> Compressor;
+	typedef cybozu::ZlibDecompressorT<std::stringstream, 1> Decompressor;
 	const std::string in = "this is a pen";
-	OutputStream os;
 
+	std::stringstream os;
 	{
 		Compressor comp(os);
 		for (size_t i = 0; i < in.size(); i++) {
-			comp.exec(&in[i], 1);
+			comp.write(&in[i], 1);
 		}
 		comp.flush();
 	}
-	const std::string enc = os.os_.str();
+	const std::string enc = os.str();
 
 	const char encTbl[] = "\x78\x9c\x2b\xc9\xc8\x2c\x56\x00\xa2\x44\x85\x82\xd4\x3c\x00\x21\x0c\x04\x99";
 
 	const std::string encOk(encTbl, encTbl + sizeof(encTbl) - 1);
 	CYBOZU_TEST_EQUAL(enc, encOk);
 
-	InputStream is;
-	is.is_ << encOk;
+	std::stringstream is;
+	is << encOk;
 
 	{
 		Decompressor dec(is);
@@ -96,37 +79,6 @@ CYBOZU_TEST_AUTO(test2_deflate)
 	}
 }
 
-namespace test3 {
-
-struct OutputStream {
-	std::ostringstream os_;
-	size_t write(const char *buf, size_t size)
-	{
-		os_.write(buf, size);
-		return size;
-	}
-};
-
-struct InputMemoryStream {
-	const char *p_;
-	size_t remainSize_;
-	InputMemoryStream(const char *buf, size_t size)
-		: p_(buf)
-		, remainSize_(size)
-	{
-	}
-	size_t read(char *buf, size_t size)
-	{
-		size_t readSize = std::min(size, remainSize_);
-		memcpy(buf, p_, readSize);
-		p_ += readSize;
-		remainSize_ -= readSize;
-		return readSize;
-	}
-};
-
-}
-
 CYBOZU_TEST_AUTO(enc_and_dec)
 {
 	std::string body = "From: cybozu\r\n"
@@ -134,17 +86,16 @@ CYBOZU_TEST_AUTO(enc_and_dec)
 				 "\r\n"
 				 "hello with zlib compressed\r\n"
 				 ".\r\n";
-	test3::OutputStream os;
-	cybozu::ZlibCompressorT<test3::OutputStream> comp(os);
-	comp.exec(&body[0], body.size());
+	std::stringstream ss;
+	cybozu::ZlibCompressorT<std::stringstream> comp(ss);
+	comp.write(&body[0], body.size());
 	comp.flush();
 
+	std::string enc = ss.str();
 
-	std::string enc = os.os_.str();
+	cybozu::StringInputStream ims(enc);
 
-	test3::InputMemoryStream ims(&enc[0], enc.size());
-
-	cybozu::ZlibDecompressorT<test3::InputMemoryStream> dec(ims);
+	cybozu::ZlibDecompressorT<cybozu::StringInputStream> dec(ims);
 	char buf[4096];
 	size_t size = dec.read(buf, sizeof(buf));
 	std::string decStr(buf, buf + size);
@@ -154,18 +105,14 @@ CYBOZU_TEST_AUTO(enc_and_dec)
 CYBOZU_TEST_AUTO(output_gzip1)
 {
 	std::string str = "Only a test, test, test, test, test, test, test, test!\n";
-	test3::OutputStream os;
-	cybozu::ZlibCompressorT<test3::OutputStream> comp(os, true);
-	comp.exec(&str[0], str.size());
+	std::stringstream ss;
+	cybozu::ZlibCompressorT<std::stringstream> comp(ss, true);
+	comp.write(&str[0], str.size());
 	comp.flush();
-	std::string enc = os.os_.str();
-//	std::ofstream ofs("c:/tmp/aaa.gz", std::ios::binary);
-//	ofs << enc;
+	std::string enc = ss.str();
 
 	{
-		InputStream is;
-		is.is_ << enc;
-		cybozu::ZlibDecompressorT<InputStream> dec(is, true);
+		cybozu::ZlibDecompressorT<std::stringstream> dec(ss, true);
 		char buf[4096];
 		size_t size = dec.read(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
@@ -173,10 +120,8 @@ CYBOZU_TEST_AUTO(output_gzip1)
 	}
 
 	{
-		const char s[] = "\x1F\x8B\x08\x00\x00\x00\x00\x00\x00\x0B\xF2\xCF\xCB\xA9\x54\x48\x54\x28\x49\x2D\x2E\xD1\x21\x9A\x54\xE4\x02\x00\x00\x00\xFF\xFF\x03\x00\x6A\xBD\xF4\xC9\x37\x00\x00";
-		InputStream is;
-		is.is_ << std::string(s, s + sizeof(s));
-		cybozu::ZlibDecompressorT<InputStream> dec(is, true);
+		cybozu::StringInputStream is(enc);
+		cybozu::ZlibDecompressorT<cybozu::StringInputStream> dec(is, true);
 		char buf[4096];
 		size_t size = dec.read(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
@@ -210,9 +155,9 @@ CYBOZU_TEST_AUTO(output_gzip2)
 	const std::string text(textBuf, textBuf + sizeof(textBufTbl));
 
 	{
-		InputStream is;
-		is.is_.write(encBuf, sizeof(encBufTbl));
-		cybozu::ZlibDecompressorT<InputStream> dec(is, true);
+		std::stringstream ss;
+		ss.write(encBuf, sizeof(encBufTbl));
+		cybozu::ZlibDecompressorT<std::stringstream> dec(ss, true);
 		char buf[4096];
 		size_t size = dec.read(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
