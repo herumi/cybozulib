@@ -111,42 +111,44 @@ public:
 		fromLtTblSize : 8
 		fromLtTbl
 	*/
-	void save(std::ostream& os) const
+	template<class OutputStream>
+	void save(OutputStream& os) const
 	{
-		sucvector_util::save(os, maxVal_, "maxVal");
-		sucvector_util::save(os, valBitLen_, "valBitLen");
-		sucvector_util::save(os, size_, "size");
+		cybozu::save(os, maxVal_);
+		cybozu::save(os, valBitLen_);
+		cybozu::save(os, size_);
 		assert(valBitLen_ == svv.size());
 		for (size_t i = 0; i < valBitLen_; i++) {
 			svv[i].save(os);
 		}
-		sucvector_util::saveVec(os, offTbl, "offTbl");
-		sucvector_util::saveVec(os, fromTbl, "fromTbl");
-		sucvector_util::saveVec(os, fromLtTbl, "fromLtTbl");
+		cybozu::savePodVec(os, offTbl);
+		cybozu::savePodVec(os, fromTbl);
+		cybozu::savePodVec(os, fromLtTbl);
 
 		if (withSelect) {
 			for (uint64_t v = 0; v < maxVal_; v++) {
-				sucvector_util::saveVec(os, selTbl_[v], "selTbl");
+				cybozu::savePodVec(os, selTbl_[v]);
 			}
 		}
 	}
-	void load(std::istream& is)
+	template<class InputStream>
+	void load(InputStream& is)
 	{
-		sucvector_util::load(maxVal_, is, "maxVal");
-		sucvector_util::load(valBitLen_, is, "valBitLen");
-		sucvector_util::load(size_, is, "size");
+		cybozu::load(maxVal_, is);
+		cybozu::load(valBitLen_, is);
+		cybozu::load(size_, is);
 		svv.resize(valBitLen_);
 		for (size_t i = 0; i < valBitLen_; i++) {
 			svv[i].load(is);
 		}
-		sucvector_util::loadVec(offTbl, is, "offTbl");
-		sucvector_util::loadVec(fromTbl, is, "fromTbl");
-		sucvector_util::loadVec(fromLtTbl, is, "fromLtTbl");
+		cybozu::loadPodVec(offTbl, is);
+		cybozu::loadPodVec(fromTbl, is);
+		cybozu::loadPodVec(fromLtTbl, is);
 
 		if (withSelect) {
 			selTbl_.resize(maxVal_);
 			for (uint64_t v = 0; v < maxVal_; v++) {
-				sucvector_util::loadVec(selTbl_[v], is, "selTbl");
+				cybozu::loadPodVec(selTbl_[v], is);
 			}
 		}
 	}
