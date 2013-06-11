@@ -2,10 +2,12 @@
 #include <cybozu/zlib.hpp>
 #include <cybozu/file.hpp>
 #include <cybozu/stream.hpp>
+#include <cybozu/serializer.hpp>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
 
 CYBOZU_TEST_AUTO(test1_deflate)
 {
@@ -162,5 +164,29 @@ CYBOZU_TEST_AUTO(output_gzip2)
 		size_t size = dec.read(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
 		CYBOZU_TEST_EQUAL(decStr, text);
+	}
+}
+
+CYBOZU_TEST_AUTO(serializer)
+{
+	typedef std::map<int, double> Map;
+	Map m, mm;
+	for (int i = 0; i < 100; i++) {
+		m[i * i] = (i + i * i) / 3.42;
+	}
+	std::stringstream ss;
+
+	{
+		cybozu::ZlibCompressorT<std::stringstream> enc(ss);
+		cybozu::save(ss, m);
+	}
+	{
+		cybozu::ZlibDecompressorT<std::stringstream> dec(ss);
+		cybozu::load(mm, ss);
+	}
+	CYBOZU_TEST_EQUAL(m.size(), mm.size());
+	for (Map::const_iterator i = m.begin(), ie = m.end(), j = mm.begin(); i != ie; ++i, ++j) {
+		CYBOZU_TEST_EQUAL(i->first, j->first);
+		CYBOZU_TEST_EQUAL(i->second, j->second);
 	}
 }
