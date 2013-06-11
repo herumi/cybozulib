@@ -178,11 +178,11 @@ CYBOZU_TEST_AUTO(serializer)
 
 	{
 		cybozu::ZlibCompressorT<std::stringstream> enc(ss);
-		cybozu::save(ss, m);
+		cybozu::save(enc, m);
 	}
 	{
 		cybozu::ZlibDecompressorT<std::stringstream> dec(ss);
-		cybozu::load(mm, ss);
+		cybozu::load(mm, dec);
 	}
 	CYBOZU_TEST_EQUAL(m.size(), mm.size());
 	for (Map::const_iterator i = m.begin(), ie = m.end(), j = mm.begin(); i != ie; ++i, ++j) {
