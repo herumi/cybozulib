@@ -69,7 +69,15 @@ public:
 	}
 	~ZlibCompressorT()
 	{
-		assert(isFlushCalled_);
+		if (!isFlushCalled_) {
+			try {
+				flush();
+			} catch (std::exception& e) {
+				fprintf(stderr, "ZlibCompressor:flush:exception:%s\n", e.what());
+			} catch (...) {
+				fprintf(stderr, "ZlibCompressor:flush:unknown exception\n");
+			}
+		}
 		deflateEnd(&z_);
 	}
 	/*
@@ -77,7 +85,7 @@ public:
 		@param buf [in] input data
 		@param size [in] input data size
 	*/
-	void write(const char *buf, size_t _size)
+	bool write(const char *buf, size_t _size)
 	{
 		assert(_size < (1U << 31));
 		uint32_t size = (uint32_t)_size;
@@ -98,6 +106,7 @@ public:
 			write_os(buf_, maxBufSize - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
 		}
+		return true;
 	}
 	void flush()
 	{
