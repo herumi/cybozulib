@@ -235,22 +235,23 @@ public:
 		}
 	}
 
-	void save(std::ostream& os) const
+	template<class OutputStream>
+	void save(OutputStream& os) const
 	{
-		sucvector_util::save(os, skip_, "skip");
-		sucvector_util::saveVec(os, cf, "cf");
+		cybozu::save(os, skip_);
+		cybozu::savePodVec(os, cf);
 		wm.save(os);
-		sucvector_util::saveVec(os, alignedSa, "alignedSa");
+		cybozu::savePodVec(os, alignedSa);
 		alignedPos.save(os);
 		if (!isRawData) freq.save(os);
 	}
-
-	void load(std::istream& is)
+	template<class InputStream>
+	void load(InputStream& is)
 	{
-		sucvector_util::load(skip_, is, "skip");
-		sucvector_util::loadVec(cf, is, "cf");
+		cybozu::load(skip_, is);
+		cybozu::loadPodVec(cf, is);
 		wm.load(is);
-		sucvector_util::loadVec(alignedSa, is, "alignedSa");
+		cybozu::loadPodVec(alignedSa, is);
 		alignedPos.load(is);
 		if (isRawData) {
 			charNum_ = size_t(1) << (sizeof(T) * 8);

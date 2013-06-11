@@ -60,11 +60,8 @@ Set searchPos2(const STRING& text, const STRING& key)
 }
 
 template<class FMINDEX, class STRING>
-void searchTest(const STRING& text, const STRING *keyTbl, size_t keySize)
+void compareText(const FMINDEX& f, const STRING& text, const STRING *keyTbl, size_t keySize)
 {
-	FMINDEX f;
-	f.init(text.begin(), text.end());
-
 	for (size_t i = 0; i < keySize; i++) {
 		const STRING& key = keyTbl[i];
 		Set a = searchPos1(f, key);
@@ -82,6 +79,21 @@ void searchTest(const STRING& text, const STRING *keyTbl, size_t keySize)
 	f.getPrevString(org, 0, f.wm.size() - 1);
 	CYBOZU_TEST_EQUAL(org.size(), text.size());
 	CYBOZU_TEST_ASSERT(org == text);
+}
+
+template<class FMINDEX, class STRING>
+void searchTest(const STRING& text, const STRING *keyTbl, size_t keySize)
+{
+	FMINDEX f;
+	f.init(text.begin(), text.end());
+	compareText(f, text, keyTbl, keySize);
+	std::stringstream ss;
+	f.save(ss);
+	{
+		FMINDEX ff;
+		ff.load(ss);
+		compareText(ff, text, keyTbl, keySize);
+	}
 }
 
 CYBOZU_TEST_AUTO(string)
