@@ -13,6 +13,7 @@
 #include <cybozu/exception.hpp>
 #include <cybozu/bit_operation.hpp>
 #include <cybozu/select8.hpp>
+#include <cybozu/serializer.hpp>
 #include <iosfwd>
 
 #ifdef _MSC_VER
@@ -64,51 +65,6 @@ inline uint32_t select64(uint64_t v, size_t r)
 	assert(r <= 8);
 	c = cybozu::select8_util::select8(uint8_t(v), r);
 	return pos + c;
-}
-
-template<class T>
-union ci {
-	T i;
-	char c[sizeof(T)];
-};
-
-template<class T>
-void load(T& val, std::istream& is, const char *msg)
-{
-	ci<T> ci;
-	if (!is.read(ci.c, sizeof(ci.c)) || is.gcount() != sizeof(ci.c)) {
-		throw cybozu::Exception("sucvector_util:load") << msg;
-	}
-	val = ci.i;
-}
-
-template<class T>
-void save(std::ostream& os, T val, const char *msg)
-{
-	ci<T> ci;
-	ci.i = val;
-	if (!os.write(ci.c, sizeof(ci.c))) {
-		throw cybozu::Exception("sucvector_util:save") << msg;
-	}
-}
-
-template<class V>
-void loadVec(V& v, std::istream& is, const char *msg)
-{
-	size_t size;
-	sucvector_util::load(size, is, msg);
-	v.resize(size);
-	if (is.read(cybozu::cast<char*>(&v[0]), size * sizeof(v[0]))) return;
-	throw cybozu::Exception("sucvector_util:loadVec") << msg;
-}
-
-template<class V>
-void saveVec(std::ostream& os, const V& v, const char *msg)
-{
-	save(os, v.size(), msg);
-	const size_t size = v.size() * sizeof(v[0]);
-	if (os.write(cybozu::cast<const char*>(&v[0]), size) && os.flush()) return;
-	throw cybozu::Exception("sucvector_util:saveVec") << msg;
 }
 
 } // cybozu::sucvector_util
@@ -234,20 +190,21 @@ public:
 		blkSize  : 8
 		blk data : blkSize * sizeof(Block)
 	*/
-	void save(std::ostream& os) const
+	template<class OutputStream>
+	void save(OutputStream& os) const
 	{
-		sucvector_util::save(os, bitSize_, "bitSize");
-		sucvector_util::save(os, numTbl_[0], "num0");
-		sucvector_util::save(os, numTbl_[1], "num1");
-		sucvector_util::saveVec(os, blk_, "blk");
+		cybozu::save(os, bitSize_);
+		cybozu::save(os, numTbl_[0]);
+		cybozu::save(os, numTbl_[1]);
+		cybozu::savePodVec(os, blk_);
 	}
-	void load(std::istream& is)
+	template<class InputStream>
+	void load(InputStream& is)
 	{
-		sucvector_util::load(bitSize_, is, "bitSize");
-		sucvector_util::load(numTbl_[0], is, "num0");
-		sucvector_util::load(numTbl_[1], is, "num1");
-		sucvector_util::loadVec(blk_, is, "blk");
-		initSelTbl();
+		cybozu::load(bitSize_, is);
+		cybozu::load(numTbl_[0], is);
+		cybozu::load(numTbl_[1], is);
+		cybozu::loadPodVec(blk_, is);
 	}
 	SucVectorT() : bitSize_(0), freezed_(false) { numTbl_[0] = numTbl_[1] = 0; }
 	SucVectorT(const uint64_t *buf, uint64_t bitSize)
