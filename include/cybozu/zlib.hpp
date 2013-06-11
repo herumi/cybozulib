@@ -8,6 +8,7 @@
 
 #include <cybozu/exception.hpp>
 #include <cybozu/endian.hpp>
+#include <cybozu/stream_fwd.hpp>
 #include <assert.h>
 #include <zlib.h>
 
@@ -59,7 +60,7 @@ public:
 				throw cybozu::Exception("zlib:ZlibCompressorT:deflateInit2") << std::string(z_.msg);
 			}
 			char header[] = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03"; /* OS_CODE = 0x03(Unix) */
-			write(header, 10);
+			write_os(header, 10);
 		} else {
 			if (deflateInit(&z_, compressionLevel) != Z_OK) {
 				throw cybozu::Exception("zlib:ZlibCompressorT:deflateInit") << std::string(z_.msg);
@@ -76,7 +77,7 @@ public:
 		@param buf [in] input data
 		@param size [in] input data size
 	*/
-	void exec(const char *buf, size_t _size)
+	void write(const char *buf, size_t _size)
 	{
 		assert(_size < (1U << 31));
 		uint32_t size = (uint32_t)_size;
@@ -94,7 +95,7 @@ public:
 			if (ret != Z_STREAM_END && ret != Z_OK) {
 				throw cybozu::Exception("zlib:exec:compress") << std::string(z_.msg);
 			}
-			write(buf_, maxBufSize - z_.avail_out);
+			write_os(buf_, maxBufSize - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
 		}
 	}
@@ -112,25 +113,20 @@ public:
 			if (ret != Z_STREAM_END && ret != Z_OK) {
 				throw cybozu::Exception("zlib:flush") << std::string(z_.msg);
 			}
-			write(buf_, sizeof(buf_) - z_.avail_out);
+			write_os(buf_, sizeof(buf_) - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
 		}
 		if (useGzip_) {
 			char tail[8];
 			cybozu::Set32bitAsLE(&tail[0], crc_);
 			cybozu::Set32bitAsLE(&tail[4], totalSize_);
-			write(tail, sizeof(tail));
+			write_os(tail, sizeof(tail));
 		}
 	}
 private:
-	void write(const char *buf, size_t _size)
+	void write_os(const char *buf, size_t size)
 	{
-		assert(_size < (1U << 31));
-		uint32_t size = (uint32_t)_size;
-		size_t writeSize = os_.write(buf, size);
-		if (writeSize != size) {
-			throw cybozu::Exception("zlib:write");
-		}
+		cybozu::OutputStreamTag<OutputStream>::write(os_, buf, size);
 	}
 };
 
@@ -150,7 +146,7 @@ class ZlibDecompressorT {
 	bool readGzipHeader_;
 	void readAll(char *buf, size_t size)
 	{
-		ssize_t readSize = is_.read(buf, size);
+		ssize_t readSize = cybozu::InputStreamTag<InputStream>::read(is_, buf, size);
 		if ((size_t)readSize != size) {
 			throw cybozu::Exception("zlib:ZlibDecompressorT:readAll") << readSize << size;
 		}
@@ -259,7 +255,7 @@ public:
 		z_.avail_out = size;
 		do {
 			if (z_.avail_in == 0) {
-				z_.avail_in = (uint32_t)is_.read(buf_, maxBufSize);
+				z_.avail_in = (uint32_t)cybozu::InputStreamTag<InputStream>::read(is_, buf_, maxBufSize);
 				if (ret_ == Z_STREAM_END && z_.avail_in == 0) return 0;
 				z_.next_in = (Bytef*)buf_;
 			}
