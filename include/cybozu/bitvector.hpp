@@ -7,6 +7,7 @@
 	http://opensource.org/licenses/BSD-3-Clause
 */
 #include <cybozu/exception.hpp>
+#include <algorithm>
 #include <vector>
 
 namespace cybozu {
@@ -15,16 +16,15 @@ class BitVector {
 	size_t bitSize_;
 	std::vector<uint64_t> v_;
 public:
-	BitVector()
-		: bitSize_(0)
+	BitVector() : bitSize_(0) {}
+	BitVector(const uint64_t *buf, size_t bitSize)
 	{
+		init(buf, bitSize);
 	}
-	void init(const uint64_t *block, size_t bitSize)
+	void init(const uint64_t *buf, size_t bitSize)
 	{
 		resize(bitSize);
-		for (size_t i = 0, n = v_.size(); i < n; i++) {
-			v_[i] = block[i];
-		}
+		std::copy(buf, buf + v_.size(), &v_[0]);
 	}
 	void resize(size_t bitSize)
 	{
