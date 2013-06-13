@@ -10,7 +10,11 @@
 #include <vector>
 #include <fstream>
 #include <stdio.h>
+#ifdef CYBOZU_FMINDEX_USE_CSUCVECTOR
+	#include <cybozu/csucvector.hpp>
+#endif
 #include <cybozu/wavelet_matrix.hpp>
+#include <cybozu/bitvector.hpp>
 #include <cybozu/frequency.hpp>
 
 #ifdef _MSC_VER
@@ -41,8 +45,12 @@ public:
 	static const size_t maxCharNum = size_t(1) << (sizeof(T) * 8);
 	typedef std::vector<uint32_t> Vec32;
 	typedef std::vector<T> Vec;
-	typedef cybozu::WaveletMatrixT<false> WaveletMatrix;
+#ifdef CYBOZU_FMINDEX_USE_CSUCVECTOR
+	typedef cybozu::CSucVector SucVector;
+#else
 	typedef cybozu::SucVectorT<uint32_t, false> SucVector;
+#endif
+	typedef cybozu::WaveletMatrixT<false, SucVector> WaveletMatrix;
 	Vec32 cf;
 	WaveletMatrix wm;
 	Vec32 alignedSa;
@@ -149,6 +157,17 @@ public:
 		initBwt(bwt, v, sa);
 		wm.init(bwt, getBitLen(charNum_));
 
+#if 1
+		cybozu::BitVector bv;
+		bv.resize(dataSize);
+		for (size_t i = 0; i < dataSize; i++) {
+			if ((sa[i] % skip) == 0) {
+				bv.set(i);
+				alignedSa.push_back(sa[i]);
+			}
+		}
+		alignedPos.init(bv.getBlock(), bv.size());
+#else
 		alignedPos.resize(dataSize);
 		for (size_t i = 0; i < dataSize; i++) {
 			if ((sa[i] % skip) == 0) {
@@ -157,6 +176,7 @@ public:
 			}
 		}
 		alignedPos.ready();
+#endif
 	}
 
 	/*
