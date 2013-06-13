@@ -13,68 +13,11 @@
 #include <iostream>
 #include <cybozu/exception.hpp>
 #include <cybozu/unordered_map.hpp>
+#include <cybozu/serializer.hpp>
 
 namespace cybozu {
 
 namespace freq_local {
-
-template<class T>
-union ci {
-	T i;
-	char c[sizeof(T)];
-};
-
-template<class T> void load(T& t, std::istream& is) { t.load(is); }
-template<class T> void save(std::ostream& os, const T& t) { t.save(os); }
-
-template<class T>
-void load(T *t, size_t n, std::istream& is, const char *msg)
-{
-	const std::streamsize size = sizeof(T) * n;
-	if (!is.read((char*)t, size) || is.gcount() != size) {
-		throw cybozu::Exception("Frequency:load") << msg;
-	}
-}
-template<class T>
-void save(std::ostream& os, const T *t, size_t n, const char *msg)
-{
-	if (!os.write((const char*)t, sizeof(T) * n)) {
-		throw cybozu::Exception("Frequency:save") << msg;
-	}
-}
-
-#define CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(type) \
-template<>void load(type& t, std::istream& is) { load(&t, 1, is, #type); } \
-template<>void save(std::ostream& os, const type& t) { save(os, &t, 1, #type); }
-
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(char)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned char)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(int)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned int)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(long)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(unsigned long)
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(wchar_t)
-#ifdef _MSC_VER
-CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE(size_t)
-#endif
-
-#undef CYBOZU_FREQUENCY_DEFINE_LOAD_SAVE
-
-template<>
-void load(std::string& t, std::istream& is)
-{
-	size_t size;
-	load(size, is);
-	t.resize(size);
-	load(&t[0], size, is, "string");
-}
-
-template<>
-void save(std::ostream& os, const std::string& t)
-{
-	save(os, t.size());
-	save(os, &t[0], t.size(), "string");
-}
 
 template<class Element, class Int = size_t>
 class FrequencyVec {
@@ -154,19 +97,20 @@ public:
 		return Element(idx2char_[idx]);
 	}
 	size_t size() const { return size_; }
-	void load(std::istream& is)
+	template<class InputStream>
+	void load(InputStream& is)
 	{
-		freq_local::load(&size_, 1u, is, "size");
-		freq_local::load(freqTbl_, N, is, "freqTbl");
-		freq_local::load(char2idx_, N, is, "char2idx");
-		freq_local::load(idx2char_, N, is, "idx2char");
+		cybozu::load(size_, is);
+		cybozu::loadRange(freqTbl_, N, is);
+		cybozu::loadRange(char2idx_, N, is);
+		cybozu::loadRange(idx2char_, N, is);
 	}
 	void save(std::ostream& os) const
 	{
-		freq_local::save(os, &size_, 1, "size");
-		freq_local::save(os, freqTbl_, N, "freqTbl");
-		freq_local::save(os, char2idx_, N, "char2idx");
-		freq_local::save(os, idx2char_, N, "idx2char");
+		cybozu::save(os, size_);
+		cybozu::saveRange(os, freqTbl_, N);
+		cybozu::saveRange(os, char2idx_, N);
+		cybozu::saveRange(os, idx2char_, N);
 	}
 	void put() const
 	{
@@ -189,15 +133,17 @@ class Frequency {
 	struct FreqIdx {
 		Int freq;
 		mutable Int idx;
-		void load(std::istream& is)
+		template<class InputStream>
+		void load(InputStream& is)
 		{
-			freq_local::load(freq, is);
-			freq_local::load(idx, is);
+			cybozu::load(freq, is);
+			cybozu::load(idx, is);
 		}
-		void save(std::ostream& os) const
+		template<class OutputStream>
+		void save(OutputStream& os) const
 		{
-			freq_local::save(os, freq);
-			freq_local::save(os, idx);
+			cybozu::save(os, freq);
+			cybozu::save(os, idx);
 		}
 	};
 	typedef CYBOZU_NAMESPACE_STD::unordered_map<Element, FreqIdx> Map;
@@ -282,26 +228,16 @@ public:
 		return idx2ref_[idx]->first;
 	}
 	size_t size() const { return idx2ref_.size(); }
-	void load(std::istream& is)
+	template<class InputStream>
+	void load(InputStream& is)
 	{
-		size_t size;
-		freq_local::load(size, is);
-		for (size_t i = 0; i < size; i++) {
-			typename Map::key_type k;
-			freq_local::load(k, is);
-			FreqIdx freqIdx;
-			freq_local::load(freqIdx, is);
-			m_.insert(typename Map::value_type(k, freqIdx));
-		}
+		cybozu::load(m_, is);
 		initIdx2Ref();
 	}
-	void save(std::ostream& os) const
+	template<class OutputStream>
+	void save(OutputStream& os) const
 	{
-		freq_local::save(os, m_.size());
-		for (typename Map::const_iterator i = m_.begin(), ie = m_.end(); i != ie; ++i) {
-			freq_local::save(os, i->first);
-			freq_local::save(os, i->second);
-		}
+		cybozu::save(os, m_);
 	}
 	void put() const
 	{
