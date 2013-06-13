@@ -291,7 +291,7 @@ public:
 	}
 	bool get(uint64_t pos) const
 	{
-		assert(pos < bitSize_);
+		if (pos >= bitSize_) throw cybozu::Exception("SucVector:get") << pos << bitSize_;
 		size_t q = size_t(pos / 256);
 		size_t r = size_t((pos / 64) & 3);
 		assert(q < blk_.size());
