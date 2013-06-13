@@ -13,6 +13,12 @@
 #pragma warning(disable:4127)
 #endif
 
+//#define CYBOZU_WAVELET_MATRIX_DIRECT_CONSTRUCT
+
+#ifndef CYBOZU_WAVELET_MATRIX_DIRECT_CONSTRUCT
+	#include <cybozu/bitvector.hpp>
+#endif
+
 namespace cybozu {
 /*
 	current version supports only max 32GiB
@@ -178,7 +184,11 @@ public:
 		Vec cur = vec, next;
 		next.resize(size_);
 		for (size_t i = 0; i < valBitLen; i++) {
+#ifdef CYBOZU_WAVELET_MATRIX_DIRECT_CONSTRUCT
 			SucVector& sv = svv[i];
+#else
+			cybozu::BitVector sv;
+#endif
 			sv.resize(size_);
 			size_t zeroPos = 0;
 			size_t onePos = offTbl[i];
@@ -194,7 +204,11 @@ public:
 					next[zeroPos++] = cur[j];
 				}
 			};
+#ifdef CYBOZU_WAVELET_MATRIX_DIRECT_CONSTRUCT
 			sv.ready();
+#else
+			svv[i].init(sv.getBlock(), sv.size());
+#endif
 			next.swap(cur);
 		}
 
