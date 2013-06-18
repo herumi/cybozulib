@@ -84,12 +84,13 @@ class MemoryOutputStream {
 	size_t size_;
 public:
 	MemoryOutputStream(char *p, size_t size) : p_(p), size_(size) {}
-	void write(const char *buf, size_t size)
+	bool write(const char *buf, size_t size)
 	{
-		if (size > size_) throw cybozu::Exception("MemoryOutputStream:write") << size << size_;
+		if (size > size_) return false;
 		memcpy(p_, buf, size);
 		p_ += size;
 		size_ -= size;
+		return true;
 	}
 };
 
@@ -116,9 +117,10 @@ class StringOutputStream {
 	void operator=(const StringOutputStream&);
 public:
 	explicit StringOutputStream(std::string& str) : str_(str) {}
-	void write(const char *buf, size_t size)
+	bool write(const char *buf, size_t size)
 	{
 		str_.append(buf, size);
+		return true;
 	}
 };
 
