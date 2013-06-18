@@ -43,6 +43,7 @@ template<class OutputStream, class InputStream>
 void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, int mode = base64::useCRLF)
 {
 	typedef typename cybozu::OutputStreamTag<OutputStream> Out;
+	typedef typename cybozu::InputStreamTag<InputStream> In;
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
 		throw cybozu::Exception("base64::EncodeToBase64:bad line size") << maxLineSize;
@@ -59,7 +60,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 	assert(sizeof(outBuf) > (sizeof(inBuf) * 4) / 3 +(sizeof(inBuf) * 2) /* max # of CRLF */ + 16 /* margin */);
 	size_t outBufSize = 0;
 	for (;;) {
-		ssize_t readSize = is.read(inBuf, sizeof(inBuf));
+		ssize_t readSize = In::read(is, inBuf, sizeof(inBuf));
 		if (readSize <= 0) break;
 		for (size_t i = 0; i < static_cast<size_t>(readSize); i++) {
 			unsigned int c = (unsigned char)inBuf[i];
