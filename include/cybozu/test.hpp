@@ -12,7 +12,11 @@
 #include <list>
 #include <iostream>
 #include <utility>
-#include <cybozu/exception.hpp>
+#if defined(_MSC_VER) && (MSC_VER <= 1500)
+	#include <cybozu/inttype.hpp>
+#else
+	#include <stdint.h>
+#endif
 
 namespace cybozu { namespace test {
 
@@ -66,22 +70,19 @@ public:
 				std::cout << "ctest:module=" << i->first << std::endl;
 				try {
 					(i->second)();
-				} catch (cybozu::Exception& e) {
-					exceptionCount_++;
-					std::cout << "ctest:  " << i->first << " is stopped by cybozu::Exception " << e.toString() << std::endl;
 				} catch (std::exception& e) {
 					exceptionCount_++;
-					std::cout << "ctest:  " << i->first << " is stopped by std::exception " << e.what() << std::endl;
+					std::cout << "ctest:  " << i->first << " is stopped by exception " << e.what() << std::endl;
 				} catch (...) {
 					exceptionCount_++;
-					std::cout << "ctest:  " << i->first << " is stopped by an exception" << std::endl;
+					std::cout << "ctest:  " << i->first << " is stopped by unknown exception" << std::endl;
 				}
 			}
 			if (term_) term_();
-		} catch (cybozu::Exception& e) {
-			msg = "ctest:err:" + e.toString();
+		} catch (std::exception& e) {
+			msg = std::string("ctest:err:") + e.what();
 		} catch (...) {
-			msg = "ctest:err: catch unexpected exception";
+			msg = "ctest:err: catch unknown exception";
 		}
 		fflush(stdout);
 		if (msg.empty()) {
