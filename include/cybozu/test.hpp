@@ -243,7 +243,6 @@ int main(int argc, char *argv[])
 		ret = 3; \
 	} \
 	if (ret) { \
-		cybozu::test::autoRun.set(false); \
 		cybozu::test::test(false, "CYBOZU_TEST_EXCEPTION_MESSAGE", #statement ", " #Exception ", " #msg, __FILE__, __LINE__); \
 		if (ret == 1) { \
 			std::cout << "ctest:  no exception" << std::endl; \
@@ -268,7 +267,6 @@ int main(int argc, char *argv[])
 		ret = 2; \
 	} \
 	if (ret) { \
-		cybozu::test::autoRun.set(false); \
 		cybozu::test::test(false, "CYBOZU_TEST_EXCEPTION", #statement ", " #Exception, __FILE__, __LINE__); \
 		if (ret == 1) { \
 			std::cout << "ctest:  no exception" << std::endl; \
