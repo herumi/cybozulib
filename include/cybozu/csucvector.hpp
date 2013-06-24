@@ -179,10 +179,9 @@ struct CSucVector {
 	};
 	LenRank biTbl_[256];
 	uint64_t bitSize_;
-	size_t inBitSize;
 	Vec64 vec;
 	BlockVec blkVec;
-	uint32_t bit1Num_;
+	uint32_t rank_;
 	std::vector<int> freqTbl;
 	csucvector_util::Bigram bi;
 	void initTable()
@@ -240,9 +239,8 @@ struct CSucVector {
 	{
 		freqTbl.clear();
 		bitSize_ = 0;
-		inBitSize = 0;
 		vec.clear();
-		bit1Num_ = 0;
+		rank_ = 0;
 	}
 	void init(const uint64_t *buf, uint64_t bitSize)
 	{
@@ -257,17 +255,17 @@ struct CSucVector {
 			is.consume(s);
 			if (is.empty()) break;
 		}
-		printf("bitSize=%d, inBitSize=%d\n", (int)bitSize, (int)inBitSize);
+		printf("bitSize=%u\n", (int)bitSize);
 
 		if (vsubPos) {
 			vec.push_back(vsub);
 			vsub = 0;
 			vsubPos = 0;
 		}
-		bit1Num_ = bit1Num;
-		initBlockVec2();
+		rank_ = bit1Num;
+		initBlockVec();
 	}
-	void initBlockVec2()
+	void initBlockVec()
 	{
 		blkVec.reserve(bitSize_ / skip + 1);
 		uint32_t orgPos = 0;
@@ -314,7 +312,6 @@ struct CSucVector {
 			if (found) {
 				bi.append(i);
 				freqTbl[i]++;
-				inBitSize += len;
 				bit1Num += tbl_[i].rk;
 				vsub |= uint64_t(i) << (csucvector_util::tblBitLen * vsubPos);
 				vsubPos++;
@@ -340,7 +337,7 @@ struct CSucVector {
 		const double cr = compSize * 100.0 / inSize;
 		const double ir = idxSize * 100.0 / inSize;
 		if (inSize == 0) return;
-		printf("in   Size= %10lld, rank=%d\n", (long long)inSize, bit1Num_);
+		printf("in   Size= %10lld, rank=%d\n", (long long)inSize, rank_);
 		printf("comp Size= %10lld(vec.size=%7lld)\n", (long long)compSize, (long long)vec.size());
 		printf("idx  Size= %10lld(blkVec.size=%7lld)\n", (long long)idxSize, (long long)blkVec.size());
 		printf("totalSize= %10lld\n", (long long)(compSize + idxSize));
@@ -399,7 +396,7 @@ clkGet.end();
 	}
 	size_t rank1(size_t pos) const
 	{
-		if (pos >= bitSize_) return bit1Num_;
+		if (pos >= bitSize_) return rank_;
 #ifdef USE_CLK
 clkRank.begin();
 #endif
@@ -456,19 +453,17 @@ clkRank.end();
 	void save(OutputStream& os) const
 	{
 		cybozu::save(os, bitSize_);
-		cybozu::save(os, inBitSize);
 		cybozu::savePodVec(os, vec);
 		cybozu::savePodVec(os, blkVec);
-		cybozu::save(os, bit1Num_);
+		cybozu::save(os, rank_);
 	}
 	template<class InputStream>
 	void load(InputStream& is)
 	{
 		cybozu::load(bitSize_, is);
-		cybozu::load(inBitSize, is);
 		cybozu::loadPodVec(vec, is);
 		cybozu::loadPodVec(blkVec, is);
-		cybozu::load(bit1Num_, is);
+		cybozu::load(rank_, is);
 		initTable();
 	}
 };
