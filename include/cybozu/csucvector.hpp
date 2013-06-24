@@ -164,21 +164,14 @@ struct CSucVector {
 #endif
 
 	struct Block {
-		uint32_t pos;
-		uint32_t rk;
-		Block(uint32_t pos = 0, uint32_t rk = 0) : pos(pos), rk(rk) {}
-	};
-	struct Block2 {
 		uint32_t orgPos;
 		uint32_t vecPos;
 		uint32_t rk;
-		Block2(uint32_t orgPos = 0, uint32_t vecPos = 0, uint32_t rk = 0) : orgPos(orgPos), vecPos(vecPos), rk(rk) {}
+		Block(uint32_t orgPos = 0, uint32_t vecPos = 0, uint32_t rk = 0) : orgPos(orgPos), vecPos(vecPos), rk(rk) {}
 	};
-	static const size_t skip = 4;
-	static const size_t skip2 = 1024;
+	static const size_t skip = 1024;
 	typedef std::vector<uint64_t> Vec64;
 	typedef std::vector<Block> BlockVec;
-	typedef std::vector<Block2> BlockVec2;
 	std::vector<csucvector_util::Encoding> tbl_;
 	struct LenRank {
 		uint32_t len;
@@ -188,7 +181,7 @@ struct CSucVector {
 	uint64_t bitSize_;
 	size_t inBitSize;
 	Vec64 vec;
-	BlockVec2 blkVec2;
+	BlockVec blkVec;
 	uint32_t bit1Num_;
 	std::vector<int> freqTbl;
 	csucvector_util::Bigram bi;
@@ -276,7 +269,7 @@ struct CSucVector {
 	}
 	void initBlockVec2()
 	{
-		blkVec2.reserve(bitSize_ / skip2 + 1);
+		blkVec.reserve(bitSize_ / skip + 1);
 		uint32_t orgPos = 0;
 		uint32_t rk = 0;
 		uint32_t samplingPos = 0;
@@ -286,13 +279,13 @@ struct CSucVector {
 			uint32_t next = orgPos + (uint32_t)tbl_[v & 15].len + (uint32_t)tbl_[v >> 4].len;
 
 			while (samplingPos < next) {
-				blkVec2.push_back(Block2(orgPos, vecPos, rk));
-				samplingPos += skip2;
+				blkVec.push_back(Block(orgPos, vecPos, rk));
+				samplingPos += skip;
 			}
 			orgPos = next;
 			rk += tbl_[v & 15].rk + tbl_[v >> 4].rk;
 		}
-		printf("blkVec2.size=%d, assume=%d\n", (int)blkVec2.size(), (int)(bitSize_ / skip2 + 1));
+		printf("blkVec.size=%d, assume=%d\n", (int)blkVec.size(), (int)(bitSize_ / skip + 1));
 		printf("Vec2: orgPos=%u, rk=%u\n", orgPos, rk);
 	}
 
@@ -326,11 +319,6 @@ struct CSucVector {
 				vsub |= uint64_t(i) << (csucvector_util::tblBitLen * vsubPos);
 				vsubPos++;
 				if (vsubPos == 16) {
-					if ((vec.size() % skip) == skip - 1) {
-						Block blk;
-						blk.pos = (uint32_t)inBitSize;
-						blk.rk = (uint32_t)bit1Num;
-					}
 					vec.push_back(vsub);
 					vsub = 0;
 					vsubPos = 0;
@@ -348,13 +336,13 @@ struct CSucVector {
 	{
 		const size_t inSize = bitSize_ / 8;
 		const size_t compSize = vec.size() * sizeof(vec[0]);
-		const size_t idxSize = blkVec2.size() * sizeof(blkVec2[0]);
+		const size_t idxSize = blkVec.size() * sizeof(blkVec[0]);
 		const double cr = compSize * 100.0 / inSize;
 		const double ir = idxSize * 100.0 / inSize;
 		if (inSize == 0) return;
 		printf("in   Size= %10lld, rank=%d\n", (long long)inSize, bit1Num_);
 		printf("comp Size= %10lld(vec.size=%7lld)\n", (long long)compSize, (long long)vec.size());
-		printf("idx  Size= %10lld(blkVec2.size=%7lld)\n", (long long)idxSize, (long long)blkVec2.size());
+		printf("idx  Size= %10lld(blkVec.size=%7lld)\n", (long long)idxSize, (long long)blkVec.size());
 		printf("totalSize= %10lld\n", (long long)(compSize + idxSize));
 		printf("rate=%5.2f%%(%5.2f%% + %5.2f%%)\n", cr + ir, cr, ir);
 	}
@@ -379,10 +367,8 @@ struct CSucVector {
 #ifdef USE_CLK
 clkGet.begin();
 #endif
-		size_t cur2 = blkVec2[pos / skip2].orgPos;
-		size_t vecPos2 = blkVec2[pos / skip2].vecPos;
-		size_t cur = cur2;
-		size_t vecPos = vecPos2;
+		size_t cur = blkVec[pos / skip].orgPos;
+		size_t vecPos = blkVec[pos / skip].vecPos;
 		const uint8_t *p = (const uint8_t*)(&vec[0]) + vecPos;
 		pos -= cur;
 		for (;;) {
@@ -417,11 +403,9 @@ clkGet.end();
 #ifdef USE_CLK
 clkRank.begin();
 #endif
-		size_t cur2 = blkVec2[pos / skip2].orgPos;
-		size_t vecPos2 = blkVec2[pos / skip2].vecPos;
-		size_t rk = blkVec2[pos / skip2].rk;
-		size_t cur = cur2;
-		size_t vecPos = vecPos2;
+		size_t cur = blkVec[pos / skip].orgPos;
+		size_t vecPos = blkVec[pos / skip].vecPos;
+		size_t rk = blkVec[pos / skip].rk;
 		const uint8_t *p = (const uint8_t*)(&vec[0]) + vecPos;
 		pos -= cur;
 		for (;;) {
@@ -474,7 +458,7 @@ clkRank.end();
 		cybozu::save(os, bitSize_);
 		cybozu::save(os, inBitSize);
 		cybozu::savePodVec(os, vec);
-		cybozu::savePodVec(os, blkVec2);
+		cybozu::savePodVec(os, blkVec);
 		cybozu::save(os, bit1Num_);
 	}
 	template<class InputStream>
@@ -483,7 +467,7 @@ clkRank.end();
 		cybozu::load(bitSize_, is);
 		cybozu::load(inBitSize, is);
 		cybozu::loadPodVec(vec, is);
-		cybozu::loadPodVec(blkVec2, is);
+		cybozu::loadPodVec(blkVec, is);
 		cybozu::load(bit1Num_, is);
 		initTable();
 	}
