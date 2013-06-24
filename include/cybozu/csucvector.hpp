@@ -211,7 +211,7 @@ struct CSucVector {
 				if (is.empty()) break;
 			}
 			printf("bitSize=%u\n",bitSize);
-	
+
 			if (vsubPos) {
 				vec.push_back(vsub);
 				vsub = 0;
