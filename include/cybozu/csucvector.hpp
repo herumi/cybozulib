@@ -26,11 +26,27 @@
 #include <xbyak/xbyak_util.h>
 #endif
 
+#define USE_ENC8
+#ifdef USE_ENC8
+	#undef USE_BITBL
+#endif
+
 namespace cybozu {
 
 namespace csucvector_util {
 
+#ifdef USE_ENC8
+static const size_t tblBitLen = 8;
+#else
 static const size_t tblBitLen = 4;
+#endif
+
+inline uint64_t getMask(size_t pos)
+{
+	assert(pos <= 64);
+	if (pos == 64) return uint64_t(-1);
+	return (uint64_t(1) << pos) - 1;
+}
 
 struct Encoding {
 	uint64_t v;
@@ -119,15 +135,29 @@ struct Bigram {
 			}
 		}
 	}
+	bool isAll1(uint64_t x, size_t len) const
+	{
+		const uint64_t all_f = uint64_t(-1);
+		if (len >= 64) {
+			return x == all_f;
+		}
+		const uint64_t mask = csucvector_util::getMask(len);
+		return (x & mask) == (all_f & mask);
+	}
 	bool concatPair(uint64_t& v, uint32_t& len, const Pair& pair) const
 	{
-		uint64_t L = encTbl_[pair.prev].v;
-		uint32_t Ln = encTbl_[pair.prev].len;
-		uint64_t H = encTbl_[pair.cur].v;
-		uint32_t Hn = encTbl_[pair.cur].len;
-		if ((L == 0 && H == 0) || (L == uint64_t(-1) && H == uint64_t(-1))) {
-			v = L;
+		const uint64_t L = encTbl_[pair.prev].v;
+		const uint32_t Ln = encTbl_[pair.prev].len;
+		const uint64_t H = encTbl_[pair.cur].v;
+		const uint32_t Hn = encTbl_[pair.cur].len;
+		if (L == 0 && H == 0) {
+			v = 0;
 			len = Ln + Hn;
+			return true;
+		}
+		if (isAll1(L, Ln) && isAll1(H, Hn)) {
+			len = Ln + Hn;
+			v = len >= 64 ? uint64_t(-1) : csucvector_util::getMask(len);
 			return true;
 		}
 		if (Ln + Hn <= 64) {
@@ -208,7 +238,9 @@ struct CSucVector {
 		uint32_t rk;
 	};
 	EncodingTbl encTbl;
+#ifdef USE_BITBL
 	LenRank biTbl[256];
+#endif
 	uint32_t bitSize_;
 	Vec8 vec;
 	BlockVec blkVec;
@@ -283,6 +315,9 @@ struct CSucVector {
 					bi.append(i);
 					freqTbl[i]++;
 					rk += encTbl[i].rk;
+#ifdef USE_ENC8
+					vec.push_back(uint8_t(i));
+#else
 					vsub |= uint64_t(i) << (csucvector_util::tblBitLen * vsubPos);
 					vsubPos++;
 					if (vsubPos == 2) {
@@ -290,6 +325,7 @@ struct CSucVector {
 						vsub = 0;
 						vsubPos = 0;
 					}
+#endif
 					return len;
 				}
 			}
@@ -306,6 +342,146 @@ struct CSucVector {
 			uint64_t v;
 			uint32_t len;
 		} tbl[] = {
+#ifdef USE_ENC8
+#if 1
+{ 0x0, 16384 },
+{ 0xffffffffffffffff, 8192 },
+{ 0x0, 8192 },
+{ 0xffffffffffffffff, 4096 },
+{ 0x0, 4096 },
+{ 0xffffffffffffffff, 2048 },
+{ 0x0, 2048 },
+{ 0xffffffffffffffff, 1024 },
+{ 0x0, 1024 },
+{ 0xffffffffffffffff, 512 },
+{ 0x0, 512 },
+{ 0x0, 384 },
+{ 0xffffffffffffffff, 256 },
+{ 0x0, 256 },
+{ 0x0, 224 },
+{ 0xffffffffffffffff, 192 },
+{ 0xffffffffffffffff, 128 },
+{ 0x0, 128 },
+{ 0x0, 96 },
+{ 0x0, 85 },
+{ 0xffffffffffffffff, 64 },
+{ 0x0, 64 },
+{ 0x1fffffffffffff, 53 },
+{ 0x0, 53 },
+{ 0x3fffffffffff, 46 },
+{ 0x0, 46 },
+{ 0x7fffffffff, 39 },
+{ 0x4000000, 35 },
+{ 0x2000000, 35 },
+{ 0x1000000, 35 },
+{ 0x800000, 35 },
+{ 0x400000, 35 },
+{ 0x200000, 35 },
+{ 0xffffffff, 32 },
+{ 0x0, 32 },
+{ 0xfffffff, 28 },
+{ 0x8000000, 28 },
+{ 0x7ffffff, 28 },
+{ 0x4000000, 28 },
+{ 0x0, 28 },
+{ 0x1fffff, 21 },
+{ 0x1fff7f, 21 },
+{ 0x1dffff, 21 },
+{ 0x1bffff, 21 },
+{ 0x180000, 21 },
+{ 0x17ffff, 21 },
+{ 0x100000, 21 },
+{ 0xfffff, 21 },
+{ 0x80000, 21 },
+{ 0x40000, 21 },
+{ 0x20000, 21 },
+{ 0x10000, 21 },
+{ 0x8000, 21 },
+{ 0x4000, 21 },
+{ 0x81, 21 },
+{ 0x0, 21 },
+{ 0x3fff, 14 },
+{ 0x3ffe, 14 },
+{ 0x3f7f, 14 },
+{ 0x3eff, 14 },
+{ 0x3dff, 14 },
+{ 0x3c00, 14 },
+{ 0x3bff, 14 },
+{ 0x3800, 14 },
+{ 0x37ff, 14 },
+{ 0x3000, 14 },
+{ 0x2fff, 14 },
+{ 0x2800, 14 },
+{ 0x2400, 14 },
+{ 0x2200, 14 },
+{ 0x2100, 14 },
+{ 0x2080, 14 },
+{ 0x2040, 14 },
+{ 0x2020, 14 },
+{ 0x2010, 14 },
+{ 0x2008, 14 },
+{ 0x2004, 14 },
+{ 0x2002, 14 },
+{ 0x2001, 14 },
+{ 0x2000, 14 },
+{ 0x1fff, 14 },
+{ 0x1800, 14 },
+{ 0x1400, 14 },
+{ 0x1200, 14 },
+{ 0x1100, 14 },
+{ 0x1080, 14 },
+{ 0x1020, 14 },
+{ 0x1010, 14 },
+{ 0x1008, 14 },
+{ 0x1004, 14 },
+{ 0x1002, 14 },
+{ 0x1001, 14 },
+{ 0x1000, 14 },
+{ 0xfff, 14 },
+{ 0xc00, 14 },
+{ 0xa00, 14 },
+{ 0x900, 14 },
+{ 0x880, 14 },
+{ 0x808, 14 },
+{ 0x804, 14 },
+{ 0x802, 14 },
+{ 0x801, 14 },
+{ 0x800, 14 },
+{ 0x7ff, 14 },
+{ 0x600, 14 },
+{ 0x500, 14 },
+{ 0x480, 14 },
+{ 0x401, 14 },
+{ 0x400, 14 },
+{ 0x300, 14 },
+{ 0x280, 14 },
+{ 0x208, 14 },
+{ 0x202, 14 },
+{ 0x201, 14 },
+{ 0x200, 14 },
+{ 0x180, 14 },
+{ 0x102, 14 },
+{ 0x101, 14 },
+{ 0x100, 14 },
+{ 0x80, 14 },
+{ 0x40, 14 },
+{ 0x20, 14 },
+{ 0x10, 14 },
+{ 0x8, 14 },
+{ 0x4, 14 },
+{ 0x2, 14 },
+{ 0x1, 14 },
+{ 0x0, 14 },
+#else
+			{ 0, 64 * 32 },
+			{ uint64_t(-1), 64 * 16 },
+			{ uint64_t(-1), 256 },
+			{ 0, 256 },
+			{ 0, 32 },
+			{ 0xffffffff, 32 },
+#endif
+
+#else
 			{ 0, 64 * 8 },
 			{ uint64_t(-1), 64 * 4 },
 #if 1
@@ -324,11 +500,17 @@ struct CSucVector {
 			{ 5, 3 },
 			{ 6, 3 },
 			{ 7, 3 },
+#endif
 		};
 		encTbl.clear();
 		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 			encTbl.push_back(csucvector_util::Encoding(tbl[i].v, tbl[i].len));
 		}
+#ifdef USE_ENC8
+		for (int i = 0; i < 128; i++) {
+			encTbl.push_back(csucvector_util::Encoding(i, 7));
+		}
+#endif
 		std::sort(encTbl.begin(), encTbl.end());
 	}
 
@@ -357,7 +539,8 @@ struct CSucVector {
 		initTable();
 		for (;;) {
 			OutputStream os(freqTbl, vec, rk_, buf, bitSize_, encTbl);
-			if (encTbl.size() == 16) break;
+	os.bi.put();
+			if (encTbl.size() == (1u << csucvector_util::tblBitLen)) break;
 			uint64_t v;
 			uint32_t len;
 			if (!os.bi.getTopEncoding(v, len)) {
@@ -366,15 +549,17 @@ struct CSucVector {
 				putEncTbl();
 				exit(1);
 			}
-			printf("append v=%llx, len=%u\n", (long long)v, len);
+			printf("append v=%llx, len=%u tblSize=%u\n", (long long)v, len, (uint32_t)encTbl.size());
 			encTbl.push_back(csucvector_util::Encoding(v, len));
 			std::sort(encTbl.begin(), encTbl.end());
 		}
+		putEncTbl();
 		initBiTbl();
 		initBlockVec();
 	}
 	void initBiTbl()
 	{
+#ifdef USE_BITBL
 		for (uint32_t i = 0; i < 16; i++) {
 			for (uint32_t j = 0; j < 16; j++) {
 				uint32_t v = j * 16 + i;
@@ -382,6 +567,7 @@ struct CSucVector {
 				biTbl[v].rk = encTbl[i].rk + encTbl[j].rk;
 			}
 		}
+#endif
 	}
 	void initBlockVec()
 	{
@@ -391,20 +577,28 @@ struct CSucVector {
 		uint32_t samplingPos = 0;
 		for (size_t vecPos = 0, n = vec.size(); vecPos < n; vecPos++) {
 			uint8_t v = vec[vecPos];
+#ifdef USE_ENC8
+			uint32_t next = orgPos + encTbl[v].len;
+#else
 			uint32_t next = orgPos + encTbl[v & 15].len + encTbl[v >> 4].len;
+#endif
 
 			while (samplingPos < next) {
 				blkVec.push_back(Block(orgPos, (uint32_t)vecPos, rk));
 				samplingPos += skip;
 			}
 			orgPos = next;
+#ifdef USE_ENC8
+			rk += encTbl[v].rk;
+#else
 			rk += encTbl[v & 15].rk + encTbl[v >> 4].rk;
+#endif
 		}
 	}
 	void putEncTbl() const
 	{
 		for (size_t i = 0; i < encTbl.size(); i++) {
-			printf("%2d : { v=%llx, len=%u }\n", (int)i, (long long)encTbl[i].v, encTbl[i].len);
+			printf("%2d : { 0x%llx, %u },\n", (int)i, (long long)encTbl[i].v, encTbl[i].len);
 		}
 	}
 	void putSub() const
@@ -426,15 +620,14 @@ struct CSucVector {
 		putSub();
 		if (freqTbl.empty()) return;
 		const uint32_t compSize = (uint32_t)vec.size();
+#ifdef USE_ENC8
+		const double rate = 1.0;
+#else
+		const double rate = 0.5;
+#endif
 		for (size_t i = 0; i < freqTbl.size(); i++) {
-			printf("freqTbl[%2d] = %8d(%5.2f%%, %5.2f%%)\n", (int)i, freqTbl[i], freqTbl[i] * 0.5 * 100.0 / compSize, freqTbl[i] * encTbl[i].len * 100.0 / bitSize_);
+			printf("freqTbl[%2d] = %8d(%5.2f%%, %5.2f%%)\n", (int)i, freqTbl[i], freqTbl[i] * rate * 100.0 / compSize, freqTbl[i] * encTbl[i].len * 100.0 / bitSize_);
 		}
-	}
-	uint64_t getMask(size_t pos) const
-	{
-		assert(pos <= 64);
-		if (pos == 64) return uint64_t(-1);
-		return (uint64_t(1) << pos) - 1;
 	}
 	bool get(size_t pos) const
 	{
@@ -454,11 +647,22 @@ clkGet.begin();
 				continue;
 			}
 #endif
+#ifdef USE_ENC8
+			size_t len = encTbl[v].len;
+			if (len > pos) {
+				const bool b = (pos >= 64) ? encTbl[v].v != 0 :(encTbl[v].v & (size_t(1) << pos)) != 0;
+#ifdef USE_CLK
+clkGet.end();
+#endif
+				return b;
+			}
+			pos -= len;
+#else
 			for (size_t j = 0; j < 2; j++) {
 				int v4 = int(v & 15);
 				size_t len = encTbl[v4].len;
 				if (len > pos) {
-					const bool b = (pos >= 64) ? encTbl[v4].v != 0 :(encTbl[v4].v & (size_t(1) << pos)) != 0 ;
+					const bool b = (pos >= 64) ? encTbl[v4].v != 0 :(encTbl[v4].v & (size_t(1) << pos)) != 0;
 #ifdef USE_CLK
 clkGet.end();
 #endif
@@ -467,6 +671,7 @@ clkGet.end();
 				pos -= len;
 				v >>= 4;
 			}
+#endif
 		}
 	}
 	size_t rank1(size_t pos) const
@@ -489,6 +694,25 @@ clkRank.begin();
 				continue;
 			}
 #endif
+#ifdef USE_ENC8
+			size_t len = encTbl[v].len;
+			if (len > pos) {
+				uint64_t adj = 0;
+				if (pos >= 64) {
+					if (encTbl[v].v != 0) adj = pos;
+				} else {
+					uint64_t x = encTbl[v].v & ((uint64_t(1) << pos) - 1);
+					adj = cybozu::popcnt<uint64_t>(x);
+				}
+				rk += adj;
+#ifdef USE_CLK
+clkRank.end();
+#endif
+				return rk;
+			}
+			pos -= len;
+			rk += encTbl[v].rk;
+#else
 			for (size_t j = 0; j < 2; j++) {
 				int v4 = int(v & 15);
 				size_t len = encTbl[v4].len;
@@ -510,6 +734,7 @@ clkRank.end();
 				rk += encTbl[v4].rk;
 				v >>= 4;
 			}
+#endif
 		}
 	}
 	size_t rank0(size_t pos) const
