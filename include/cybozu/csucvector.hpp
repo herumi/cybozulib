@@ -40,6 +40,12 @@ struct Encoding {
 		: v(v)
 		, len(len)
 		, rk(len <= 64 ? cybozu::popcnt<uint64_t>(v) : v == 0 ? 0 : len) { }
+	bool operator<(const Encoding& rhs) const
+	{
+		if (len > rhs.len) return true;
+		if (len < rhs.len) return false;
+		return v > rhs.v;
+	}
 };
 
 struct InputStream {
@@ -78,6 +84,7 @@ struct Bigram {
 		uint32_t cur;
 		Pair(uint32_t prev = 0, uint32_t cur = 0) : prev(prev), cur(cur) {}
 	};
+	typedef std::multimap<uint32_t, Pair, std::greater<uint32_t> > PairMap;
 	const std::vector<Encoding>& encTbl_;
 	uint32_t tblNum;
 	std::vector<std::vector<uint32_t> > tbl;
@@ -104,29 +111,52 @@ struct Bigram {
 		tbl[prev][v]++;
 		prev = v;
 	}
-	bool put(Pair *ppair = 0)
+	void getPairMap(PairMap& m) const
 	{
-		typedef std::multimap<uint32_t, Pair, std::greater<uint32_t> > Map;
-		Map m;
 		for (uint32_t i = 0; i < tblNum; i++) {
 			for (uint32_t j = 0; j < tblNum; j++) {
-				m.insert(Map::value_type(tbl[i][j], Pair(i, j)));
+				m.insert(PairMap::value_type(tbl[i][j], Pair(i, j)));
 			}
 		}
+	}
+	bool concatPair(uint64_t& v, uint32_t& len, const Pair& pair) const
+	{
+		uint64_t L = encTbl_[pair.prev].v;
+		uint32_t Ln = encTbl_[pair.prev].len;
+		uint64_t H = encTbl_[pair.cur].v;
+		uint32_t Hn = encTbl_[pair.cur].len;
+		if ((L == 0 && H == 0) || (L == uint64_t(-1) && H == uint64_t(-1))) {
+			v = L;
+			len = Ln + Hn;
+			return true;
+		}
+		if (Ln + Hn <= 64) {
+			v = (H << Ln) | L;
+			len = Ln + Hn;
+			return true;
+		}
+		return false;
+	}
+	bool getTopEncoding(uint64_t& v, uint32_t& len) const
+	{
+		PairMap m;
+		getPairMap(m);
+		return concatPair(v, len, m.begin()->second);
+	}
+	bool put(Pair *ppair = 0) const
+	{
+		PairMap m;
+		getPairMap(m);
 		int n = 0;
-		for (Map::const_iterator i = m.begin(), ie = m.end(); i != ie; ++i) {
+		for (PairMap::const_iterator i = m.begin(), ie = m.end(); i != ie; ++i) {
 			if (i->first > 0) {
 				printf("%u (%u, %u) ", i->first, i->second.prev, i->second.cur);
-				{
-					uint64_t L = encTbl_[i->second.prev].v;
-					uint32_t Ln = encTbl_[i->second.prev].len;
-					uint64_t H = encTbl_[i->second.cur].v;
-					uint32_t Hn = encTbl_[i->second.cur].len;
-					if (Ln + Hn <= 64) {
-						printf(" { 0x%llx, %u }\n", (long long)((H << Ln) | L), Ln + Hn);
-					} else {
-						printf("over Ln=%u, Hn=%u\n", Ln, Hn);
-					}
+				uint64_t v;
+				uint32_t len;
+				if (concatPair(v, len, i->second)) {
+					printf(" { 0x%llx, %u }\n", (long long)v, len);
+				} else {
+					printf("over prev=%u cur=%u\n", i->second.prev, i->second.cur);
 				}
 				n++;
 				if (n == 10) break;
@@ -187,15 +217,15 @@ struct CSucVector {
 	struct OutputStream {
 		Vec32& freqTbl; // output
 		Vec64& vec; // output
-		uint32_t rk_; // output
+		uint32_t& rk; // output
 		csucvector_util::Bigram bi; // output
 		uint64_t vsub; // tmp
 		size_t vsubPos; // tmp
 		const EncodingTbl& encTbl; // in
-		OutputStream(Vec32& freqTbl, Vec64& vec, const uint64_t *buf, uint32_t bitSize, const EncodingTbl& encTbl)
+		OutputStream(Vec32& freqTbl, Vec64& vec, uint32_t& rk, const uint64_t *buf, uint32_t bitSize, const EncodingTbl& encTbl)
 			: freqTbl(freqTbl)
 			, vec(vec)
-			, rk_(0)
+			, rk(rk)
 			, bi(encTbl)
 			, vsub(0)
 			, vsubPos(0)
@@ -205,6 +235,7 @@ struct CSucVector {
 			freqTbl.clear();
 			freqTbl.resize(encTbl.size());
 			vec.clear();
+			rk = 0;
 			for (;;) {
 				uint32_t s = append(is);
 				is.consume(s);
@@ -225,14 +256,21 @@ struct CSucVector {
 				const uint32_t len = encTbl[i].len;
 				bool found = false;
 				if (len >= 64) {
-					const size_t n = len / 64;
+					const size_t q = len / 64;
+					const size_t r = len % 64;
 					const uint64_t target = encTbl[i].v;
 					if (v == target) {
 						found = true;
-						for (size_t j = 1; j < n; j++) {
+						for (size_t j = 1; j < q; j++) {
 							if (is.peek(j * 64) != target) {
 								found = false;
 								break;
+							}
+						}
+						if (found && r > 0) {
+							const uint64_t mask = (uint64_t(1) << r) - 1;
+							if ((is.peek(q * 64) & mask) != (target & mask)) {
+								found = false;
 							}
 						}
 					}
@@ -243,7 +281,7 @@ struct CSucVector {
 				if (found) {
 					bi.append(i);
 					freqTbl[i]++;
-					rk_ += encTbl[i].rk;
+					rk += encTbl[i].rk;
 					vsub |= uint64_t(i) << (csucvector_util::tblBitLen * vsubPos);
 					vsubPos++;
 					if (vsubPos == 16) {
@@ -269,12 +307,14 @@ struct CSucVector {
 		} tbl[] = {
 			{ 0, 64 * 8 },
 			{ uint64_t(-1), 64 * 4 },
+#if 1
 			{ 0, 24 },
 			{ 0, 12 },
 			{ 0xfff, 12 },
 			{ 0, 9 },
 			{ 0x20, 6 },
 			{ 0x3f, 6 },
+#endif
 			{ 0, 3 },
 			{ 1, 3 },
 			{ 2, 3 },
@@ -288,13 +328,7 @@ struct CSucVector {
 		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 			encTbl.push_back(csucvector_util::Encoding(tbl[i].v, tbl[i].len));
 		}
-		for (uint32_t i = 0; i < 16; i++) {
-			for (uint32_t j = 0; j < 16; j++) {
-				uint32_t v = j * 16 + i;
-				biTbl[v].len = encTbl[i].len + encTbl[j].len;
-				biTbl[v].rk = encTbl[i].rk + encTbl[j].rk;
-			}
-		}
+		std::sort(encTbl.begin(), encTbl.end());
 	}
 
 	CSucVector() { clear(); }
@@ -320,9 +354,37 @@ struct CSucVector {
 		if (bitSize >= (uint64_t(1) << 32)) throw cybozu::Exception("CSucVector:init:big bitSize") << bitSize;
 		bitSize_ = (uint32_t)bitSize;
 		initTable();
-		OutputStream os(freqTbl, vec, buf, bitSize_, encTbl);
-		rk_ = os.rk_;
+		for (;;) {
+			OutputStream os(freqTbl, vec, rk_, buf, bitSize_, encTbl);
+			if (encTbl.size() == 16) break;
+//			puts("---");
+//			printf("encTbl.size=%d\n", (int)encTbl.size());
+//			os.bi.put();
+			uint64_t v;
+			uint32_t len;
+			if (!os.bi.getTopEncoding(v, len)) {
+				printf("ERR getTopEncoding\n");
+				os.bi.put();
+				putEncTbl();
+				exit(1);
+			}
+			printf("append v=%llx, len=%u\n", (long long)v, len);
+			encTbl.push_back(csucvector_util::Encoding(v, len));
+			std::sort(encTbl.begin(), encTbl.end());
+//			putEncTbl();
+		}
+		initBiTbl();
 		initBlockVec();
+	}
+	void initBiTbl()
+	{
+		for (uint32_t i = 0; i < 16; i++) {
+			for (uint32_t j = 0; j < 16; j++) {
+				uint32_t v = j * 16 + i;
+				biTbl[v].len = encTbl[i].len + encTbl[j].len;
+				biTbl[v].rk = encTbl[i].rk + encTbl[j].rk;
+			}
+		}
 	}
 	void initBlockVec()
 	{
@@ -342,8 +404,12 @@ struct CSucVector {
 			orgPos = next;
 			rk += encTbl[v & 15].rk + encTbl[v >> 4].rk;
 		}
-		printf("blkVec.size=%u, assume=%u\n", (int)blkVec.size(), bitSize_ / skip + 16);
-		printf("Vec2: orgPos=%u, rk=%u\n", orgPos, rk);
+	}
+	void putEncTbl() const
+	{
+		for (size_t i = 0; i < encTbl.size(); i++) {
+			printf("%2d : { v=%llx, len=%u }\n", (int)i, (long long)encTbl[i].v, encTbl[i].len);
+		}
 	}
 	void putSub() const
 	{
@@ -472,6 +538,7 @@ clkRank.end();
 		cybozu::savePodVec(os, vec);
 		cybozu::savePodVec(os, blkVec);
 		cybozu::save(os, rk_);
+		cybozu::savePodVec(os, encTbl);
 	}
 	template<class InputStream>
 	void load(InputStream& is)
@@ -480,7 +547,8 @@ clkRank.end();
 		cybozu::loadPodVec(vec, is);
 		cybozu::loadPodVec(blkVec, is);
 		cybozu::load(rk_, is);
-		initTable();
+		cybozu::loadPodVec(encTbl, is);
+		initBiTbl();
 	}
 };
 
