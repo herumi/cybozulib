@@ -21,7 +21,7 @@
 
 //#define USE_CLK
 #ifdef USE_CLK
-#include <xbyak/xbyak_util.h>
+#include <cybozu/benchmark.hpp>
 #endif
 
 namespace cybozu {
@@ -30,11 +30,11 @@ namespace csucvector_util {
 
 static const size_t tblBitLen = 8;
 static const size_t maxTblSize = size_t(1) << tblBitLen;
+static const uint64_t all1 = uint64_t(-1);
 
 inline uint64_t getMask(size_t pos)
 {
-	assert(pos <= 64);
-	if (pos == 64) return uint64_t(-1);
+	assert(pos < 64);
 	return (uint64_t(1) << pos) - 1;
 }
 
@@ -127,12 +127,11 @@ struct Bigram {
 	}
 	bool isAll1(uint64_t x, size_t len) const
 	{
-		const uint64_t all_f = uint64_t(-1);
 		if (len >= 64) {
-			return x == all_f;
+			return x == all1;
 		}
-		const uint64_t mask = csucvector_util::getMask(len);
-		return (x & mask) == (all_f & mask);
+		const uint64_t mask = getMask(len);
+		return (x & mask) == (all1 & mask);
 	}
 	bool concatPair(uint64_t& v, uint32_t& len, const Pair& pair) const
 	{
@@ -147,7 +146,7 @@ struct Bigram {
 		}
 		if (isAll1(L, Ln) && isAll1(H, Hn)) {
 			len = Ln + Hn;
-			v = len >= 64 ? uint64_t(-1) : csucvector_util::getMask(len);
+			v = len >= 64 ? all1 : getMask(len);
 			return true;
 		}
 		if (Ln + Hn <= 64) {
@@ -163,7 +162,7 @@ struct Bigram {
 		getPairMap(m);
 		return concatPair(v, len, m.begin()->second);
 	}
-	bool put(Pair *ppair = 0) const
+	void put() const
 	{
 		PairMap m;
 		getPairMap(m);
@@ -182,10 +181,6 @@ struct Bigram {
 				if (n == 10) break;
 			}
 		}
-		if (!m.empty() && ppair) {
-			*ppair = m.begin()->second;
-		}
-		return !m.empty();
 	}
 private:
 	Bigram(const Bigram&);
@@ -196,9 +191,9 @@ private:
 
 struct CSucVector {
 #ifdef USE_CLK
-	mutable Xbyak::util::Clock clkGet;
-	mutable Xbyak::util::Clock clkRank;
-	void putClkSub(const char *msg, const Xbyak::util::Clock& clk) const
+	mutable cybozu::CpuClock clkGet;
+	mutable cybozu::CpuClock clkRank;
+	void putClkSub(const char *msg, const cybozu::CpuClock& clk) const
 	{
 		if (clk.getCount() == 0) return;
 		printf("%s:%6.2f %d\n", msg, clk.getClock() / double(clk.getCount()), clk.getCount());
@@ -218,15 +213,10 @@ struct CSucVector {
 		Block(uint32_t orgPos = 0, uint32_t vecPos = 0, uint32_t rk = 0) : orgPos(orgPos), vecPos(vecPos), rk(rk) {}
 	};
 	static const uint32_t skip = 1024;
-	typedef std::vector<uint64_t> Vec64;
 	typedef std::vector<Block> BlockVec;
 	typedef std::vector<csucvector_util::Encoding> EncodingTbl;
 	typedef std::vector<uint32_t> Vec32;
 	typedef std::vector<uint8_t> Vec8;
-	struct LenRank {
-		uint32_t len;
-		uint32_t rk;
-	};
 	EncodingTbl encTbl;
 	uint32_t bitSize_;
 	Vec8 vec;
@@ -288,14 +278,14 @@ struct CSucVector {
 							}
 						}
 						if (found && r > 0) {
-							const uint64_t mask = (uint64_t(1) << r) - 1;
+							const uint64_t mask = csucvector_util::getMask(r);
 							if ((is.peek(q * 64) & mask) != (target & mask)) {
 								found = false;
 							}
 						}
 					}
 				} else {
-					const uint64_t mask = (uint64_t(1) << len) - 1;
+					const uint64_t mask = csucvector_util::getMask(len);
 					found = (v & mask) == encTbl[i].v;
 				}
 				if (found) {
@@ -495,8 +485,8 @@ struct CSucVector {
 		initTable();
 		for (;;) {
 			OutputStream os(freqTbl, vec, rk_, buf, bitSize_, encTbl);
-	os.bi.put();
-			if (encTbl.size() == (1u << csucvector_util::tblBitLen)) break;
+//	os.bi.put();
+			if (encTbl.size() == csucvector_util::maxTblSize) break;
 			uint64_t v;
 			uint32_t len;
 			if (!os.bi.getTopEncoding(v, len)) {
@@ -509,7 +499,7 @@ struct CSucVector {
 			encTbl.push_back(csucvector_util::Encoding(v, len));
 			std::sort(encTbl.begin(), encTbl.end());
 		}
-		putEncTbl();
+//		putEncTbl();
 		initBlockVec();
 	}
 	void initBlockVec()
@@ -565,21 +555,21 @@ struct CSucVector {
 #ifdef USE_CLK
 clkGet.begin();
 #endif
-		uint32_t cur = blkVec[pos / skip].orgPos;
+		const uint32_t cur = blkVec[pos / skip].orgPos;
 		uint32_t vecPos = blkVec[pos / skip].vecPos;
 		pos -= cur;
+		uint8_t v;
 		for (;;) {
-			uint8_t v = vec[vecPos++];
-			size_t len = encTbl[v].len;
-			if (len > pos) {
-				const bool b = (pos >= 64) ? encTbl[v].v != 0 :(encTbl[v].v & (size_t(1) << pos)) != 0;
+			v = vec[vecPos++];
+			uint32_t len = encTbl[v].len;
+			if (len > pos) break;
+			pos -= len;
+		}
+		const bool b = (pos >= 64) ? encTbl[v].v != 0 : (encTbl[v].v & (size_t(1) << pos)) != 0;
 #ifdef USE_CLK
 clkGet.end();
 #endif
-				return b;
-			}
-			pos -= len;
-		}
+		return b;
 	}
 	size_t rank1(size_t pos) const
 	{
@@ -587,30 +577,30 @@ clkGet.end();
 #ifdef USE_CLK
 clkRank.begin();
 #endif
-		uint32_t cur = blkVec[pos / skip].orgPos;
+		const uint32_t cur = blkVec[pos / skip].orgPos;
 		uint32_t vecPos = blkVec[pos / skip].vecPos;
 		uint32_t rk = blkVec[pos / skip].rk;
 		pos -= cur;
+		uint8_t v;
 		for (;;) {
-			uint8_t v = vec[vecPos++];
+			v = vec[vecPos++];
 			size_t len = encTbl[v].len;
-			if (len > pos) {
-				uint64_t adj = 0;
-				if (pos >= 64) {
-					if (encTbl[v].v != 0) adj = pos;
-				} else {
-					uint64_t x = encTbl[v].v & ((uint64_t(1) << pos) - 1);
-					adj = cybozu::popcnt<uint64_t>(x);
-				}
-				rk += adj;
-#ifdef USE_CLK
-clkRank.end();
-#endif
-				return rk;
-			}
+			if (len > pos) break;
 			pos -= len;
 			rk += encTbl[v].rk;
 		}
+		uint64_t adj = 0;
+		if (pos >= 64) {
+			if (encTbl[v].v != 0) adj = pos;
+		} else {
+			uint64_t x = encTbl[v].v & csucvector_util::getMask(pos);
+			adj = cybozu::popcnt<uint64_t>(x);
+		}
+		rk += adj;
+#ifdef USE_CLK
+clkRank.end();
+#endif
+		return rk;
 	}
 	size_t rank0(size_t pos) const
 	{
