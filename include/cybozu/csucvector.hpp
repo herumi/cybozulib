@@ -254,7 +254,7 @@ struct CSucVector {
 			printf("bitSize=%u\n",bitSize);
 
 			if (vsubPos) {
-				vec.push_back(vsub);
+				vec.push_back((uint8_t)vsub);
 				vsub = 0;
 				vsubPos = 0;
 			}
@@ -289,7 +289,7 @@ struct CSucVector {
 					found = (v & mask) == encTbl[i].v;
 				}
 				if (found) {
-					bi.append(i);
+					bi.append((uint8_t)i);
 					freqTbl[i]++;
 					rk += encTbl[i].rk;
 					vec.push_back(uint8_t(i));
@@ -579,7 +579,7 @@ clkRank.begin();
 #endif
 		const uint32_t cur = blkVec[pos / skip].orgPos;
 		uint32_t vecPos = blkVec[pos / skip].vecPos;
-		uint32_t rk = blkVec[pos / skip].rk;
+		size_t rk = blkVec[pos / skip].rk;
 		pos -= cur;
 		uint8_t v;
 		for (;;) {
@@ -589,7 +589,7 @@ clkRank.begin();
 			pos -= len;
 			rk += encTbl[v].rk;
 		}
-		uint64_t adj = 0;
+		size_t adj = 0;
 		if (pos >= 64) {
 			if (encTbl[v].v != 0) adj = pos;
 		} else {
