@@ -202,6 +202,7 @@ struct CSucVector {
 	typedef std::vector<Block> BlockVec;
 	typedef std::vector<csucvector_util::Encoding> EncodingTbl;
 	typedef std::vector<uint32_t> Vec32;
+	typedef std::vector<uint8_t> Vec8;
 	struct LenRank {
 		uint32_t len;
 		uint32_t rk;
@@ -209,20 +210,20 @@ struct CSucVector {
 	EncodingTbl encTbl;
 	LenRank biTbl[256];
 	uint32_t bitSize_;
-	Vec64 vec;
+	Vec8 vec;
 	BlockVec blkVec;
 	uint32_t rk_;
 	Vec32 freqTbl;
 
 	struct OutputStream {
 		Vec32& freqTbl; // output
-		Vec64& vec; // output
+		Vec8& vec; // output
 		uint32_t& rk; // output
 		csucvector_util::Bigram bi; // output
 		uint64_t vsub; // tmp
 		size_t vsubPos; // tmp
 		const EncodingTbl& encTbl; // in
-		OutputStream(Vec32& freqTbl, Vec64& vec, uint32_t& rk, const uint64_t *buf, uint32_t bitSize, const EncodingTbl& encTbl)
+		OutputStream(Vec32& freqTbl, Vec8& vec, uint32_t& rk, const uint64_t *buf, uint32_t bitSize, const EncodingTbl& encTbl)
 			: freqTbl(freqTbl)
 			, vec(vec)
 			, rk(rk)
@@ -284,7 +285,7 @@ struct CSucVector {
 					rk += encTbl[i].rk;
 					vsub |= uint64_t(i) << (csucvector_util::tblBitLen * vsubPos);
 					vsubPos++;
-					if (vsubPos == 16) {
+					if (vsubPos == 2) {
 						vec.push_back(vsub);
 						vsub = 0;
 						vsubPos = 0;
@@ -334,7 +335,7 @@ struct CSucVector {
 	CSucVector() { clear(); }
 	~CSucVector()
 	{
-		put();
+//		put();
 #ifdef USE_CLK
 		putClk();
 #endif
@@ -357,9 +358,6 @@ struct CSucVector {
 		for (;;) {
 			OutputStream os(freqTbl, vec, rk_, buf, bitSize_, encTbl);
 			if (encTbl.size() == 16) break;
-//			puts("---");
-//			printf("encTbl.size=%d\n", (int)encTbl.size());
-//			os.bi.put();
 			uint64_t v;
 			uint32_t len;
 			if (!os.bi.getTopEncoding(v, len)) {
@@ -371,7 +369,6 @@ struct CSucVector {
 			printf("append v=%llx, len=%u\n", (long long)v, len);
 			encTbl.push_back(csucvector_util::Encoding(v, len));
 			std::sort(encTbl.begin(), encTbl.end());
-//			putEncTbl();
 		}
 		initBiTbl();
 		initBlockVec();
@@ -392,13 +389,12 @@ struct CSucVector {
 		uint32_t orgPos = 0;
 		uint32_t rk = 0;
 		uint32_t samplingPos = 0;
-		const uint8_t *const pv = (const uint8_t*)&vec[0];
-		for (uint32_t vecPos = 0, n = (uint32_t)vec.size() * 8; vecPos < n; vecPos++) {
-			uint8_t v = pv[vecPos];
-			uint32_t next = orgPos + (uint32_t)encTbl[v & 15].len + (uint32_t)encTbl[v >> 4].len;
+		for (size_t vecPos = 0, n = vec.size(); vecPos < n; vecPos++) {
+			uint8_t v = vec[vecPos];
+			uint32_t next = orgPos + encTbl[v & 15].len + encTbl[v >> 4].len;
 
 			while (samplingPos < next) {
-				blkVec.push_back(Block(orgPos, vecPos, rk));
+				blkVec.push_back(Block(orgPos, (uint32_t)vecPos, rk));
 				samplingPos += skip;
 			}
 			orgPos = next;
@@ -414,22 +410,22 @@ struct CSucVector {
 	void putSub() const
 	{
 		const uint32_t inSize = bitSize_ / 8;
-		const size_t compSize = vec.size() * sizeof(vec[0]);
-		const size_t idxSize = blkVec.size() * sizeof(blkVec[0]);
+		const uint32_t compSize = (uint32_t)vec.size();
+		const uint32_t idxSize = (uint32_t)(blkVec.size() * sizeof(blkVec[0]));
 		const double cr = compSize * 100.0 / inSize;
 		const double ir = idxSize * 100.0 / inSize;
 		if (inSize == 0) return;
-		printf("in   Size= %10lld, rank=%u\n", (long long)inSize, rk_);
-		printf("comp Size= %10lld(vec.size=%7lld)\n", (long long)compSize, (long long)vec.size());
-		printf("idx  Size= %10lld(blkVec.size=%7lld)\n", (long long)idxSize, (long long)blkVec.size());
-		printf("totalSize= %10lld\n", (long long)(compSize + idxSize));
+		printf("in   Size= %9d, rank=%u\n", inSize, rk_);
+		printf("comp Size= %9u\n", compSize);
+		printf("idx  Size= %9u(blkVec.size=%7u)\n", idxSize, (uint32_t)blkVec.size());
+		printf("totalSize= %9u\n", compSize + idxSize);
 		printf("rate=%5.2f%%(%5.2f%% + %5.2f%%)\n", cr + ir, cr, ir);
 	}
 	void put() const
 	{
 		putSub();
 		if (freqTbl.empty()) return;
-		const size_t compSize = vec.size() * sizeof(vec[0]);
+		const uint32_t compSize = (uint32_t)vec.size();
 		for (size_t i = 0; i < freqTbl.size(); i++) {
 			printf("freqTbl[%2d] = %8d(%5.2f%%, %5.2f%%)\n", (int)i, freqTbl[i], freqTbl[i] * 0.5 * 100.0 / compSize, freqTbl[i] * encTbl[i].len * 100.0 / bitSize_);
 		}
@@ -446,17 +442,15 @@ struct CSucVector {
 #ifdef USE_CLK
 clkGet.begin();
 #endif
-		size_t cur = blkVec[pos / skip].orgPos;
-		size_t vecPos = blkVec[pos / skip].vecPos;
-		const uint8_t *p = (const uint8_t*)(&vec[0]) + vecPos;
+		uint32_t cur = blkVec[pos / skip].orgPos;
+		uint32_t vecPos = blkVec[pos / skip].vecPos;
 		pos -= cur;
 		for (;;) {
-			uint8_t v = *p;
+			uint8_t v = vec[vecPos++];
 #ifdef USE_BITBL
 			uint32_t len = biTbl[v].len;
 			if (len <= pos) {
 				pos -= len;
-				p++;
 				continue;
 			}
 #endif
@@ -473,7 +467,6 @@ clkGet.end();
 				pos -= len;
 				v >>= 4;
 			}
-			p++;
 		}
 	}
 	size_t rank1(size_t pos) const
@@ -482,19 +475,17 @@ clkGet.end();
 #ifdef USE_CLK
 clkRank.begin();
 #endif
-		size_t cur = blkVec[pos / skip].orgPos;
-		size_t vecPos = blkVec[pos / skip].vecPos;
-		size_t rk = blkVec[pos / skip].rk;
-		const uint8_t *p = (const uint8_t*)(&vec[0]) + vecPos;
+		uint32_t cur = blkVec[pos / skip].orgPos;
+		uint32_t vecPos = blkVec[pos / skip].vecPos;
+		uint32_t rk = blkVec[pos / skip].rk;
 		pos -= cur;
 		for (;;) {
-			uint8_t v = *p;
+			uint8_t v = vec[vecPos++];
 #ifdef USE_BITBL
 			uint32_t len = biTbl[v].len;
 			if (len <= pos) {
 				pos -= len;
 				rk += biTbl[v].rk;
-				p++;
 				continue;
 			}
 #endif
@@ -519,7 +510,6 @@ clkRank.end();
 				rk += encTbl[v4].rk;
 				v >>= 4;
 			}
-			p++;
 		}
 	}
 	size_t rank0(size_t pos) const
