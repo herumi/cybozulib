@@ -71,11 +71,7 @@ struct InputStream {
 		if (r == 0) return block_[q];
 		uint64_t L = block_[q];
 		uint64_t H = q < blockSize_ - 1 ? block_[q + 1] : 0;
-		return ((L >> r) & mask(64 - r)) | (H << (64 - r));
-	}
-	uint64_t mask(size_t r) const
-	{
-		return (uint64_t(1) << r) - 1;
+		return ((L >> r) & getMask(64 - r)) | (H << (64 - r));
 	}
 	void consume(size_t size)
 	{
@@ -106,7 +102,7 @@ struct Bigram {
 			tbl[i].resize(tblNum);
 		}
 	}
-	~Bigram(){ put(); }
+//	~Bigram(){ put(); }
 	void append(uint32_t v)
 	{
 		if (v >= tblNum) throw cybozu::Exception("CSucVector:Bigram:bad v") << v;
@@ -229,16 +225,12 @@ struct CSucVector {
 		Vec8& vec; // output
 		uint32_t& rk; // output
 		csucvector_util::Bigram bi; // output
-		uint64_t vsub; // tmp
-		size_t vsubPos; // tmp
 		const EncodingTbl& encTbl; // in
 		OutputStream(Vec32& freqTbl, Vec8& vec, uint32_t& rk, const uint64_t *buf, uint32_t bitSize, const EncodingTbl& encTbl)
 			: freqTbl(freqTbl)
 			, vec(vec)
 			, rk(rk)
 			, bi(encTbl)
-			, vsub(0)
-			, vsubPos(0)
 			, encTbl(encTbl)
 		{
 			csucvector_util::InputStream is(buf, bitSize);
@@ -252,12 +244,6 @@ struct CSucVector {
 				if (is.empty()) break;
 			}
 			printf("bitSize=%u\n",bitSize);
-
-			if (vsubPos) {
-				vec.push_back((uint8_t)vsub);
-				vsub = 0;
-				vsubPos = 0;
-			}
 		}
 		uint32_t append(const csucvector_util::InputStream& is)
 		{
