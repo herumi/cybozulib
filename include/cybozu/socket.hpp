@@ -28,6 +28,7 @@
 #endif
 
 #include <cybozu/inttype.hpp>
+#include <cybozu/exception.hpp>
 #include <string>
 
 namespace cybozu {
@@ -114,72 +115,61 @@ struct DummyCall {
 } // cybozu::socket_local
 
 class SocketAddr {
-	struct sockaddr_in addr_;
+	struct sockaddr_storage addr_;
+	socklen_t addrlen_;
+	int family_;
 public:
 	SocketAddr()
 	{
 	}
-	SocketAddr(const std::string& address, unsigned short port)
+	SocketAddr(const std::string& address, uint16_t port)
 	{
 		set(address, port);
 	}
-	bool setName(const std::string& address)
+	bool set(const std::string& address, uint16_t port)
 	{
+		char portStr[32];
+		CYBOZU_SNPRINTF(portStr, sizeof(portStr), "%d", port);
 		memset(&addr_, 0, sizeof(addr_));
-		addr_.sin_family = AF_INET;
+		addrlen_ = 0;
+		family_ = 0;
 
-#ifdef _WIN32
-		struct hostent *host = gethostbyname(address.c_str()); /* return value is thread local */
-		if (!host) {
-			return false;
-		}
-		memcpy(&addr_.sin_addr, host->h_addr_list[0], host->h_length);
-#else
-#if 1
-		{
-			struct addrinfo hints;
-			memset(&hints, 0, sizeof(struct addrinfo));
-			hints.ai_family = AF_INET; // AF_UNSPEC;
-			hints.ai_socktype = SOCK_STREAM;
-			hints.ai_flags = 0; // AI_PASSIVE;
-			struct addrinfo *result;
-			int s = getaddrinfo(address.c_str(), NULL, &hints, &result);
+		struct addrinfo *result = 0;
+		struct addrinfo hints;
+		memset(&hints, 0, sizeof(struct addrinfo));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+		hints.ai_flags = 0; // AI_PASSIVE;
+		int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
+		// s == EAI_AGAIN
+		if (s) {
+			hints.ai_family = AF_INET6;
+			hints.ai_flags |= AI_V4MAPPED;
+			int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
 			if (s) {
-#ifndef NDEBUG
-				fprintf(stderr, "setName %s\n",gai_strerror(s));
-#endif
 				return false;
 			}
-			memcpy(&addr_, result->ai_addr, result->ai_addrlen);
-
-			freeaddrinfo(result);
 		}
-#else
-		{
-			int err;
-			char buf[128];
-			struct hostent host, *p;
-			if (gethostbyname_r(address.c_str(), &host, buf, sizeof(buf), &p, &err)) {
-				return false;
+		bool found = false;
+		for (const struct addrinfo *p = result; p; p = p->ai_next) {
+			const int family = p->ai_family;
+			if (family == AF_INET || family == AF_INET6) {
+				if (p->ai_addrlen > sizeof(addr_)) {
+					throw cybozu::Exception("SocketAddr:setName") << address << p->ai_addrlen;
+				}
+				memcpy(&addr_, p->ai_addr, p->ai_addrlen);
+				addrlen_ = (socklen_t)p->ai_addrlen;
+				family_ = family;
+				found = true;
+				break;
 			}
-			memcpy(&addr_.sin_addr, host.h_addr_list[0], host.h_length);
 		}
-#endif
-#endif
-		return true;
+		freeaddrinfo(result);
+		return found;
 	}
-	void setPort(unsigned short port)
-	{
-		addr_.sin_port = htons(port);
-	}
-	bool set(const std::string& address, unsigned short port)
-	{
-		if (!setName(address)) {
-			return false;
-		}
-		setPort(port);
-		return true;
-	}
+	socklen_t getSize() const { return addrlen_; }
+	int getFamily() const { return family_; }
 	const struct sockaddr *get() const { return (const struct sockaddr*)&addr_; }
 };
 /*
@@ -351,13 +341,12 @@ public:
 		@param address [in] address
 		@param port [in] port
 	*/
-	bool connect(const std::string& address, unsigned short port)
+	bool connect(const std::string& address, uint16_t port)
 	{
 		SocketAddr addr;
-		if (!addr.setName(address)) {
+		if (!addr.set(address, port)) {
 			return false;
 		}
-		addr.setPort(port);
 		return connect(addr);
 	}
 	/**
@@ -365,40 +354,51 @@ public:
 	*/
 	bool connect(const cybozu::SocketAddr& addr)
 	{
-		sd_ = socket(AF_INET, SOCK_STREAM, 0);
+		sd_ = socket(addr.getFamily(), SOCK_STREAM, 0);
 		if (!isValid()) {
 			return false;
 		}
-
-		if (::connect(sd_, addr.get(), sizeof(addr)) == 0) {
-			return true;
+		if (::connect(sd_, addr.get(), addr.getSize())) {
+			int keep = errno;
+			close();
+			errno = keep;
+			return false;
 		}
-		int keep = errno;
-		close();
-		errno = keep;
-		return false;
+		return true;
 	}
 
 	/**
 		init for server
 		@param port [in] port number
 	*/
-	bool bind(unsigned short port)
+	bool bind(uint16_t port, bool onlyIpv4 = false)
 	{
-		sd_ = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		const int family = onlyIpv4 ? AF_INET : AF_INET6;
+		sd_ = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			return false;
 		}
 		if (!setSocketOption(SO_REUSEADDR, 1)) {
 			return false;
 		}
-		struct sockaddr_in addr;
-		memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(port);
-		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-		if (::bind(sd_, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+		struct sockaddr_in6 addr6;
+		struct sockaddr_in addr4;
+		struct sockaddr *addr;
+		socklen_t addrLen;
+		if (onlyIpv4) {
+			memset(&addr4, 0, sizeof(addr4));
+			addr4.sin_family = AF_INET;
+			addr4.sin_port = htons(port);
+			addr = (struct sockaddr*)&addr4;
+			addrLen = sizeof(addr4);
+		} else {
+			memset(&addr6, 0, sizeof(addr6));
+			addr6.sin6_family = AF_INET6;
+			addr6.sin6_port = htons(port);
+			addr = (struct sockaddr*)&addr6;
+			addrLen = sizeof(addr6);
+		}
+		if (::bind(sd_, addr, addrLen) == 0) {
 			if (::listen(sd_, SOMAXCONN) == 0) {
 				return true;
 			}
@@ -433,16 +433,13 @@ public:
 	/**
 		accept for server
 	*/
-	bool accept(Socket& client, struct in_addr *ip = 0) const
+	bool accept(Socket& client, struct sockaddr_storage *paddr = 0) const
 	{
-		struct sockaddr_in addr;
+		struct sockaddr_storage addr;
 		socklen_t len = sizeof(addr);
-		client.sd_ = ::accept(sd_, (struct sockaddr *)&addr, &len);
-		if (client.isValid()) {
-			if (ip) *ip = addr.sin_addr;
-			return true;
-		}
-		return false;
+		if (paddr == 0) paddr = &addr;
+		client.sd_ = ::accept(sd_, (struct sockaddr *)paddr, &len);
+		return client.isValid();
 	}
 
 	/**
@@ -482,7 +479,7 @@ public:
 	/**
 		setup linger
 	*/
-	bool setLinger(unsigned short l_onoff, unsigned short l_linger)
+	bool setLinger(uint16_t l_onoff, uint16_t l_linger)
 	{
 		struct linger linger;
 		linger.l_onoff = l_onoff;
