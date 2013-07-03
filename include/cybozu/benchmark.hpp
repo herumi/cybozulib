@@ -4,7 +4,11 @@
 	@brief measure exec time of function
 	@author MITSUNARI Shigeo
 */
-#include <cybozu/inttype.hpp>
+#if defined(_MSC_VER) && (MSC_VER <= 1500)
+	#include <cybozu/inttype.hpp>
+#else
+	#include <stdint.h>
+#endif
 #include <stdio.h>
 
 #if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
