@@ -3,6 +3,133 @@
 #include <cybozu/atoi.hpp>
 #include <cybozu/test.hpp>
 
+CYBOZU_TEST_AUTO(test_int8_t)
+{
+    const struct {
+        const char *str;
+        int8_t x;
+    } okTbl[] = {
+        { "0", 0 },
+        { "1", 1 },
+        { "12", 12 },
+        { "123", 123 },
+        { "126", 126 },
+        { "127", 127 },
+        { "-1", -1 },
+        { "-12", -12 },
+        { "-123", -123 },
+        { "-126", -126 },
+        { "-127", -127 },
+        { "-128", -128 },
+        { "00000", 0 },
+        { "-0", 0 },
+        { "00000", 0 },
+        { "001", 1 },
+        { "0012", 12 },
+        { "00000123", 123 },
+        { "-00000", 0 },
+        { "-001", -1 },
+        { "-0012", -12 },
+        { "-00000123", -123 },
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
+        int8_t x = 0;
+        CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
+        CYBOZU_TEST_EQUAL(x, okTbl[i].x);
+    }
+    {
+        const int8_t numTbl[] = { 1, 12, 123 };
+        const char str[] = "123";
+        for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(numTbl); i++) {
+            int8_t x = 0;
+            CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(str, i + 1));
+            CYBOZU_TEST_EQUAL(x, numTbl[i]);
+        }
+        const char str2[] = "12abc";
+        int8_t x = 0;
+        CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(str2, 2));
+        CYBOZU_TEST_EQUAL(x, 12);
+    }
+    const char ngTbl[][40] = {
+        "", "a", "000-", "-", "00s",
+        "128", "129", "-129", "-130",
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int8_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+    }
+    const struct {
+        const char *str;
+        size_t len;
+    } ng2Tbl[] = {
+        { "", 0 },
+        { "", 1 },
+        { "1a", 2 },
+        { "1a", 3 },
+        { "234b", 4 },
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int8_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+    }
+}
+
+CYBOZU_TEST_AUTO(test_uint8_t)
+{
+    const struct {
+        const char *str;
+        uint8_t x;
+    } okTbl[] = {
+        { "0", 0 },
+        { "1", 1 },
+        { "12", 12 },
+        { "123", 123 },
+        { "254", 254 },
+        { "255", 255 },
+        { "00000", 0 },
+        { "001", 1 },
+        { "0012", 12 },
+        { "00000123", 123 },
+        { "000255", 255 },
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(okTbl); i++) {
+        uint8_t x = 0;
+        CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(okTbl[i].str));
+        CYBOZU_TEST_EQUAL(x, okTbl[i].x);
+    }
+    {
+        const uint8_t numTbl[] = { 1, 12, 123 };
+        const char str[] = "123";
+        for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(numTbl); i++) {
+            uint8_t x = 0;
+            CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(str, i + 1));
+            CYBOZU_TEST_EQUAL(x, numTbl[i]);
+        }
+        const char str2[] = "12abc";
+        uint8_t x = 0;
+        CYBOZU_TEST_NO_EXCEPTION(x = cybozu::atoi(str2, 2));
+        CYBOZU_TEST_EQUAL(x, 12U);
+    }
+    const char ngTbl[][40] = {
+        "", "a", "000-", "-", "00s",
+        "-2", "4294967296", "4294967297", "4294967298", "4294967299", "4294967300"
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint8_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+    }
+    const struct {
+        const char *str;
+        size_t len;
+    } ng2Tbl[] = {
+        { "", 0 },
+        { "", 1 },
+        { "1a", 2 },
+        { "1a", 3 },
+        { "234b", 4 },
+    };
+    for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint8_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+    }
+}
+
 CYBOZU_TEST_AUTO(test_int)
 {
     const struct {
