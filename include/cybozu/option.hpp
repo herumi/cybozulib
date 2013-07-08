@@ -260,6 +260,7 @@ class Option {
 	Info remains_;
 	bool permitVariableParam_;
 	OptMap optMap_;
+	std::string helpOpt_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
 	{
@@ -355,6 +356,10 @@ public:
 		remains_.opt = name;
 		remains_.help = help;
 	}
+	void appendHelp(const char *opt)
+	{
+		helpOpt_ = opt;
+	}
 	/*
 		parse (argc, argv)
 		@param argc [in] argc of main
@@ -368,6 +373,10 @@ public:
 		for (int pos = 1; pos < argc; pos++) {
 			if (argv[pos][0] == '-') {
 				const std::string str = argv[pos] + 1;
+				if (!helpOpt_.empty() && helpOpt_ == str) {
+					usage();
+					exit(1);
+				}
 				OptMap::const_iterator i = optMap_.find(str);
 				if (i == optMap_.end()) {
 					err.set(OptionError::BAD_OPT, pos);
@@ -475,6 +484,9 @@ public:
 			if (!param.help.empty()) printf("  %s:%s\n", paramVec_[i].name.c_str(), paramVec_[i].help.c_str());
 		}
 		if (!remains_.help.empty()) printf("  %s:%s\n", remains_.opt.c_str(), remains_.help.c_str());
+		if (!helpOpt_.empty()) {
+			printf("  -%s put this message\n", helpOpt_.c_str());
+		}
 		for (size_t i = 0; i < infoVec_.size(); i++) {
 			infoVec_[i].usage();
 		}

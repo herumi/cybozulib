@@ -25,6 +25,7 @@ struct A : public cybozu::Option {
 		appendVec(&w, "w", "str str str ...");
 		appendParam(&inName, "input-file", "text file");
 		appendParamVec(&vi, "remains", "sss");
+		appendHelp("h");
 	}
 };
 
