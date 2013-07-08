@@ -59,9 +59,9 @@ public:
 		double t = getClock() / double(getCount()) / N;
 		if (msg && *msg) printf("%s ", msg);
 		if (t > 1e6) {
-			printf("%6.2fMclk", t * 1e-6);
+			printf("%7.3fMclk", t * 1e-6);
 		} else if (t > 1e3) {
-			printf("%6.2fKclk", t * 1e-3);
+			printf("%7.3fKclk", t * 1e-3);
 		} else {
 			printf("%6.2f clk", t);
 		}
