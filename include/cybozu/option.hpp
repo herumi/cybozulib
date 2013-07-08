@@ -356,7 +356,7 @@ public:
 		permitVariableParam_ = true;
 		remains_.var = option_local::Var(pvar);
 		remains_.mode = N_any;
-		remains_.isMust = true;
+		remains_.isMust = false;
 		remains_.opt = name;
 		remains_.help = help;
 	}
@@ -465,7 +465,7 @@ public:
 			}
 		}
 		// check whether remains is set
-		if (permitVariableParam_ && !remains_.var.isSet()) {
+		if (permitVariableParam_ && remains_.isMust && !remains_.var.isSet()) {
 			err.set(OptionError::PARAM_IS_NECESSARY) << remains_.opt;
 			goto ERR;
 		}
