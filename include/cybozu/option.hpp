@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <limits>
 #include <stdlib.h>
 #include <assert.h>
 #include <cybozu/exception.hpp>
@@ -91,12 +92,15 @@ bool convertInt(T* x, const char *str)
 		case 'K': factor = 1024; len--; break;
 		case 'M': factor = 1024 * 1024; len--; break;
 		case 'G': factor = 1024 * 1024 * 1024; len--; break;
-		default: return false;
+		default: break;
 		}
 	}
 	bool b;
 	T y = cybozu::atoi(&b, str, len);
 	if (factor > 1) {
+//		if (y > 0 && std::numeric_limists<T>::max() / factor < y)
+	//	} else if (y < 0) {
+		//}
 		T yfactor = T(y * factor);
 		if (T(yfactor / factor) != y) return false;
 		*x = yfactor;
@@ -250,12 +254,13 @@ class Option {
 	typedef std::vector<Info> InfoVec;
 	typedef std::vector<std::string> StrVec;
 	struct Param {
-		std::string *pvar;
+		option_local::Var var;
 		std::string name;
 		std::string help;
 		Param() {}
-		Param(std::string *pvar, const std::string& name, const std::string& help)
-			: pvar(pvar), name(name), help(help) { }
+		template<class T>
+		Param(T *pvar, const std::string& name, const std::string& help)
+			: var(pvar), name(name), help(help) { }
 	};
 	typedef std::vector<Param> ParamVec;
 	typedef std::map<std::string, size_t> OptMap;
@@ -341,9 +346,9 @@ public:
 		@param opt [in] option name
 		@param help [in] option help
 	*/
-	void appendParam(std::string *pvar, const char *name, const char *help = "")
+	template<class T>
+	void appendParam(T *pvar, const char *name, const char *help = "")
 	{
-		pvar->clear();
 		paramVec_.push_back(Param(pvar, name, help));
 	}
 	/*
@@ -435,8 +440,11 @@ public:
 				bool used = false;
 				for (size_t i = 0; i < paramVec_.size(); i++) {
 					Param& param = paramVec_[i];
-					if (param.pvar->empty()) {
-						*param.pvar = argv[pos];
+					if (!param.var.isSet()) {
+						if (!param.var.set(argv[pos])) {
+							err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for " + param.name);
+							goto ERR;
+						}
 						used = true;
 						break;
 					}
@@ -462,7 +470,7 @@ public:
 		// check whether param is set
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			const Param& param = paramVec_[i];
-			if (param.pvar->empty()) {
+			if (!param.var.isSet()) {
 				err.set(OptionError::PARAM_IS_NECESSARY) << param.name;
 				goto ERR;
 			}
@@ -505,7 +513,7 @@ public:
 	{
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			const Param& param = paramVec_[i];
-			printf("%s=%s\n", param.name.c_str(), param.pvar->c_str());
+			printf("%s=%s\n", param.name.c_str(), param.var.toStr().c_str());
 		}
 		if (permitVariableParam_) {
 			printf("remains=%s\n", remains_.var.toStr().c_str());
