@@ -154,7 +154,14 @@ public:
 	{
 		set(b, str.c_str(), str.size());
 	}
-
+	inline operator signed char() const
+	{
+		return atoi_local::convertToInt<signed char>(b_, p_, size_, "128", -128, 12, '8');
+	}
+	inline operator unsigned char() const
+	{
+		return atoi_local::convertToUint<unsigned char>(b_, p_, size_, 25, '6');
+	}
 	inline operator short() const
 	{
 		return atoi_local::convertToInt<short>(b_, p_, size_, "32768", -32768, 3276, '8');
@@ -163,26 +170,29 @@ public:
 	{
 		return atoi_local::convertToUint<unsigned short>(b_, p_, size_, 6553, '6');
 	}
-
 	inline operator int() const
 	{
 		return atoi_local::convertToInt<int>(b_, p_, size_, "2147483648", INT_MIN, 214748364, '8');
 	}
-
-	inline operator int64_t() const
-	{
-		return atoi_local::convertToInt<int64_t>(b_, p_, size_, "9223372036854775808", LLONG_MIN, 922337203685477580LL, '8');
-	}
-
 	inline operator unsigned int() const
 	{
 		return atoi_local::convertToUint<unsigned int>(b_, p_, size_, 429496729, '6');
 	}
-
-	inline operator uint64_t() const
+	inline operator long long() const
 	{
-		return atoi_local::convertToUint<uint64_t>(b_, p_, size_, 1844674407370955161ULL, '6');
+		return atoi_local::convertToInt<long long>(b_, p_, size_, "9223372036854775808", LLONG_MIN, 922337203685477580LL, '8');
 	}
+	inline operator unsigned long long() const
+	{
+		return atoi_local::convertToUint<unsigned long long>(b_, p_, size_, 1844674407370955161ULL, '6');
+	}
+#if defined(__SIZEOF_LONG__) && (__SIZEOF_LONG__ == 8)
+	inline operator long() const { return (long)(long long)(*this); }
+	inline operator unsigned long() const { return (unsigned long)(unsigned long long)(*this); }
+#else
+	inline operator long() const { return (long)(int)(*this); }
+	inline operator unsigned long() const { return (unsigned long)(unsigned int)(*this); }
+#endif
 };
 
 class hextoi {
