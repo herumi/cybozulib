@@ -396,8 +396,11 @@ public:
 					}
 					break;
 				case N_is1:
-					if (argc <= 1) goto ERR;
 					pos++;
+					if (pos == argc) {
+						err.set(OptionError::BAD_VALUE, pos) << (std::string("no value for -") + info.opt);
+						goto ERR;
+					}
 					if (!info.var.set(argv[pos])) {
 						err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for -" + info.opt);
 						goto ERR;
