@@ -82,13 +82,15 @@ template<class T>
 bool convertInt(T* x, const char *str)
 {
 	size_t len = strlen(str);
-	int factor = 1;
+	unsigned int factor = 1;
 	if (len > 1) {
 		switch (str[len - 1]) {
 		case 'k': factor = 1000; len--; break;
 		case 'm': factor = 1000 * 1000; len--; break;
+		case 'g': factor = 1000 * 1000 * 1000; len--; break;
 		case 'K': factor = 1024; len--; break;
 		case 'M': factor = 1024 * 1024; len--; break;
+		case 'G': factor = 1024 * 1024 * 1024; len--; break;
 		default: return false;
 		}
 	}
@@ -298,8 +300,10 @@ public:
 		@note you can use 123k, 56M if T is integer type.
 		k : *1000
 		m : *1000000
+		g : *1000000000
 		K : *1024
 		M : *1024*1024
+		G : *1024*1024*1024
 	*/
 	template<class T, class U>
 	void appendOpt(T *pvar, const U& defaultVal, const char *opt, const char *help = "")
