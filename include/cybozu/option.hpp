@@ -210,7 +210,6 @@ public:
 	  -opt1-name:opt1-help
 	  ...
 */
-template<class Option>
 class Option {
 	enum Mode {
 		N_is0 = 0,
@@ -255,7 +254,6 @@ class Option {
 	};
 	typedef std::vector<Param> ParamVec;
 	typedef std::map<std::string, size_t> OptMap;
-	typedef std::vector<std::string> StrVec;
 	const char *progName_;
 	InfoVec infoVec_;
 	ParamVec paramVec_;
@@ -289,6 +287,7 @@ public:
 		, permitVariableParam_(false)
 	{
 	}
+	virtual ~Option() {}
 	/*
 		append optional option with default value
 		@param pvar [in] pointer to option variable

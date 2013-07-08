@@ -5,7 +5,7 @@
 #include <cybozu/option.hpp>
 #include <vector>
 
-struct A : public cybozu::Option<A> {
+struct A : public cybozu::Option {
 	int x;
 	bool b;
 	double d;
