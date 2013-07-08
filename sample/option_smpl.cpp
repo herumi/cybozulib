@@ -14,7 +14,8 @@ struct A : public cybozu::Option {
 	std::vector<std::string> w;
 	std::string inName;
 	std::vector<std::string> r;
-	std::vector<int> vi;
+	std::vector<std::string> vi;
+	uint64_t u;
 	A()
 	{
 		appendOpt(&x, 5, "x", "int");
@@ -23,6 +24,7 @@ struct A : public cybozu::Option {
 		appendMust(&y, "y", "string");
 		appendVec(&z, "z", "int int int ...");
 		appendVec(&w, "w", "str str str ...");
+		appendOpt(&u, 0, "u", "uint64 val");
 		appendParam(&inName, "input-file", "text file");
 		appendParamVec(&vi, "remains", "sss");
 		appendHelp("h");
