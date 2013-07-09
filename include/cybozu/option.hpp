@@ -17,7 +17,34 @@
 #include <cybozu/atoi.hpp>
 
 /*
-	progName (-opt val ...) param1 param2 ...
+	Option parser
+
+	progName (opt1-name|opt2-name|...) param1 param2 ...
+	  param1:param1-help
+	  param2:param2-help
+	  -op1-name:opt1-help
+	  ...
+
+	How to setup
+	int num;
+	-n num ; (optional) option => appendOpt(&x, <defaultValue>, "num", "num-help");
+	-n num ; must option       => appendMust(&x, "num", "num-help");
+
+	std::vector<int> v;
+	-v s1 s2 s3 ...            => appendVec(&v, "v");
+
+	Remark1: terminate parsing of v if argv begins with '-[^0-9]'
+	Remark2: the begining character of opt-name is not a number ('0'...'9')
+	         because avoid conflict with minus number
+
+	std::string file1;
+	file1 is param             => appendParam(&file1, "input-file");
+	file2 is optional param    => appendParamOpt(&file2, "output-file");
+
+	How to use
+	opt.analyze(argc, argv);
+
+	see sample/option_smpl.cpp
 */
 
 namespace cybozu {
@@ -207,16 +234,6 @@ public:
 
 } // option_local
 
-/*
-	Option parser
-	see sample/option_smpl.cpp
-
-	progName (opt1-name|opt2-name|...) param1-name param2-name ...
-	  param1-name:param1-help
-	  param2-name:param2-help
-	  -opt1-name:opt1-help
-	  ...
-*/
 class Option {
 	enum Mode { // for opt
 		N_is0 = 0,
