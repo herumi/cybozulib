@@ -5,7 +5,9 @@
 #include <cybozu/option.hpp>
 #include <vector>
 
-struct A : public cybozu::Option {
+int main(int argc, char *argv[])
+	try
+{
 	int x;
 	bool b;
 	double d;
@@ -16,29 +18,24 @@ struct A : public cybozu::Option {
 	std::vector<std::string> r;
 	std::vector<std::string> vi;
 	uint64_t u;
-	A()
-	{
-		appendOpt(&x, 5, "x", "int");
-		appendOpt(&b, false, "b", "bool");
-		appendMust(&d, "d", "double");
-		appendMust(&y, "y", "string");
-		appendVec(&z, "z", "int int int ...");
-		appendVec(&w, "w", "str str str ...");
-		appendOpt(&u, 0, "u", "uint64 val");
-		appendParam(&inName, "input-file", "text file");
-		appendParamVec(&vi, "remains", "sss");
-		appendHelp("h");
-	}
-};
 
-int main(int argc, char *argv[])
-	try
-{
-	A a;
-	if (a.parse(argc, argv)) {
-		a.put();
+	cybozu::Option opt;
+
+	opt.appendOpt(&x, 5, "x", "int");
+	opt.appendOpt(&b, false, "b", "bool");
+	opt.appendMust(&d, "d", "double");
+	opt.appendMust(&y, "y", "string");
+	opt.appendVec(&z, "z", "int int int ...");
+	opt.appendVec(&w, "w", "str str str ...");
+	opt.appendOpt(&u, 0, "u", "uint64 val");
+	opt.appendParam(&inName, "input-file", "text file");
+	opt.appendParamVec(&vi, "remains", "sss");
+	opt.appendHelp("h");
+
+	if (opt.parse(argc, argv)) {
+		opt.put();
 	} else {
-		a.usage();
+		opt.usage();
 	}
 } catch (std::exception& e) {
 	printf("ERR %s\n", e.what());
