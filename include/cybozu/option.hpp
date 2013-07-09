@@ -218,7 +218,7 @@ public:
 	  ...
 */
 class Option {
-	enum Mode {
+	enum Mode { // for opt
 		N_is0 = 0,
 		N_is1 = 1,
 		N_any = 2
@@ -230,9 +230,9 @@ class Option {
 	};
 	struct Info {
 		option_local::Var var;
-		Mode mode; // 0 or 1 or any
+		Mode mode; // 0 or 1 or any ; for opt, not used for Param
 		bool isMust; // this option is must
-		std::string opt; // option param without '-'
+		std::string opt; // option param name without '-'
 		std::string help; // description of option
 
 		Info() : mode(N_is0) {}
@@ -256,21 +256,10 @@ class Option {
 	};
 	typedef std::vector<Info> InfoVec;
 	typedef std::vector<std::string> StrVec;
-	struct Param {
-		option_local::Var var;
-		bool isMust;
-		std::string name;
-		std::string help;
-		Param() {}
-		template<class T>
-		Param(T *pvar, bool isMust, const std::string& name, const std::string& help)
-			: var(pvar), isMust(isMust), name(name), help(help) { }
-	};
-	typedef std::vector<Param> ParamVec;
 	typedef std::map<std::string, size_t> OptMap;
 	const char *progName_;
 	InfoVec infoVec_;
-	ParamVec paramVec_;
+	InfoVec paramVec_;
 	ParamMode paramMode_;
 	Info remains_;
 	OptMap optMap_;
@@ -367,10 +356,10 @@ public:
 		@param help [in] option help
 	*/
 	template<class T>
-	void appendParam(T *pvar, const char *name, const char *help = "")
+	void appendParam(T *pvar, const char *opt, const char *help = "")
 	{
 		verifyParamMode();
-		paramVec_.push_back(Param(pvar, true, name, help));
+		paramVec_.push_back(Info(pvar, N_is1, true, opt, help));
 	}
 	/*
 		append optional parameter
@@ -380,11 +369,11 @@ public:
 		@note you can call appendParamOpt once after appendParam
 	*/
 	template<class T>
-	void appendParamOpt(T *pvar, const char *name, const char *help = "")
+	void appendParamOpt(T *pvar, const char *opt, const char *help = "")
 	{
 		verifyParamMode();
 		paramMode_ = P_optional;
-		paramVec_.push_back(Param(pvar, false, name, help));
+		paramVec_.push_back(Info(pvar, N_is1, false, opt, help));
 	}
 	/*
 		append remain parameter
@@ -475,10 +464,10 @@ public:
 			} else {
 				bool used = false;
 				for (size_t i = 0; i < paramVec_.size(); i++) {
-					Param& param = paramVec_[i];
+					Info& param = paramVec_[i];
 					if (!param.var.isSet()) {
 						if (!param.var.set(argv[pos])) {
-							err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for " + param.name);
+							err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for " + param.opt);
 							goto ERR;
 						}
 						used = true;
@@ -505,9 +494,9 @@ public:
 		}
 		// check whether param is set
 		for (size_t i = 0; i < paramVec_.size(); i++) {
-			const Param& param = paramVec_[i];
+			const Info& param = paramVec_[i];
 			if (param.isMust && !param.var.isSet()) {
-				err.set(OptionError::PARAM_IS_NECESSARY) << param.name;
+				err.set(OptionError::PARAM_IS_NECESSARY) << param.opt;
 				goto ERR;
 			}
 		}
@@ -527,15 +516,15 @@ public:
 	{
 		printf("usage:%s (option)", progName_);
 		for (size_t i = 0; i < paramVec_.size(); i++) {
-			printf(" %s", paramVec_[i].name.c_str());
+			printf(" %s", paramVec_[i].opt.c_str());
 		}
 		if (paramMode_ == P_variable) {
 			printf(" %s", remains_.opt.c_str());
 		}
 		printf("\n");
 		for (size_t i = 0; i < paramVec_.size(); i++) {
-			const Param& param = paramVec_[i];
-			if (!param.help.empty()) printf("  %s:%s\n", paramVec_[i].name.c_str(), paramVec_[i].help.c_str());
+			const Info& param = paramVec_[i];
+			if (!param.help.empty()) printf("  %s:%s\n", paramVec_[i].opt.c_str(), paramVec_[i].help.c_str());
 		}
 		if (!remains_.help.empty()) printf("  %s:%s\n", remains_.opt.c_str(), remains_.help.c_str());
 		if (!helpOpt_.empty()) {
@@ -548,8 +537,8 @@ public:
 	void put() const
 	{
 		for (size_t i = 0; i < paramVec_.size(); i++) {
-			const Param& param = paramVec_[i];
-			printf("%s=%s\n", param.name.c_str(), param.var.toStr().c_str());
+			const Info& param = paramVec_[i];
+			printf("%s=%s\n", param.opt.c_str(), param.var.toStr().c_str());
 		}
 		if (paramMode_ == P_variable) {
 			printf("remains=%s\n", remains_.var.toStr().c_str());
