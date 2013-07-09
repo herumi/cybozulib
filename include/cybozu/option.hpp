@@ -223,6 +223,11 @@ class Option {
 		N_is1 = 1,
 		N_any = 2
 	};
+	enum ParamMode {
+		P_exact = 0, // one
+		P_optional = 1, // zero or one
+		P_variable = 2 // zero or greater
+	};
 	struct Info {
 		option_local::Var var;
 		Mode mode; // 0 or 1 or any
@@ -253,25 +258,28 @@ class Option {
 	typedef std::vector<std::string> StrVec;
 	struct Param {
 		option_local::Var var;
+		bool isMust;
 		std::string name;
 		std::string help;
 		Param() {}
 		template<class T>
-		Param(T *pvar, const std::string& name, const std::string& help)
-			: var(pvar), name(name), help(help) { }
+		Param(T *pvar, bool isMust, const std::string& name, const std::string& help)
+			: var(pvar), isMust(isMust), name(name), help(help) { }
 	};
 	typedef std::vector<Param> ParamVec;
 	typedef std::map<std::string, size_t> OptMap;
 	const char *progName_;
 	InfoVec infoVec_;
 	ParamVec paramVec_;
+	ParamMode paramMode_;
 	Info remains_;
-	bool permitVariableParam_;
 	OptMap optMap_;
 	std::string helpOpt_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
 	{
+		const char c = opt[0];
+		if ('0' <= c && c <= '9') throw cybozu::Exception("Option::appendSub:opt must begin with not number") << opt;
 		if (optMap_.find(opt) != optMap_.end()) {
 			throw cybozu::Exception("Option::append:duplicate option") << opt;
 		}
@@ -297,15 +305,17 @@ class Option {
 	}
 	void append(bool *pvar, const bool& defaultVal, bool isMust, const char *opt, const char *help = "")
 	{
-		const char c = opt[0];
-		if ('0' <= c && c <= '9') throw cybozu::Exception("Option::append:opt must begin with not number") << opt;
 		*pvar = defaultVal;
 		appendSub(pvar, N_is0, isMust, opt, help);
+	}
+	void verifyParamMode()
+	{
+		if (paramMode_ != P_exact) throw cybozu::Exception("Option:appendParamVec:appendParam is forbidden after appendParamOpt/appendParamVec");
 	}
 public:
 	Option()
 		: progName_(0)
-		, permitVariableParam_(false)
+		, paramMode_(P_exact)
 	{
 	}
 	virtual ~Option() {}
@@ -359,19 +369,35 @@ public:
 	template<class T>
 	void appendParam(T *pvar, const char *name, const char *help = "")
 	{
-		paramVec_.push_back(Param(pvar, name, help));
+		verifyParamMode();
+		paramVec_.push_back(Param(pvar, true, name, help));
+	}
+	/*
+		append optional parameter
+		@param pvar [in] pointer to parameter
+		@param opt [in] option name
+		@param help [in] option help
+		@note you can call appendParamOpt once after appendParam
+	*/
+	template<class T>
+	void appendParamOpt(T *pvar, const char *name, const char *help = "")
+	{
+		verifyParamMode();
+		paramMode_ = P_optional;
+		paramVec_.push_back(Param(pvar, false, name, help));
 	}
 	/*
 		append remain parameter
 		@param pvar [in] pointer to vector of parameter
 		@param opt [in] option name
 		@param help [in] option help
+		@note you can call appendParamVec once after appendParam
 	*/
 	template<class T, class Alloc, template<class T_, class Alloc_>class Container>
 	void appendParamVec(Container<T, Alloc> *pvar, const char *name, const char *help = "")
 	{
-		if (permitVariableParam_) throw cybozu::Exception("Option:appendParamVec:already appendParamVec is called");
-		permitVariableParam_ = true;
+		verifyParamMode();
+		paramMode_ = P_variable;
 		remains_.var = option_local::Var(pvar);
 		remains_.mode = N_any;
 		remains_.isMust = false;
@@ -460,7 +486,7 @@ public:
 					}
 				}
 				if (!used) {
-					if (permitVariableParam_) {
+					if (paramMode_ == P_variable) {
 						remains_.var.set(argv[pos]);
 					} else {
 						err.set(OptionError::REDUNDANT_VAL, pos) << argv[pos];
@@ -480,13 +506,13 @@ public:
 		// check whether param is set
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			const Param& param = paramVec_[i];
-			if (!param.var.isSet()) {
+			if (param.isMust && !param.var.isSet()) {
 				err.set(OptionError::PARAM_IS_NECESSARY) << param.name;
 				goto ERR;
 			}
 		}
 		// check whether remains is set
-		if (permitVariableParam_ && remains_.isMust && !remains_.var.isSet()) {
+		if (paramMode_ == P_variable && remains_.isMust && !remains_.var.isSet()) {
 			err.set(OptionError::PARAM_IS_NECESSARY) << remains_.opt;
 			goto ERR;
 		}
@@ -503,7 +529,7 @@ public:
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			printf(" %s", paramVec_[i].name.c_str());
 		}
-		if (permitVariableParam_) {
+		if (paramMode_ == P_variable) {
 			printf(" %s", remains_.opt.c_str());
 		}
 		printf("\n");
@@ -525,7 +551,7 @@ public:
 			const Param& param = paramVec_[i];
 			printf("%s=%s\n", param.name.c_str(), param.var.toStr().c_str());
 		}
-		if (permitVariableParam_) {
+		if (paramMode_ == P_variable) {
 			printf("remains=%s\n", remains_.var.toStr().c_str());
 		}
 		for (size_t i = 0; i < infoVec_.size(); i++) {
