@@ -83,7 +83,7 @@ template<class T>
 bool convertInt(T* x, const char *str)
 {
 	size_t len = strlen(str);
-	unsigned int factor = 1;
+	int factor = 1;
 	if (len > 1) {
 		switch (str[len - 1]) {
 		case 'k': factor = 1000; len--; break;
@@ -97,13 +97,14 @@ bool convertInt(T* x, const char *str)
 	}
 	bool b;
 	T y = cybozu::atoi(&b, str, len);
+	if (!b) return false;
 	if (factor > 1) {
-//		if (y > 0 && std::numeric_limists<T>::max() / factor < y)
-	//	} else if (y < 0) {
-		//}
-		T yfactor = T(y * factor);
-		if (T(yfactor / factor) != y) return false;
-		*x = yfactor;
+		if (std::numeric_limits<T>::min() / factor <= y
+			&& y <= std::numeric_limits<T>::max() / factor) {
+			*x = y * factor;
+		} else {
+			return false;
+		}
 	} else {
 		*x = y;
 	}
@@ -113,14 +114,10 @@ bool convertInt(T* x, const char *str)
 #define CYBOZU_OPTION_DEFINE_CONVERT_INT(type) \
 template<>bool convert(type* x, const char *str) { return convertInt(x, str); }
 
-CYBOZU_OPTION_DEFINE_CONVERT_INT(signed char)
-CYBOZU_OPTION_DEFINE_CONVERT_INT(short)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(int)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(long)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(long long)
 
-CYBOZU_OPTION_DEFINE_CONVERT_INT(unsigned char)
-CYBOZU_OPTION_DEFINE_CONVERT_INT(unsigned short)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(unsigned int)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(unsigned long)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(unsigned long long)
