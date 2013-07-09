@@ -189,8 +189,8 @@ public:
 	void swap(Var& rhs) throw()
 	{
 		std::swap(p_, rhs.p_);
+		std::swap(isSet_, rhs.isSet_);
 	}
-
 	void operator=(const Var& rhs)
 	{
 		Var v(rhs);
