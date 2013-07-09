@@ -131,3 +131,56 @@ CYBOZU_TEST_AUTO(convert_uint64_t)
 		}
 	}
 }
+
+CYBOZU_TEST_AUTO(Var)
+{
+	{
+		int x = 3;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("12345");
+		CYBOZU_TEST_EQUAL(x, 12345);
+		CYBOZU_TEST_EQUAL(v.toStr(), "12345");
+		CYBOZU_TEST_ASSERT(v.isSet());
+		v.set("333");
+		CYBOZU_TEST_EQUAL(x, 333);
+		cybozu::option_local::Var w;
+		CYBOZU_TEST_ASSERT(!w.isSet());
+		CYBOZU_TEST_EQUAL(w.toStr(), "");
+		w.swap(v);
+		CYBOZU_TEST_ASSERT(w.isSet());
+		CYBOZU_TEST_EQUAL(w.toStr(), "333");
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		CYBOZU_TEST_EQUAL(v.toStr(), "");
+	}
+	{
+		double x = 2;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("2.345");
+		CYBOZU_TEST_EQUAL(x, 2.345);
+		CYBOZU_TEST_EQUAL(v.toStr(), "2.345");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+	{
+		std::string x = "123";
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("2.345");
+		CYBOZU_TEST_EQUAL(x, "2.345");
+		CYBOZU_TEST_EQUAL(v.toStr(), "2.345");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+	{
+		std::vector<int> x;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("5");
+		v.set("1234");
+		CYBOZU_TEST_EQUAL(x.size(), 2u);
+		CYBOZU_TEST_EQUAL(x[0], 5);
+		CYBOZU_TEST_EQUAL(x[1], 1234);
+		CYBOZU_TEST_EQUAL(v.toStr(), "5 1234");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+}
