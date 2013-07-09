@@ -315,7 +315,7 @@ public:
 		@param defaultVal [in] default value
 		@param opt [in] option name
 		@param help [in] option help
-		@note you can use 123k, 56M if T is integer type.
+		@note you can use 123k, 56M if T is int/long/long long
 		k : *1000
 		m : *1000000
 		g : *1000000000
