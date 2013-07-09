@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include <limits>
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <cybozu/exception.hpp>
