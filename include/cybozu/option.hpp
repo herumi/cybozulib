@@ -284,8 +284,20 @@ class Option {
 		*pvar = defaultVal;
 		appendSub(pvar, N_is1, isMust, opt, help);
 	}
+	/*
+		don't deal with negative number as option
+	*/
+	bool isOpt(const char *str) const
+	{
+		if (str[0] != '-') return false;
+		const char c = str[1];
+		if ('0' <= c && c <= '9') return false;
+		return true;
+	}
 	void append(bool *pvar, const bool& defaultVal, bool isMust, const char *opt, const char *help = "")
 	{
+		const char c = opt[0];
+		if ('0' <= c && c <= '9') throw cybozu::Exception("Option::append:opt must begin with not number") << opt;
 		*pvar = defaultVal;
 		appendSub(pvar, N_is0, isMust, opt, help);
 	}
@@ -380,7 +392,7 @@ public:
 		progName_ = argv[0];
 		OptionError err;
 		for (int pos = 1; pos < argc; pos++) {
-			if (argv[pos][0] == '-') {
+			if (isOpt(argv[pos])) {
 				const std::string str = argv[pos] + 1;
 				if (!helpOpt_.empty() && helpOpt_ == str) {
 					usage();
@@ -416,7 +428,7 @@ public:
 					{
 						pos++;
 						int i = 0;
-						while (pos < argc && argv[pos][0] != '-') {
+						while (pos < argc && !isOpt(argv[pos])) {
 							if (!info.var.set(argv[pos])) {
 								err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for -" + info.opt) << i;
 								goto ERR;
