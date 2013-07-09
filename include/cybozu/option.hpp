@@ -201,7 +201,7 @@ public:
 		isSet_ = true;
 		return p_->set(str);
 	}
-	std::string toStr() const { return p_->toStr(); }
+	std::string toStr() const { return p_ ? p_->toStr() : ""; }
 	bool isSet() const { return isSet_; }
 };
 
