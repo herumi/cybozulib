@@ -107,6 +107,13 @@ bool convert(T* x, const char *str)
 	return is != 0;
 }
 
+template<>
+bool convert(std::string* x, const char *str)
+{
+	*x = str;
+	return true;
+}
+
 template<class T>
 bool convertInt(T* x, const char *str)
 {
