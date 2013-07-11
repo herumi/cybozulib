@@ -174,6 +174,15 @@ CYBOZU_TEST_AUTO(Var)
 		CYBOZU_TEST_ASSERT(v.isSet());
 	}
 	{
+		std::string x;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("1 23 456");
+		CYBOZU_TEST_EQUAL(x, "1 23 456");
+		CYBOZU_TEST_EQUAL(v.toStr(), "1 23 456");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+	{
 		bool x = false;
 		cybozu::option_local::Var v(&x);
 		CYBOZU_TEST_ASSERT(!v.isSet());
