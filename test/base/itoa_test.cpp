@@ -347,6 +347,53 @@ CYBOZU_TEST_AUTO(itohex)
 	CYBOZU_TEST_EQUAL(cybozu::itohex((uint64_t)0xaaaabbbbffffeeeeULL, false), "aaaabbbbffffeeee");
 }
 
+CYBOZU_TEST_AUTO(getBinLength)
+{
+	const struct {
+		uint64_t v;
+		size_t len;
+	} tbl[] = {
+		{ 0, 1 },
+		{ 1, 1 },
+		{ 2, 2 },
+		{ 3, 2 },
+		{ 4, 3 },
+		{ 0xffff, 16 },
+		{ 0xffffffff, 32 },
+		{ uint64_t(1) << 32, 33 },
+		{ uint64_t(0xffffffffffffffffull), 64 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::getBinLength(tbl[i].v), tbl[i].len);
+	}
+}
+
+CYBOZU_TEST_AUTO(itobin)
+{
+	char buf[80];
+	const struct {
+		const char *out;
+		size_t len;
+		uint64_t v;
+	} tbl[] = {
+		{ "0", 1, 0 },
+		{ "000", 3, 0 },
+		{ "1", 1, 1 },
+		{ "10", 2, 6 },
+		{ "1100", 4, 12 },
+		{ "1111", 4, 15 },
+		{ "10000000", 8, 128, },
+		{ "11111111111111111111", 20, (1 << 20) - 1},
+		{ "1111111111111111111111111111111111111111111111111111111111111111", 64, uint64_t(-1) },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		memset(buf, 'x', sizeof(buf));
+		cybozu::itobin(buf, tbl[i].len, tbl[i].v);
+		CYBOZU_TEST_EQUAL(memcmp(buf, tbl[i].out, tbl[i].len), 0);
+		CYBOZU_TEST_EQUAL(buf[tbl[i].len], 'x'); // check buffer overrun
+	}
+}
+
 std::string cvt(uint64_t x)
 {
 	std::ostringstream os;
