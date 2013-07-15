@@ -394,6 +394,22 @@ CYBOZU_TEST_AUTO(itobin)
 	}
 }
 
+CYBOZU_TEST_AUTO(itobin2)
+{
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned char)0), "00000000");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned short)0), "0000000000000000");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned int)0), "00000000000000000000000000000000");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((uint64_t)0), "0000000000000000000000000000000000000000000000000000000000000000");
+
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned char)0x12), "00010010");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned int)0x1234adef), "00010010001101001010110111101111");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((uint64_t)0xaaaabbbbffffeeeeULL), "1010101010101010101110111011101111111111111111111110111011101110");
+
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned char)0x12, false), "10010");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((unsigned int)0x1234adef, false), "10010001101001010110111101111");
+	CYBOZU_TEST_EQUAL(cybozu::itobin((uint64_t)0xaaaabbbbffffeeeeULL, false), "1010101010101010101110111011101111111111111111111110111011101110");
+}
+
 std::string cvt(uint64_t x)
 {
 	std::ostringstream os;
