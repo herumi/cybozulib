@@ -36,6 +36,25 @@ void itohex(char *out, size_t len, T x, bool upCase = true)
 	}
 }
 
+template<class T>
+size_t getBinLength(T x)
+{
+	return x == 0 ? 1 : cybozu::bsr(x) + 1;
+}
+/*
+	convert x to bin string with len
+	@note out should have getBinLength(x) size
+	out is not NUL terminated
+*/
+template<class T>
+void itobin(char *out, size_t len, T x)
+{
+	for (size_t i = 0; i < len; i++) {
+		out[len - i - 1] = '0' + (x & 1);
+		x >>= 1;
+	}
+}
+
 namespace itoa_local {
 
 template<typename T, typename UT, int n>
