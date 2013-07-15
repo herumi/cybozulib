@@ -132,13 +132,13 @@ inline void itoa(std::string& out, int x)
 }
 
 /**
-	convert int64_t to string
+	convert long long to string
 	@param out [out] string
-	@param x [in] int64_t
+	@param x [in] long long
 */
-inline void itoa(std::string& out, int64_t x)
+inline void itoa(std::string& out, long long x)
 {
-	itoa_local::convertFromInt<int64_t, uint64_t>(out, x, LLONG_MIN, "-9223372036854775808");
+	itoa_local::convertFromInt<long long, unsigned long long>(out, x, LLONG_MIN, "-9223372036854775808");
 }
 
 /**
@@ -152,15 +152,22 @@ inline void itoa(std::string& out, unsigned int x)
 }
 
 /**
-	convert uint64_t to string
+	convert unsigned long long to string
 	@param out [out] string
-	@param x [in] uint64_t
+	@param x [in] unsigned long long
 */
-inline void itoa(std::string& out, uint64_t x)
+inline void itoa(std::string& out, unsigned long long x)
 {
 	itoa_local::convertFromUint(out, x);
 }
 
+#if defined(__SIZEOF_LONG__) && (__SIZEOF_LONG__ == 8)
+inline void itoa(std::string& out, long x) { itoa(out, (long long)x); }
+inline void itoa(std::string& out, unsigned long x) { itoa(out, (unsigned long long)x); }
+#else
+inline void itoa(std::string& out, long x) { itoa(out, (int)x); }
+inline void itoa(std::string& out, unsigned long x) { itoa(out, (int)x); }
+#endif
 /**
 	convert integer to string
 	@param x [in] int
