@@ -111,6 +111,14 @@ void itohexLocal(std::string& out, T x, bool upCase, bool withZero)
 	itohex(&out[0], size, x, upCase);
 }
 
+template<class T>
+void itobinLocal(std::string& out, T x, bool withZero)
+{
+	const size_t size = withZero ? sizeof(T) * 8 : getBinLength(x);
+	out.resize(size);
+	itobin(&out[0], size, x);
+}
+
 } // itoa_local
 
 /**
@@ -180,9 +188,47 @@ inline void itohex(std::string& out, unsigned int x, bool upCase = true, bool wi
 	itoa_local::itohexLocal(out, x, upCase, withZero);
 }
 
-inline void itohex(std::string& out, uint64_t x, bool upCase = true, bool withZero = true)
+inline void itohex(std::string& out, unsigned long x, bool upCase = true, bool withZero = true)
 {
 	itoa_local::itohexLocal(out, x, upCase, withZero);
+}
+
+inline void itohex(std::string& out, unsigned long long x, bool upCase = true, bool withZero = true)
+{
+	itoa_local::itohexLocal(out, x, upCase, withZero);
+}
+
+template<typename T>
+inline std::string itobin(T x, bool withZero = true)
+{
+	std::string out;
+	itoa_local::itobinLocal(out, x, withZero);
+	return out;
+}
+
+inline void itobin(std::string& out, unsigned char x, bool withZero = true)
+{
+	itoa_local::itobinLocal(out, x, withZero);
+}
+
+inline void itobin(std::string& out, unsigned short x, bool withZero = true)
+{
+	itoa_local::itobinLocal(out, x, withZero);
+}
+
+inline void itobin(std::string& out, unsigned int x, bool withZero = true)
+{
+	itoa_local::itobinLocal(out, x, withZero);
+}
+
+inline void itobin(std::string& out, unsigned long x, bool withZero = true)
+{
+	itoa_local::itobinLocal(out, x, withZero);
+}
+
+inline void itobin(std::string& out, unsigned long long x, bool withZero = true)
+{
+	itoa_local::itobinLocal(out, x, withZero);
 }
 
 template<typename T>
@@ -192,7 +238,6 @@ inline std::string itohex(T x, bool upCase = true, bool withZero = true)
 	itohex(out, x, upCase, withZero);
 	return out;
 }
-
 /**
 	convert integer to string with zero padding
 	@param x [in] int
