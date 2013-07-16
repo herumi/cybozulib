@@ -34,7 +34,7 @@ template<class FMINDEX, class STRING>
 Set searchPos1(const FMINDEX& f, const STRING& key)
 {
 	Set ret;
-	size_t begin, end;
+	size_t begin, end = 0;
 	if (f.getRange(&begin, &end, key)) {
 		while (begin != end) {
 			ret.insert((int)f.convertPosition(begin));
