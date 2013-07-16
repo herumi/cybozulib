@@ -91,7 +91,7 @@ void search(const std::string& inName, const std::string& queryFile, bool putHas
 	cybozu::CpuClock clkPos;
 	while (qs >> key) {
 		if (!putHash) std::cout << "query " << key << std::endl;
-		size_t begin, end;
+		size_t begin, end = 0;
 		if (bench) clkRange.begin();
 		bool found = f.getRange(&begin, &end, key);
 		if (bench) clkRange.end();
