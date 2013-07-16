@@ -114,10 +114,9 @@ public:
 	bool connect(const std::string& address, unsigned short port)
 	{
 		SocketAddr addr;
-		if (!addr.setName(address)) {
+		if (!addr.set(address, port)) {
 			return false;
 		}
-		addr.setPort(port);
 		return connect(addr);
 	}
 	bool connect(const cybozu::SocketAddr& addr)
