@@ -34,7 +34,7 @@
 
 namespace cybozu {
 
-#if defined(__GNUC__) && (__SIZEOF_WCHAR_T == 4)
+#if defined(__GNUC__) && (__SIZEOF_WCHAR_T__ == 4)
 	/* avoid to use uint32_t because compiling boost::regex fails */
 	typedef wchar_t Char; //!< Char for Linux
 	typedef unsigned short Char16; /* unsigned is necessary for gcc */
