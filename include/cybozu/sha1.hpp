@@ -10,6 +10,7 @@
 #include <cybozu/inttype.hpp>
 #include <cybozu/endian.hpp>
 #include <string>
+#include <algorithm>
 #include <memory.h>
 #include <assert.h>
 
