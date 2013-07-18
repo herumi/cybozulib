@@ -5,6 +5,7 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <string>
+#include <algorithm>
 #include <sstream>
 #include <errno.h>
 #ifdef _WIN32
