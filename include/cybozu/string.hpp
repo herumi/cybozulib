@@ -1096,7 +1096,7 @@ public:
 	*/
 	size_type copy(CharT *dest, size_type count, size_type off = 0) const
 	{
-#if defined(_MSC_VER) && (_MSC_VER < 1600)
+#ifdef _MSC_VER
 		return str_._Copy_s(dest, count, count, off);
 #else
 		return str_.copy(dest, count, off);
