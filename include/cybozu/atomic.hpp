@@ -122,7 +122,7 @@ T AtomicCompareExchange(T *p, T newValue, T oldValue)
 }
 
 /**
-	tmp *p;
+	tmp = *p;
 	*p = newValue;
 	return tmp;
 */

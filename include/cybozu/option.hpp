@@ -288,6 +288,8 @@ class Option {
 	Info remains_;
 	OptMap optMap_;
 	std::string helpOpt_;
+	std::string description_;
+	std::string usage_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
 	{
@@ -533,11 +535,19 @@ public:
 	ERR:
 		assert(err.type);
 		if (doThrow) throw err;
-		printf("err %s\n", err.what());
+		printf("%s\n", err.what());
 		return false;
+	}
+	void setUsage(const std::string& usage)
+	{
+		usage_ = usage;
 	}
 	void usage() const
 	{
+		if (!usage_.empty()) {
+			printf("%s\n", usage_.c_str());
+			return;
+		}
 		printf("usage:%s (option)", progName_);
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			printf(" %s", paramVec_[i].opt.c_str());
