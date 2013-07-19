@@ -27,7 +27,7 @@
 	#include <stdio.h>
 #endif
 
-#include <cybozu/inttype.hpp>
+#include <cybozu/atomic.hpp>
 #include <cybozu/exception.hpp>
 #include <string>
 
@@ -71,13 +71,14 @@ inline ssize_t read(SocketHandle sd, char *buf, size_t len)
 	return ret;
 #endif
 }
-inline void close(SocketHandle sd)
+inline bool close(SocketHandle sd)
 {
 #ifdef _WIN32
-	::shutdown(sd, SD_SEND);
-	::closesocket(sd);
+	// ::shutdown(sd, SD_SEND);
+	// shutdown is called in closesocket
+	return ::closesocket(sd) == 0;
 #else
-	::close(sd);
+	return ::close(sd) == 0;
 #endif
 }
 
@@ -229,9 +230,7 @@ public:
 		ERR = -2
 	};
 #ifndef _WIN32
-	enum {
-		INVALID_SOCKET = -1
-	};
+	static const int INVALID_SOCKET = -1;
 #endif
 	Socket()
 		: sd_(INVALID_SOCKET)
@@ -248,8 +247,7 @@ public:
 	void operator=(Socket& rhs)
 	{
 		close();
-		sd_ = rhs.sd_; rhs.sd_ = INVALID_SOCKET;
-//	  sd_ = cybozu::AtomicExchange((uint32*)&rhs.sd_, INVALID_SOCKET);
+		sd_ = cybozu::AtomicExchange(&rhs.sd_, INVALID_SOCKET);
 	}
 
 	~Socket()
@@ -259,11 +257,9 @@ public:
 
 	bool close()
 	{
-		if (!isValid()) return true;
-
-		cybozu::socket_local::close(sd_);
-		sd_ = INVALID_SOCKET;
-		return true;
+		cybozu::socket_local::SocketHandle sd = cybozu::AtomicExchange(&sd_, INVALID_SOCKET);
+		if (sd == INVALID_SOCKET) return true;
+		return cybozu::socket_local::close(sd);
 	}
 
 	/*!
@@ -530,7 +526,6 @@ public:
 	{
 		return setSocketOption(SO_SNDBUF, size);
 	}
-public:
 	/**
 		set send timeout
 		@param msec [in] msec
