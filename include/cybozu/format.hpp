@@ -13,42 +13,50 @@
 
 namespace cybozu {
 
-std::string format(const char *format, ...)
+inline void vformat(std::string& str, const char *format, va_list args)
 {
 #ifdef _MSC_VER
-	va_list args;
-	va_start(args, format);
+	va_list args2;
+	va_copy(args2, args);
 	_locale_t curLoc = _get_current_locale();
-	va_start(args, format);
 	int size = _vscprintf_l(format, curLoc, args);
-	va_end(args);
-	if (size < 0 || size >= INT_MAX) throw cybozu::Exception("format:_vscprintf_l");
+	if (size < 0 || size >= INT_MAX) throw cybozu::Exception("vformat:_vscprintf_l");
 
-	std::string str;
 	str.resize(size + 1);
 
-	va_start(args, format);
-	int ret = _vsprintf_s_l(&str[0], size + 1, format, curLoc, args);
-	va_end(args);
-	if (ret < 0) throw cybozu::Exception("format:_vsprintf_s_l");
+	int ret = _vsprintf_s_l(&str[0], size + 1, format, curLoc, args2);
+	if (ret < 0) throw cybozu::Exception("vformat:_vsprintf_s_l");
 	str.resize(size);
-	return str;
 #else
 	char *p;
-	va_list args;
-	va_start(args, format);
 	int ret = vasprintf(&p, format, args);
-	va_end(args);
-	if (ret < 0) throw cybozu::Exception("format:vasnprintf");
+	if (ret < 0) throw cybozu::Exception("vformat:vasnprintf");
     try {
-		std::string str(p, ret);
+		str.assign(p, ret);
 		free(p);
-		return str;
 	} catch (...) {
 		free(p);
 		throw std::bad_alloc();
 	}
 #endif
+}
+
+inline void format(std::string& str, const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	cybozu::vformat(str, format, args);
+	va_end(args);
+}
+
+inline std::string format(const char *format, ...)
+{
+	std::string str;
+	va_list args;
+	va_start(args, format);
+	cybozu::vformat(str, format, args);
+	va_end(args);
+	return str;
 }
 
 } // cybozu
