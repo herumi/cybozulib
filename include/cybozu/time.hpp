@@ -193,7 +193,7 @@ public:
 		const char *format = appendMsec ? "%Y-%m-%d %H:%M:%S." : "%Y-%m-%d %H:%M:%S";
 		toString(out, format, appendMsec, doClear);
 	}
-	std::string toString() const { std::string out; toString(out); return out; }
+	std::string toString(bool appendMsec = true) const { std::string out; toString(out, appendMsec); return out; }
 	/**
 		get current time
 	*/
