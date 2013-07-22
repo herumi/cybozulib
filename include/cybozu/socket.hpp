@@ -263,22 +263,6 @@ public:
 	}
 
 	/*!
-		send data
-		@param buf [out] send buffer
-		@param bufSize [in] send buffer size(byte)
-		@retval >= 0 send size
-		@retval TIMEOUT timeout
-		@retval CLOSED socket is closed
-		@retval ERR otherwise
-	*/
-	ssize_t write(const char *buf, size_t bufSize)
-	{
-		ssize_t ret = cybozu::socket_local::write(sd_, buf, bufSize);
-		if (ret >= 0) return ret; /* send 0 byte data if bufSize == 0 */
-		return getError();
-	}
-
-	/*!
 		receive data
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
@@ -315,16 +299,17 @@ public:
 		write all data unless timeout
 		@param buf [out] send buffer
 		@param bufSize [in] send buffer size(byte)
-		@return NOERR no error
-		@retval TIMEOUT timeout
-		@retval CLOSED socket is closed
-		@retval ERR otherwise
 	*/
-	void writeAll(const void *buf, size_t bufSize)
+	void write(const void *buf, size_t bufSize)
 	{
 		const char *p = (const char *)buf;
+		if (bufSize == 0) {
+			ssize_t ret = cybozu::socket_local::write(sd_, p, 0);
+			if (ret < 0) throw cybozu::Exception("Socket:write:bufSize = 0");
+			return;
+		}
 		while (bufSize > 0) {
-			ssize_t ret = write(p, bufSize);
+			ssize_t ret = cybozu::socket_local::write(sd_, p, bufSize);
 			if (ret <= 0) {
 				throw cybozu::Exception("Socket:writeAll") << ret;
 			}
