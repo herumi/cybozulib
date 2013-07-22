@@ -385,25 +385,22 @@ inline void RemoveFile(const std::string& name)
 	}
 }
 
-namespace file {
-
-struct Info {
+struct FileInfo {
 	std::string name;
 	bool isFile;
-	Info() : isFile(false) {}
+	FileInfo() : isFile(false) {}
 };
 
-typedef std::vector<Info> InfoVec;
-
-} // file
+typedef std::vector<FileInfo> FileList;
 
 /**
 	get file name in dir
 	@param list [out] list must be able to push_back(file::Info)
 	@param dir [in] directory
+	@param suf [in] target suffix (select all if suffix is empty)
 */
 template<class List>
-inline bool GetFileList(List &list, const std::string& dir)
+inline bool GetFileList(List &list, const std::string& dir, const std::string& /*suffix*/ = "")
 {
 #ifdef _WIN32
 	std::string path = dir + "/*";
@@ -426,7 +423,7 @@ inline bool GetFileList(List &list, const std::string& dir)
 		return false;
 	}
 	do {
-		file::Info fi;
+		FileInfo fi;
 		fi.name = fd.cFileName;
 		fi.isFile = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
 		list.push_back(fi);
@@ -457,7 +454,7 @@ inline bool GetFileList(List &list, const std::string& dir)
 	for (;;) {
 		struct dirent *dp = ::readdir(hdl.dir_);
 		if (dp == 0) return true;
-		file::Info fi;
+		FileInfo fi;
 		fi.name = dp->d_name;
 		fi.isFile = dp->d_type == DT_REG;
 		list.push_back(fi);
