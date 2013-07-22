@@ -288,7 +288,6 @@ class Option {
 	Info remains_;
 	OptMap optMap_;
 	std::string helpOpt_;
-	std::string description_;
 	std::string usage_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
