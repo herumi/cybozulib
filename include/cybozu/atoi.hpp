@@ -41,8 +41,8 @@ T convertToInt(bool *b, const char *p, size_t size, const char (&max)[n], T min,
 				}
 				unsigned int y = c - '0';
 				if (y > 9 || x > overflow1 || (x == overflow1 && c >= overflow2)) {
-	break;
-}
+					break;
+				}
 				x = x * 10 + T(y);
 				i++;
 			}
