@@ -246,20 +246,6 @@ public:
 	}
 };
 
-namespace file {
-
-/**
-	if name has tail, then remove '.' + tail
-	otherwise return name
-*/
-inline std::string RemoveTail(const std::string& name, const std::string& tail, char c = '.')
-{
-	size_t pos = name.find_last_of(c);
-	if (name.substr(pos + 1) == tail) {
-		return name.substr(0, pos);
-	}
-	return name;
-}
 /*
 	split name as basename.suffix
 */
@@ -288,7 +274,7 @@ inline void ReplaceBackSlash(std::string& str)
 
 /**
 	get exe path and baseNamme
-	@note file name should be "xxx.exe"
+	@note file name is the form "xxx.exe" then baseName = xxx
 */
 inline std::string GetExePath(std::string *baseName = 0)
 {
@@ -315,10 +301,16 @@ inline std::string GetExePath(std::string *baseName = 0)
 		size_t pos = path.find_last_of('/');
 		if (pos != std::string::npos) {
 			if (baseName) {
-				*baseName = RemoveTail(path.substr(pos + 1), "exe");
+				const std::string name = path.substr(pos + 1);
+				std::string suffix;
+				std::string base = GetBaseName(name, &suffix);
+				if (suffix == "exe") {
+					*baseName = base;
+				} else {
+					*baseName = name;
+				}
 			}
 			path.resize(pos + 1);
-			ReplaceBackSlash(path);
 		}
 	}
 #endif
@@ -328,7 +320,7 @@ inline std::string GetExePath(std::string *baseName = 0)
 /**
 	get file size
 */
-inline int64_t GetSize(const std::string& name, bool dontThrow = true)
+inline uint64_t GetFileSize(const std::string& name)
 {
 #ifdef _WIN32
 	struct __stat64 buf;
@@ -337,16 +329,16 @@ inline int64_t GetSize(const std::string& name, bool dontThrow = true)
 	struct stat buf;
 	bool isOK = stat(name.c_str(), &buf) == 0;
 #endif
-	if (!dontThrow && !isOK) {
-		throw cybozu::Exception("file:GetSize") << name << cybozu::ErrorNo();
+	if (!isOK) {
+		throw cybozu::Exception("GetFileSize") << name << cybozu::ErrorNo();
 	}
-	return isOK ? buf.st_size : -1;
+	return buf.st_size;
 }
 
 /**
 	verify whether path exists or not
 */
-inline bool DoesExist(const std::string& path)
+inline bool DoesFileExist(const std::string& path)
 {
 	if (path.empty()) return false;
 	std::string p = path;
@@ -363,52 +355,55 @@ inline bool DoesExist(const std::string& path)
 #endif
 }
 
-inline bool Move(const std::string& from, const std::string& to, bool dontThrow = true)
+inline void RenameFile(const std::string& from, const std::string& to)
 {
-	if (DoesExist(to)) {
-		if (dontThrow) return false;
-		throw cybozu::Exception("file:Move:file already exist") << from << to;
+	if (DoesFileExist(to)) {
+		throw cybozu::Exception("RenameFile:file already exist") << from << to;
 	}
 #ifdef _WIN32
 	bool isOK = ::MoveFileExA(from.c_str(), to.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) != 0;
 #else
-	bool isOK = rename(from.c_str(), to.c_str()) == 0;
+	bool isOK = ::rename(from.c_str(), to.c_str()) == 0;
 #endif
-	if (!dontThrow && !isOK) {
-		throw cybozu::Exception("file:Move") << from << to << cybozu::ErrorNo();
+	if (!isOK) {
+		throw cybozu::Exception("RenameFile") << from << to << cybozu::ErrorNo();
 	}
-	return isOK;
 }
 
 /**
 	remove file
 */
-inline bool Remove(const std::string& name, bool dontThrow = true)
+inline void RemoveFile(const std::string& name)
 {
 #ifdef _WIN32
 	bool isOK = DeleteFileA(name.c_str()) != 0;
 #else
 	bool isOK = unlink(name.c_str()) == 0;
 #endif
-	if (!dontThrow && !isOK) {
-		throw cybozu::Exception("file:Remove") << name << cybozu::ErrorNo();
+	if (!isOK) {
+		throw cybozu::Exception("RemoveFile") << name << cybozu::ErrorNo();
 	}
-	return isOK;
 }
 
-struct FileInfo {
+namespace file {
+
+struct Info {
 	std::string name;
 	bool isFile;
+	Info() : isFile(false) {}
 };
 
-typedef std::vector<FileInfo> FileInfoVec;
+typedef std::vector<Info> InfoVec;
+
+} // file
+
 /**
 	get file name in dir
-	@param list [out] list must be able to push_back(FileInfo)
+	@param list [out] list must be able to push_back(file::Info)
 	@param dir [in] directory
 */
-template<class T>
-bool GetFilesInDir(T &list, const std::string& dir)
+template<class List>
+inline bool GetFileList(List &list, const std::string& dir)
 {
 #ifdef _WIN32
 	std::string path = dir + "/*";
@@ -431,13 +426,9 @@ bool GetFilesInDir(T &list, const std::string& dir)
 		return false;
 	}
 	do {
-		FileInfo fi;
+		file::Info fi;
 		fi.name = fd.cFileName;
 		fi.isFile = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
-//		LARGE_INTEGER fileSize;
-//		fileSize.LowPart = fd.nFileSizeLow;
-//		fileSize.HighPart = fd.nFileSizeHigh;
-//		fi.size = fileSize.QuadPart;
 		list.push_back(fi);
 	} while (FindNextFileA(hdl.hdl_, &fd) != 0);
 	return true;
@@ -466,15 +457,13 @@ bool GetFilesInDir(T &list, const std::string& dir)
 	for (;;) {
 		struct dirent *dp = ::readdir(hdl.dir_);
 		if (dp == 0) return true;
-		FileInfo fi;
+		file::Info fi;
 		fi.name = dp->d_name;
 		fi.isFile = dp->d_type == DT_REG;
 		list.push_back(fi);
 	}
 #endif
 }
-
-} // cybozu::file
 
 template<>
 struct InputStreamTag<cybozu::File> {

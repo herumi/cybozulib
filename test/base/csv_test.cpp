@@ -154,7 +154,7 @@ CYBOZU_TEST_AUTO(file)
 		{ { "abc,xyz\r\n123", "\t", ",,,\"\n" }, 3, { "abc,xyz\n123", "\t", ",,,\"\n" } },
 	};
 	{
-		cybozu::CsvWriter csv(cybozu::file::GetExePath() + "csv_file_test.csv", '\t');
+		cybozu::CsvWriter csv(cybozu::GetExePath() + "csv_file_test.csv", '\t');
 		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 			std::vector<std::string> vec;
 			for (size_t j = 0; j < tbl[i].n; j++) {
@@ -164,7 +164,7 @@ CYBOZU_TEST_AUTO(file)
 		}
 	}
 	{
-		cybozu::CsvReader csv(cybozu::file::GetExePath() + "csv_file_test.csv", '\t');
+		cybozu::CsvReader csv(cybozu::GetExePath() + "csv_file_test.csv", '\t');
 		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 			std::vector<std::string> vec;
 			bool ret = csv.read(vec);

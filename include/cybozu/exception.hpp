@@ -28,9 +28,10 @@ namespace exception {
 /* get max 10 characters to avoid buffer overrun */
 inline std::string makeString(const char *str, size_t size)
 {
-	return std::string(str, std::min<size_t>(size,10));
+	return std::string(str, std::min<size_t>(size, 10));
 }
 
+} // cybozu::exception
 
 /**
 	convert errno to string
@@ -53,8 +54,6 @@ inline std::string ConvertErrorNoToString(int err)
 	}
 #endif
 }
-
-} // cybozu::exception
 
 class Exception : public std::exception {
 	std::string str_;
@@ -139,7 +138,7 @@ public:
 		}
 		return ret;
 #else
-		return exception::ConvertErrorNoToString(err_);
+		return ConvertErrorNoToString(err_);
 #endif
 	}
 };
