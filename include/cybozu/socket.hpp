@@ -298,20 +298,18 @@ public:
 		read all data unless timeout
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
-		@return NOERR no error
-		@retval TIMEOUT timeout
-		@retval CLOSED socket is closed
-		@retval ERR otherwise
 	*/
-	ssize_t readAll(char *buf, size_t bufSize)
+	void readAll(void *buf, size_t bufSize)
 	{
+		char *p = (char *)buf;
 		while (bufSize > 0) {
-			ssize_t ret = read(buf, bufSize);
-			if (ret <= 0) return ret;
-			buf += ret;
+			ssize_t ret = read(p, bufSize);
+			if (ret <= 0) return {
+				throw cybozu::Exception("Socket:readAll") << ret;
+			}
+			p += ret;
 			bufSize -= ret;
 		}
-		return NOERR;
 	}
 	/*!
 		write all data unless timeout
@@ -322,15 +320,17 @@ public:
 		@retval CLOSED socket is closed
 		@retval ERR otherwise
 	*/
-	ssize_t writeAll(const char *buf, size_t bufSize)
+	void writeAll(const void *buf, size_t bufSize)
 	{
+		const char *p = (const char *)buf;
 		while (bufSize > 0) {
-			ssize_t ret = write(buf, bufSize);
-			if (ret <= 0) return ret;
-			buf += ret;
+			ssize_t ret = write(p, bufSize);
+			if (ret <= 0) {
+				throw cybozu::Exception("Socket:writeAll") << ret;
+			}
+			p += ret;
 			bufSize -= ret;
 		}
-		return NOERR;
 	}
 	/**
 		connect to address:port
