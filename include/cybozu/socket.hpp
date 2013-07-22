@@ -304,7 +304,7 @@ public:
 		char *p = (char *)buf;
 		while (bufSize > 0) {
 			ssize_t ret = read(p, bufSize);
-			if (ret <= 0) return {
+			if (ret <= 0) {
 				throw cybozu::Exception("Socket:readAll") << ret;
 			}
 			p += ret;
