@@ -85,6 +85,10 @@ public:
 		fp_ = NULL;
 		return isOK;
 	}
+	void setPriority(LogPriority priority)
+	{
+		priority_ = priority;
+	}
 };
 
 } // cybozu::log_local
@@ -98,6 +102,14 @@ inline void OpenLogFile(const std::string& path)
 	return log_local::Logger::getInstance().openFile(path);
 }
 
+/*
+	set priority(default cybozu::LogDebug)
+	does not show the message of which is less or equal to the priority
+*/
+inline void SetLogPriority(LogPriority priority)
+{
+	log_local::Logger::getInstance().setPriority(priority);
+}
 /*
 	write log
 	Linux : default is syslog
