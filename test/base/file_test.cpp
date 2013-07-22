@@ -29,7 +29,7 @@ CYBOZU_TEST_AUTO(read)
 
 CYBOZU_TEST_AUTO(size)
 {
-	CYBOZU_TEST_EQUAL(cybozu::file::GetSize(fileName), (int)sizeof(testBuf));
+	CYBOZU_TEST_EQUAL(cybozu::GetFileSize(fileName), sizeof(testBuf));
 }
 
 CYBOZU_TEST_AUTO(append)
@@ -74,18 +74,17 @@ CYBOZU_TEST_AUTO(move_and_remove)
 		/*
 			remove fileName2 if exists and move fileName to fileName2
 		*/
-		if (cybozu::file::DoesExist(fileName2)) {
-			CYBOZU_TEST_ASSERT(cybozu::file::Remove(fileName2));
+		if (cybozu::DoesFileExist(fileName2)) {
+			cybozu::RemoveFile(fileName2);
 		}
-		CYBOZU_TEST_ASSERT(!cybozu::file::DoesExist(fileName2));
-		CYBOZU_TEST_ASSERT(cybozu::file::Move(fileName, fileName2));
-		CYBOZU_TEST_ASSERT(cybozu::file::DoesExist(fileName2));
-		CYBOZU_TEST_ASSERT(cybozu::file::Remove(fileName2));
+		CYBOZU_TEST_ASSERT(!cybozu::DoesFileExist(fileName2));
+		cybozu::RenameFile(fileName, fileName2);
+		CYBOZU_TEST_ASSERT(cybozu::DoesFileExist(fileName2));
+		cybozu::RemoveFile(fileName2);
 	}
 	{
-		CYBOZU_TEST_ASSERT(!cybozu::file::Remove(fileName2));
-		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Remove(fileName2, !cybozu::DontThrow), cybozu::Exception, fileName2);
-		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::file::Move(fileName, fileName2, !cybozu::DontThrow), cybozu::Exception, fileName2);
+		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::RemoveFile(fileName2), cybozu::Exception, fileName2);
+		CYBOZU_TEST_EXCEPTION_MESSAGE(cybozu::RenameFile(fileName, fileName2), cybozu::Exception, fileName2);
 	}
 }
 
@@ -94,12 +93,12 @@ CYBOZU_TEST_AUTO(path)
 	{
 		std::string a = "abc\\def\\defg\\\\";
 		std::string b = "abc/def/defg//";
-		cybozu::file::ReplaceBackSlash(a);
+		cybozu::ReplaceBackSlash(a);
 		CYBOZU_TEST_EQUAL(a, b);
 	}
 
 	std::string path, baseName;
-	path = cybozu::file::GetExePath(&baseName);
+	path = cybozu::GetExePath(&baseName);
 #ifdef NDEBUG
 	const std::string cBaseName = "file_test";
 #else
@@ -122,9 +121,9 @@ bool findIn(const std::string& name, const char (&tbl)[N][16])
 
 CYBOZU_TEST_AUTO(GetFilesInDir)
 {
-	std::string path = cybozu::file::GetExePath() + "../include/cybozu/";
-	cybozu::file::FileInfoVec list;
-	CYBOZU_TEST_ASSERT(cybozu::file::GetFilesInDir(list, path));
+	std::string path = cybozu::GetExePath() + "../include/cybozu/";
+	cybozu::file::InfoVec list;
+	CYBOZU_TEST_ASSERT(cybozu::GetFileList(list, path));
 
 	const char fileTbl[][16] = {
 		"inttype.hpp",
@@ -173,9 +172,9 @@ CYBOZU_TEST_AUTO(GetBaseName)
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		const std::string name = tbl[i].name;
-		CYBOZU_TEST_EQUAL(cybozu::file::GetBaseName(name), tbl[i].base);
+		CYBOZU_TEST_EQUAL(cybozu::GetBaseName(name), tbl[i].base);
 		std::string suf;
-		CYBOZU_TEST_EQUAL(cybozu::file::GetBaseName(name, &suf), tbl[i].base);
+		CYBOZU_TEST_EQUAL(cybozu::GetBaseName(name, &suf), tbl[i].base);
 		CYBOZU_TEST_EQUAL(suf, tbl[i].suf);
 
 	}

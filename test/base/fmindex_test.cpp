@@ -19,7 +19,7 @@ std::string g_textTbl[] = {
 struct Init {
 	Init()
 	{
-		std::string path = cybozu::file::GetExePath();
+		std::string path = cybozu::GetExePath();
 		size_t pos = path.find("cybozulib");
 		CYBOZU_TEST_ASSERT(pos != std::string::npos);
 		path = path.substr(0, pos + 9) + "/include/cybozu/fmindex.hpp";

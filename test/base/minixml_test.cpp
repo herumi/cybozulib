@@ -75,7 +75,7 @@ CYBOZU_TEST_AUTO(escape)
 
 CYBOZU_TEST_AUTO(example)
 {
-	std::string file = cybozu::file::GetExePath();
+	std::string file = cybozu::GetExePath();
 	{
 		const std::string& key = "/cybozulib/";
 		size_t pos = file.find(key);

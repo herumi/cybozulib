@@ -14,7 +14,7 @@ std::string testName;
 struct InitPath {
 	InitPath()
 	{
-		dataPath = cybozu::file::GetExePath();
+		dataPath = cybozu::GetExePath();
 		size_t pos = dataPath.find("cybozulib");
 		if (pos == std::string::npos) {
 			puts("InitPath err");

@@ -107,7 +107,7 @@ struct AtndInfo {
 
 int main(int argc, char** argv)
 {
-	std::string data_dir = cybozu::file::GetExePath() + "../sample/data/plsi/";
+	std::string data_dir = cybozu::GetExePath() + "../sample/data/plsi/";
 
 	int K = 20;
 	int Iter = 100;
