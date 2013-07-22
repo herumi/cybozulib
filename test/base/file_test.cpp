@@ -123,7 +123,7 @@ CYBOZU_TEST_AUTO(GetFilesInDir)
 {
 	std::string path = cybozu::GetExePath() + "../include/cybozu/";
 	cybozu::FileList list;
-	CYBOZU_TEST_ASSERT(cybozu::GetFileList(list, path));
+	CYBOZU_TEST_ASSERT(cybozu::GetFileList(list, path, "hpp"));
 
 	const char fileTbl[][16] = {
 		"inttype.hpp",
@@ -177,5 +177,23 @@ CYBOZU_TEST_AUTO(GetBaseName)
 		CYBOZU_TEST_EQUAL(cybozu::GetBaseName(name, &suf), tbl[i].base);
 		CYBOZU_TEST_EQUAL(suf, tbl[i].suf);
 
+	}
+}
+
+CYBOZU_TEST_AUTO(HasSuffix)
+{
+	const struct {
+		const char *name;
+		const char *suf;
+		bool has;
+	} tbl[] = {
+		{ "test.txt", "txt", true },
+		{ "test.txa", "txt", false },
+		{ ".txt", "txt", true },
+		{ "asbc", "", true },
+		{ "", "a", false },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::HasSuffix(tbl[i].name, tbl[i].suf), tbl[i].has);
 	}
 }

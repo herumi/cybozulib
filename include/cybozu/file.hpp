@@ -247,6 +247,18 @@ public:
 };
 
 /*
+	name has suffix
+*/
+inline bool HasSuffix(const std::string& name, const std::string& suffix)
+{
+	const size_t nameSize = name.size();
+	const size_t suffixSize = suffix.size();
+	if (suffixSize == 0) return true;
+	if (nameSize < suffixSize + 1) return false;
+	const char *p = &name[nameSize - suffixSize - 1];
+	return *p == '.' && memcmp(p + 1, &suffix[0], suffixSize) == 0;
+}
+/*
 	split name as basename.suffix
 */
 inline std::string GetBaseName(const std::string& name, std::string *suffix = 0)
@@ -397,10 +409,11 @@ typedef std::vector<FileInfo> FileList;
 	get file name in dir
 	@param list [out] list must be able to push_back(file::Info)
 	@param dir [in] directory
-	@param suf [in] target suffix (select all if suffix is empty)
+	@param suffix [in] select files having suffix and all directory
+	@param cond [in] filter function (select if cond(targetFile, suffix) is true)
 */
 template<class List>
-inline bool GetFileList(List &list, const std::string& dir, const std::string& /*suffix*/ = "")
+inline bool GetFileList(List &list, const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
 {
 #ifdef _WIN32
 	std::string path = dir + "/*";
@@ -426,7 +439,9 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& /
 		FileInfo fi;
 		fi.name = fd.cFileName;
 		fi.isFile = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
-		list.push_back(fi);
+		if (!fi.isFile || cond(fi.name, suffix)) {
+			list.push_back(fi);
+		}
 	} while (FindNextFileA(hdl.hdl_, &fd) != 0);
 	return true;
 #else
@@ -457,7 +472,9 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& /
 		FileInfo fi;
 		fi.name = dp->d_name;
 		fi.isFile = dp->d_type == DT_REG;
-		list.push_back(fi);
+		if (!fi.isFile || cond(fi.name, suffix)) {
+			list.push_back(fi);
+		}
 	}
 #endif
 }
