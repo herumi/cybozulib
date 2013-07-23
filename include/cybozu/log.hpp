@@ -36,11 +36,9 @@ public:
 	{
 		closeFile();
 	}
-	void put(LogPriority priority, const char *format, va_list args)
+	void put(LogPriority priority, const std::string& str)
 	{
 		if (priority <= priority_) return;
-		std::string str;
-		cybozu::vformat(str, format, args);
 		if (fp_) {
 			cybozu::Time cur(true);
 			if (fprintf(fp_, "%s %s\n", cur.toString(false).c_str(), str.c_str()) < 0) {
@@ -63,6 +61,13 @@ public:
 #endif
 		}
 	}
+	void put(LogPriority priority, const char *format, va_list args)
+	{
+		if (priority <= priority_) return;
+		std::string str;
+		cybozu::vformat(str, format, args);
+		put(priority, str);
+	}
 
 	static Logger& getInstance()
 	{
@@ -75,7 +80,11 @@ public:
 	void openFile(const std::string& path)
 	{
 		closeFile();
+#ifdef _MSC_VER
+		if (fopen_s(&fp_, path.c_str(), "a+b")) fp_ = 0;
+#else
 		fp_ = fopen(path.c_str(), "a+b");
+#endif
 		if (fp_ == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
 	}
 	bool closeFile() throw()
@@ -111,7 +120,7 @@ inline void SetLogPriority(LogPriority priority)
 	log_local::Logger::getInstance().setPriority(priority);
 }
 /*
-	write log
+	write log like printf
 	Linux : default is syslog
 	Windows : default is file(use openFile)
 */
@@ -127,5 +136,33 @@ inline void PutLog(LogPriority priority, const char *format, ...) throw()
 } catch (...) {
 	fprintf(stderr, "faital error in cybozu::PutLog\n");
 }
+
+} // cybozu
+
+namespace cybozu {
+/*
+	write log like std::cout
+	Linux : default is syslog
+	Windows : default is file(use openFile)
+*/
+class Log {
+	LogPriority pri_;
+	std::ostringstream os_;
+	Log(const Log&);
+	void operator=(const Log&);
+public:
+	explicit Log(LogPriority priority = cybozu::LogInfo) : pri_(priority) { }
+	~Log()
+		try
+	{
+		log_local::Logger::getInstance().put(pri_, os_.str());
+	} catch (std::exception& e) {
+		fprintf(stderr, "faital error in cybozu::Log %s\n", e.what());
+	} catch (...) {
+		fprintf(stderr, "faital error in cybozu::Log\n");
+	}
+	template<class T>
+	Log& operator<<(const T& t) { os_ << t; return *this; }
+};
 
 } // cybozu
