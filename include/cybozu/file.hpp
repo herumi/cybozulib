@@ -481,7 +481,7 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& s
 
 template<>
 struct InputStreamTag<cybozu::File> {
-	static inline size_t read(cybozu::File& is, char *buf, size_t size, const char * = "")
+	static inline size_t read(cybozu::File& is, char *buf, size_t size)
 	{
 		return (size_t)is.read(buf, size);
 	}
@@ -489,9 +489,9 @@ struct InputStreamTag<cybozu::File> {
 
 template<>
 struct OutputStreamTag<cybozu::File> {
-	static inline void write(cybozu::File& os, const char *buf, size_t size, const char *msg = "")
+	static inline void write(cybozu::File& os, const char *buf, size_t size)
 	{
-		if ((size_t)os.write(buf, size) != size) throw cybozu::Exception("OutputStreamTag<cybozu::File>:write") << size << msg;
+		if ((size_t)os.write(buf, size) != size) throw cybozu::Exception("OutputStreamTag<cybozu::File>:write") << size;
 	}
 };
 
