@@ -266,31 +266,27 @@ public:
 		receive data
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
-		@retval > 0 recived size
-		@retval TIMEOUT timeout
-		@retval CLOSED socket is closed
-		@retval ERR otherwise
+		@retval >= 0 recived size
+		@note always return true if success, otherwise throw exception
 	*/
-	ssize_t read(char *buf, size_t bufSize)
+	size_t read(char *buf, size_t bufSize)
 	{
 		ssize_t ret = cybozu::socket_local::read(sd_, buf, bufSize);
 		if (ret >= 0) return ret;
-		return getError();
+		throw cybozu::Exception("Socket:read") << getError();
 	}
 
 	/*!
 		read all data unless timeout
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
+		@note always return true if success, otherwise throw exception
 	*/
 	void readAll(void *buf, size_t bufSize)
 	{
 		char *p = (char *)buf;
 		while (bufSize > 0) {
-			ssize_t ret = read(p, bufSize);
-			if (ret <= 0) {
-				throw cybozu::Exception("Socket:readAll") << ret;
-			}
+			size_t ret = read(p, bufSize);
 			p += ret;
 			bufSize -= ret;
 		}
