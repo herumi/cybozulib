@@ -3,7 +3,7 @@
 	@file
 	@brief tiny socket class
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 	@author MITSUNARI Shigeo
 */
 #include <errno.h>
@@ -29,6 +29,7 @@
 
 #include <cybozu/atomic.hpp>
 #include <cybozu/exception.hpp>
+#include <cybozu/stream_fwd.hpp>
 #include <string>
 
 namespace cybozu {
@@ -536,6 +537,14 @@ public:
 	int getReceiveTimeout() const
 	{
 		return getTimeout(SO_RCVTIMEO);
+	}
+};
+
+template<>
+struct OutputStreamTag<cybozu::Socket> {
+	static inline void write(cybozu::Socket& os, const char *buf, size_t size)
+	{
+		os.write(buf, size);
 	}
 };
 
