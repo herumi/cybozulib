@@ -12,19 +12,21 @@ CYBOZU_TEST_AUTO(open_and_write)
 {
 	cybozu::File f;
 	CYBOZU_TEST_ASSERT(!f.isOpen());
-	CYBOZU_TEST_ASSERT(f.open(fileName, std::ios::out | std::ios::trunc, cybozu::DontThrow));
+	f.open(fileName, std::ios::out | std::ios::trunc);
 	CYBOZU_TEST_ASSERT(f.isOpen());
-	CYBOZU_TEST_ASSERT(f.write(testBuf, sizeof(testBuf), cybozu::DontThrow));
+	f.write(testBuf, sizeof(testBuf));
+	f.close();
 }
 
 CYBOZU_TEST_AUTO(read)
 {
 	cybozu::File f;
-	CYBOZU_TEST_ASSERT(f.open(fileName, std::ios::in, cybozu::DontThrow));
-	char buf[sizeof(testBuf)];
-	CYBOZU_TEST_EQUAL(f.read(buf, sizeof(buf), cybozu::DontThrow), (int)sizeof(testBuf));
+	f.open(fileName, std::ios::in);
+	CYBOZU_TEST_ASSERT(f.isOpen());
+	char buf[sizeof(testBuf)] = {};
+	f.read(buf, sizeof(buf));
 	CYBOZU_TEST_ASSERT(memcmp(buf, testBuf, sizeof(buf)) == 0);
-	CYBOZU_TEST_EQUAL(f.getSize(), (int)sizeof(buf));
+	CYBOZU_TEST_EQUAL(f.getSize(), sizeof(testBuf));
 }
 
 CYBOZU_TEST_AUTO(size)
@@ -36,18 +38,18 @@ CYBOZU_TEST_AUTO(append)
 {
 	cybozu::File f;
 	CYBOZU_TEST_ASSERT(!f.isOpen());
-	CYBOZU_TEST_ASSERT(f.open(fileName, std::ios::out | std::ios::app, cybozu::DontThrow));
+	f.open(fileName, std::ios::out | std::ios::app);
 	CYBOZU_TEST_ASSERT(f.isOpen());
-	CYBOZU_TEST_ASSERT(f.write(testBuf, sizeof(testBuf), cybozu::DontThrow));
+	f.write(testBuf, sizeof(testBuf));
 }
 
 CYBOZU_TEST_AUTO(read2)
 {
 	cybozu::File f;
-	CYBOZU_TEST_ASSERT(f.open(fileName, std::ios::in, cybozu::DontThrow));
-	const int size = sizeof(testBuf);
+	f.open(fileName, std::ios::in);
+	const size_t size = sizeof(testBuf);
 	char buf[size * 2];
-	CYBOZU_TEST_EQUAL(f.read(buf, size * 2, cybozu::DontThrow), size * 2);
+	f.read(buf, size * 2);
 	CYBOZU_TEST_ASSERT(memcmp(buf, testBuf, size) == 0);
 	CYBOZU_TEST_ASSERT(memcmp(buf + size, testBuf, size) == 0);
 	CYBOZU_TEST_EQUAL(f.getSize(), size * 2);
@@ -56,19 +58,19 @@ CYBOZU_TEST_AUTO(read2)
 CYBOZU_TEST_AUTO(badmode)
 {
 	cybozu::File f;
-	CYBOZU_TEST_ASSERT(!f.open("test", std::ios::in | std::ios::out));
-	CYBOZU_TEST_ASSERT(!f.open("test", std::ios::in | std::ios::trunc));
-	CYBOZU_TEST_ASSERT(!f.open("test", std::ios::in | std::ios::app));
-	CYBOZU_TEST_ASSERT(!f.open("test", std::ios::out | std::ios::trunc | std::ios::app));
+	CYBOZU_TEST_EXCEPTION(f.open("test", std::ios::in | std::ios::out), cybozu::Exception);
+	CYBOZU_TEST_EXCEPTION(f.open("test", std::ios::in | std::ios::trunc), cybozu::Exception);
+	CYBOZU_TEST_EXCEPTION(f.open("test", std::ios::in | std::ios::app), cybozu::Exception);
+	CYBOZU_TEST_EXCEPTION(f.open("test", std::ios::out | std::ios::trunc | std::ios::app), cybozu::Exception);
 }
 
 CYBOZU_TEST_AUTO(move_and_remove)
 {
 	{
 		cybozu::File f;
-		CYBOZU_TEST_ASSERT(f.open(fileName, std::ios::out | std::ios::trunc));
+		f.open(fileName, std::ios::out | std::ios::trunc);
 		CYBOZU_TEST_ASSERT(f.isOpen());
-		CYBOZU_TEST_ASSERT(f.write(testBuf, sizeof(testBuf), cybozu::DontThrow));
+		f.write(testBuf, sizeof(testBuf));
 	}
 	{
 		/*
