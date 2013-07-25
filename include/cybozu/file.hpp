@@ -35,29 +35,52 @@ namespace cybozu {
 class File {
 	std::string name_;
 #ifdef _WIN32
-	HANDLE hdl_;
+	typedef HANDLE handleType;
 #else
-	int hdl_;
+	typedef int handleType;
 	enum {
 		INVALID_HANDLE_VALUE = -1
 	};
 #endif
+	handleType hdl_;
+	bool doClose_;
+	bool isReadOnly_;
 	File(const File&);
 	void operator=(const File&);
 public:
 	File()
 		: hdl_(INVALID_HANDLE_VALUE)
+		, doClose_(true)
+		, isReadOnly_(false)
 	{
 	}
-	File(const std::string& name, std::ios::openmode mode, bool dontThrow = true)
+	File(const std::string& name, std::ios::openmode mode)
 		: hdl_(INVALID_HANDLE_VALUE)
 	{
-		open(name, mode, dontThrow);
+		open(name, mode);
+	}
+	/*
+		construct with file handle
+		@param hdl [in] file handle
+	*/
+	explicit File(handleType hdl)
+		: hdl_(hdl)
+		, doClose_(false)
+		, isReadOnly_(false)
+
+	{
 	}
 	~File() throw()
 	{
-		sync(cybozu::DontThrow);
-		close(cybozu::DontThrow);
+		if (!doClose_) return;
+		try {
+			sync();
+			close();
+		} catch (std::exception& e) {
+			fprintf(stderr, "File:dstr:%s\n", e.what());
+		} catch (...) {
+			fprintf(stderr, "File:dstr:unknown\n");
+		}
 	}
 	bool isOpen() const throw() { return hdl_ != INVALID_HANDLE_VALUE; }
 	/**
@@ -67,20 +90,26 @@ public:
 		ios::out : write only(+truncate)
 		ios::out + ios::app(append)
 	*/
-	bool open(const std::string& name, std::ios::openmode mode, bool dontThrow = true)
+	void open(const std::string& name, std::ios::openmode mode)
 	{
+		if (isOpen()) throw cybozu::Exception("File:open:alread opened") << name;
 		name_ = name;
+		doClose_ = true;
 		bool isCorrectMode = true;
 		// verify mode
-		if (!!(mode & std::ios::in) == !!(mode & std::ios::out)) isCorrectMode = false;
-		if (mode & std::ios::in) {
-			if ((mode & std::ios::app) || (mode & std::ios::trunc)) isCorrectMode = false;
+		if (!!(mode & std::ios::in) == !!(mode & std::ios::out)) {
+			isCorrectMode = false;
 		} else {
-			if ((mode & std::ios::app) && (mode & std::ios::trunc)) isCorrectMode = false;
+			if (mode & std::ios::in) {
+				isReadOnly_ = true;
+				if ((mode & std::ios::app) || (mode & std::ios::trunc)) isCorrectMode = false;
+			} else {
+				isReadOnly_ = false;
+				if ((mode & std::ios::app) && (mode & std::ios::trunc)) isCorrectMode = false;
+			}
 		}
 		if (!isCorrectMode) {
-			if (dontThrow) return false;
-			throw cybozu::Exception("file:open:bad mode") << name_ << mode;
+			throw cybozu::Exception("File:open:bad mode") << name_ << mode;
 		}
 #ifdef _WIN32
 		DWORD access = GENERIC_READ;
@@ -106,7 +135,7 @@ public:
 		}
 #endif
 #ifdef _WIN32
-		hdl_ = CreateFileA(name.c_str(), access, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+		hdl_ = ::CreateFileA(name.c_str(), access, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
 #else
 		hdl_ = ::open(name.c_str(), flags, access);
 #endif
@@ -114,79 +143,105 @@ public:
 			if (mode & std::ios::app) {
 				seek(getSize(), std::ios::beg);
 			}
-			return true;
-		} else {
-			if (dontThrow) return false;
-			throw cybozu::Exception("file:open") << name_ << cybozu::ErrorNo() << static_cast<int>(mode);
+			return;
 		}
+		throw cybozu::Exception("File:open") << name_ << cybozu::ErrorNo() << static_cast<int>(mode);
 	}
-	bool openW(const std::string& name, bool dontThrow = true)
+	void openW(const std::string& name)
 	{
-		return open(name, std::ios::out | std::ios::binary | std::ios::trunc, dontThrow);
+		open(name, std::ios::out | std::ios::binary | std::ios::trunc);
 	}
-	bool openR(const std::string& name, bool dontThrow = true)
+	void openR(const std::string& name)
 	{
-		return open(name, std::ios::in | std::ios::binary, dontThrow);
+		open(name, std::ios::in | std::ios::binary);
 	}
-	bool close(bool dontThrow = true)
+	void close()
 	{
-		if (!isOpen()) return true;
+		if (!isOpen()) return;
 #ifdef _WIN32
-		bool isOK = CloseHandle(hdl_) != 0;
+		bool isOK = ::CloseHandle(hdl_) != 0;
 #else
 		bool isOK = ::close(hdl_) == 0;
 #endif
 		hdl_ = INVALID_HANDLE_VALUE;
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("fie:close") << name_ << cybozu::ErrorNo();
-		}
-		return isOK;
+		if (isOK) return;
+		throw cybozu::Exception("File:close") << name_ << cybozu::ErrorNo();
 	}
-	bool sync(bool dontThrow = true)
+	/*
+		sync
+		@param doFullSync [in] call sync(for only Linux)
+	*/
+	void sync(bool doFullSync = false)
 	{
-		if (!isOpen()) return true;
+		cybozu::disable_warning_unused_variable(doFullSync);
+		if (!isOpen()) return;
+		if (isReadOnly_) return;
 #ifdef _WIN32
-		bool isOK = FlushFileBuffers(hdl_) != 0;
+		/* fail if isReadOnly_ */
+		if (!::FlushFileBuffers(hdl_)) goto ERR_EXIT;
 #elif defined(__linux__) || defined(__CYGWIN__)
-		bool isOK = fdatasync(hdl_) == 0;
-#else
-		bool isOK = fcntl(hdl_, F_FULLFSYNC) == 0;
-#endif
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:sync") << name_ << cybozu::ErrorNo();
+		if (doFullSync) {
+			if (::fsync(hdl_)) goto ERR_EXIT;
+		} else {
+			if (::fdatasync(hdl_)) goto ERR_EXIT;
 		}
-		return isOK;
-	}
-	ssize_t write(const void *buf, size_t bufSize, bool dontThrow = true)
-	{
-#ifdef _WIN32
-		assert(bufSize < (1ULL << 31)); // modify for 64bit
-		DWORD writeSize;
-		bool isOK = WriteFile(hdl_, buf, static_cast<DWORD>(bufSize), &writeSize, NULL) != 0;
 #else
-		bool isOK = ::write(hdl_, buf, bufSize) == static_cast<ssize_t>(bufSize);
+		if (::fcntl(hdl_, F_FULLFSYNC)) goto ERR_EXIT;
 #endif
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:write") << name_ << cybozu::ErrorNo();
-		}
-		return isOK ? bufSize : -1;
+		return;
+	ERR_EXIT:
+		throw cybozu::Exception("File:sync") << name_ << cybozu::ErrorNo();
 	}
-	ssize_t read(void *buf, size_t bufSize, bool dontThrow = true)
+	void write(const void *buf, size_t bufSize)
 	{
+		const char *p = (const char *)buf;
+		while (bufSize > 0) {
+			uint32_t size = (uint32_t)std::min(size_t(0x7fffffff), bufSize);
 #ifdef _WIN32
-		assert(bufSize < (1ULL << 31)); // modify for 64bit
+			DWORD writeSize;
+			if (!::WriteFile(hdl_, p, size, &writeSize, NULL)) goto ERR_EXIT;
+#else
+			ssize_t writeSize = ::write(hdl_, p, size);
+			if (writeSize < 0) {
+				if (errno == EINTR) continue;
+				goto ERR_EXIT;
+			}
+#endif
+			p += writeSize;
+			bufSize -= writeSize;
+		}
+		return;
+	ERR_EXIT:
+		throw cybozu::Exception("File:write") << name_ << cybozu::ErrorNo();
+	}
+	size_t readsome(void *buf, size_t bufSize)
+	{
+		uint32_t size = (uint32_t)std::min(size_t(0x7fffffff), bufSize);
+#ifdef _WIN32
 		DWORD readSize;
-		bool isOK = ReadFile(hdl_, buf, static_cast<DWORD>(bufSize), &readSize, NULL) != 0;
+		if (!::ReadFile(hdl_, buf, size, &readSize, NULL)) goto ERR_EXIT;
 #else
-		ssize_t readSize = ::read(hdl_, buf, bufSize);
-		bool isOK = readSize >= 0;
-#endif
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:read") << name_ << cybozu::ErrorNo();
+	RETRY:
+		ssize_t readSize = ::read(hdl_, buf, size);
+		if (readSize < 0) {
+			if (errno == EINTR) goto RETRY;
+			goto ERR_EXIT;
 		}
-		return isOK ? static_cast<ssize_t>(readSize) : -1;
+#endif
+		return readSize;
+	ERR_EXIT:
+		throw cybozu::Exception("File:read") << name_ << cybozu::ErrorNo();
 	}
-	bool seek(int64_t pos, std::ios::seek_dir dir, bool dontThrow = true)
+	void read(void *buf, size_t bufSize)
+	{
+		char *p = (char *)buf;
+		while (bufSize > 0) {
+			size_t readSize = readsome(p, bufSize);
+			p += readSize;
+			bufSize -= readSize;
+		}
+	}
+	void seek(int64_t pos, std::ios::seek_dir dir)
 	{
 #ifdef _WIN32
 		LARGE_INTEGER largePos;
@@ -222,14 +277,12 @@ public:
 		}
 		bool isOK = lseek(hdl_, pos, whence) >= 0;
 #endif
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:seek") << name_ << cybozu::ErrorNo() << pos << static_cast<int>(dir);
-		}
-		return isOK;
+		if (isOK) return;
+		throw cybozu::Exception("File:seek") << name_ << cybozu::ErrorNo() << pos << static_cast<int>(dir);
 	}
-	int64_t getSize(bool dontThrow = true) const
+	uint64_t getSize() const
 	{
-		int64_t fileSize;
+		uint64_t fileSize;
 #ifdef _WIN32
 		LARGE_INTEGER size;
 		bool isOK = GetFileSizeEx(hdl_, &size) != 0;
@@ -239,10 +292,8 @@ public:
 		bool isOK = fstat(hdl_, &stat) == 0;
 		fileSize = stat.st_size;
 #endif
-		if (!dontThrow && !isOK) {
-			throw cybozu::Exception("file:getSize") << name_ << cybozu::ErrorNo();
-		}
-		return isOK ? fileSize : -1;
+		if (isOK) return fileSize;
+		throw cybozu::Exception("File:getSize") << name_ << cybozu::ErrorNo();
 	}
 };
 
@@ -341,10 +392,8 @@ inline uint64_t GetFileSize(const std::string& name)
 	struct stat buf;
 	bool isOK = stat(name.c_str(), &buf) == 0;
 #endif
-	if (!isOK) {
-		throw cybozu::Exception("GetFileSize") << name << cybozu::ErrorNo();
-	}
-	return buf.st_size;
+	if (isOK) return buf.st_size;
+	throw cybozu::Exception("GetFileSize") << name << cybozu::ErrorNo();
 }
 
 /**
@@ -478,21 +527,5 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& s
 	}
 #endif
 }
-
-template<>
-struct InputStreamTag<cybozu::File> {
-	static inline size_t read(cybozu::File& is, char *buf, size_t size)
-	{
-		return (size_t)is.read(buf, size);
-	}
-};
-
-template<>
-struct OutputStreamTag<cybozu::File> {
-	static inline void write(cybozu::File& os, const char *buf, size_t size)
-	{
-		if ((size_t)os.write(buf, size) != size) throw cybozu::Exception("OutputStreamTag<cybozu::File>:write") << size;
-	}
-};
 
 } // cybozu
