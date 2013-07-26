@@ -36,7 +36,7 @@ CYBOZU_TEST_AUTO(test1_deflate)
 		char buf[2048];
 		std::string out;
 		for (;;) {
-			size_t size = dec.read(buf, sizeof(buf));
+			size_t size = dec.readSome(buf, sizeof(buf));
 			if (size == 0) break;
 			out.append(buf, buf + size);
 		}
@@ -73,7 +73,7 @@ CYBOZU_TEST_AUTO(test2_deflate)
 		char buf[2048];
 		std::string out;
 		for (;;) {
-			size_t size = dec.read(buf, sizeof(buf));
+			size_t size = dec.readSome(buf, sizeof(buf));
 			if (size == 0) break;
 			out.append(buf, buf + size);
 		}
@@ -99,7 +99,7 @@ CYBOZU_TEST_AUTO(enc_and_dec)
 
 	cybozu::ZlibDecompressorT<cybozu::StringInputStream> dec(ims);
 	char buf[4096];
-	size_t size = dec.read(buf, sizeof(buf));
+	size_t size = dec.readSome(buf, sizeof(buf));
 	std::string decStr(buf, buf + size);
 	CYBOZU_TEST_EQUAL(body, decStr);
 }
@@ -116,7 +116,7 @@ CYBOZU_TEST_AUTO(output_gzip1)
 	{
 		cybozu::ZlibDecompressorT<std::stringstream> dec(ss, true);
 		char buf[4096];
-		size_t size = dec.read(buf, sizeof(buf));
+		size_t size = dec.readSome(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
 		CYBOZU_TEST_EQUAL(decStr, str);
 	}
@@ -125,7 +125,7 @@ CYBOZU_TEST_AUTO(output_gzip1)
 		cybozu::StringInputStream is(enc);
 		cybozu::ZlibDecompressorT<cybozu::StringInputStream> dec(is, true);
 		char buf[4096];
-		size_t size = dec.read(buf, sizeof(buf));
+		size_t size = dec.readSome(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
 		CYBOZU_TEST_EQUAL(decStr, str);
 	}
@@ -161,7 +161,7 @@ CYBOZU_TEST_AUTO(output_gzip2)
 		ss.write(encBuf, sizeof(encBufTbl));
 		cybozu::ZlibDecompressorT<std::stringstream> dec(ss, true);
 		char buf[4096];
-		size_t size = dec.read(buf, sizeof(buf));
+		size_t size = dec.readSome(buf, sizeof(buf));
 		std::string decStr(buf, buf + size);
 		CYBOZU_TEST_EQUAL(decStr, text);
 	}

@@ -60,9 +60,9 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 	assert(sizeof(outBuf) > (sizeof(inBuf) * 4) / 3 +(sizeof(inBuf) * 2) /* max # of CRLF */ + 16 /* margin */);
 	size_t outBufSize = 0;
 	for (;;) {
-		ssize_t readSize = In::read(is, inBuf, sizeof(inBuf));
-		if (readSize <= 0) break;
-		for (size_t i = 0; i < static_cast<size_t>(readSize); i++) {
+		size_t readSize = In::readSome(is, inBuf, sizeof(inBuf));
+		if (readSize == 0) break;
+		for (size_t i = 0; i < readSize; i++) {
 			unsigned int c = (unsigned char)inBuf[i];
 			if (idx == 0) {
 				remain = (c & 3) << 4;
@@ -201,9 +201,10 @@ template<class OutputStream, class InputStream>
 void DecodeFromBase64(OutputStream& os, InputStream& is)
 {
 	cybozu::Base64Decoder<OutputStream> dec(os);
+	typedef typename cybozu::InputStreamTag<InputStream> In;
 	for (;;) {
 		char buf[1024];
-		ssize_t readSize = is.read(buf, sizeof(buf));
+		size_t readSize = In::readSome(is, buf, sizeof(buf));
 		if (readSize <= 0) break;
 		dec.write(buf, readSize);
 	}

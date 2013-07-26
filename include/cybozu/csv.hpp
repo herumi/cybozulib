@@ -155,7 +155,7 @@ private:
 		if (pos_ < bufSize_) {
 			return buf_[pos_++];
 		}
-		bufSize_ = In::read(is_, buf_, sizeof(buf_));
+		bufSize_ = In::readSome(is_, buf_, sizeof(buf_));
 		if (bufSize_ > 0) {
 			pos_ = 1;
 			return buf_[0];
@@ -170,8 +170,8 @@ private:
 	size_t line_;
 	size_t lineSize_;
 	char buf_[2048];
-	ssize_t pos_;
-	ssize_t bufSize_;
+	size_t pos_;
+	size_t bufSize_;
 	bool eof_;
 };
 

@@ -30,14 +30,13 @@ union ci {
 template<class InputStream, class T>
 void loadRange(T *p, size_t num, InputStream& is)
 {
-	size_t size = cybozu::InputStreamTag<InputStream>::read(is, (char*)p, num * sizeof(T));
-	if (size != num * sizeof(T)) throw cybozu::Exception("loadRange") << num;
+	cybozu::InputStreamTag<InputStream>::read(is, p, num * sizeof(T));
 }
 
 template<class OutputStream, class T>
 void saveRange(OutputStream& os, const T *p, size_t num)
 {
-	cybozu::OutputStreamTag<OutputStream>::write(os, (const char*)p, num * sizeof(T));
+	cybozu::OutputStreamTag<OutputStream>::write(os, p, num * sizeof(T));
 }
 
 template<class InputStream, class T>

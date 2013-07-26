@@ -89,7 +89,7 @@ public:
 		@param buf [in] input data
 		@param size [in] input data size
 	*/
-	bool write(const char *buf, size_t _size)
+	void write(const void *buf, size_t _size)
 	{
 		assert(_size < (1U << 31));
 		uint32_t size = (uint32_t)_size;
@@ -97,7 +97,7 @@ public:
 			crc_ = crc32(crc_, (const Bytef *)buf, size);
 			totalSize_ += (unsigned int)size;
 		}
-		z_.next_in = (Bytef*)const_cast<char*>(buf);
+		z_.next_in = (Bytef*)const_cast<char*>((const char*)buf);
 		z_.avail_in = size;
 		while (z_.avail_in > 0) {
 			z_.next_out = (Bytef*)buf_;
@@ -110,7 +110,6 @@ public:
 			write_os(buf_, maxBufSize - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
 		}
-		return true;
 	}
 	void flush()
 	{
@@ -149,6 +148,7 @@ private:
 */
 template<class InputStream, size_t maxBufSize = 2048>
 class ZlibDecompressorT {
+	typedef cybozu::InputStreamTag<InputStream> In;
 	InputStream& is_;
 	unsigned int crc_;
 	unsigned int totalSize_; /* mod 2^32 */
@@ -159,10 +159,7 @@ class ZlibDecompressorT {
 	bool readGzipHeader_;
 	void readAll(char *buf, size_t size)
 	{
-		ssize_t readSize = cybozu::InputStreamTag<InputStream>::read(is_, buf, size);
-		if ((size_t)readSize != size) {
-			throw cybozu::Exception("zlib:ZlibDecompressorT:readAll") << readSize << size;
-		}
+		In::read(is_, buf, size);
 	}
 	void skipToZero()
 	{
@@ -255,7 +252,7 @@ public:
 		@param str [out] max buf size
 		@return written size
 	*/
-	ssize_t read(char *buf, size_t _size)
+	size_t readSome(void *buf, size_t _size)
 	{
 		assert(_size < (1U << 31));
 		uint32_t size = (uint32_t)_size;
@@ -268,18 +265,28 @@ public:
 		z_.avail_out = size;
 		do {
 			if (z_.avail_in == 0) {
-				z_.avail_in = (uint32_t)cybozu::InputStreamTag<InputStream>::read(is_, buf_, maxBufSize);
+				z_.avail_in = (uint32_t)In::readSome(is_, buf_, maxBufSize);
 				if (ret_ == Z_STREAM_END && z_.avail_in == 0) return 0;
 				z_.next_in = (Bytef*)buf_;
 			}
 			ret_ = inflate(&z_, Z_NO_FLUSH);
 			if (ret_ == Z_STREAM_END) break;
 			if (ret_ != Z_OK) {
-				throw cybozu::Exception("zlib:read:decompress") << std::string(z_.msg);
+				throw cybozu::Exception("zlib:readSome:decompress") << std::string(z_.msg);
 			}
 		} while (size == z_.avail_out);
 
 		return size - z_.avail_out;
+	}
+	void read(void *buf, size_t size)
+	{
+		char *p = (char *)buf;
+		while (size > 0) {
+			size_t readSize = readSome(p, size);
+			if (readSize == 0) throw cybozu::Exception("zlib:read");
+			p += readSize;
+			size -= readSize;
+		}
 	}
 };
 
