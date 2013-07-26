@@ -46,43 +46,6 @@ namespace socket_local {
 	typedef int SocketHandle;
 #endif
 
-inline ssize_t write(SocketHandle sd, const char *buf, size_t len)
-{
-#ifdef _WIN32
-	assert(len < (1U << 31));
-	return ::send(sd, buf, (int)len, 0);
-#else
-	ssize_t ret;
-	do {
-		ret = ::write(sd, buf, len);
-	} while (ret < 0 && errno == EINTR);
-	return ret;
-#endif
-}
-inline ssize_t read(SocketHandle sd, char *buf, size_t len)
-{
-#ifdef _WIN32
-	assert(len < (1U << 31));
-	return ::recv(sd, buf, (int)len, 0);
-#else
-	ssize_t ret;
-	do {
-		ret = ::read(sd, buf, len);
-	} while (ret < 0 && errno == EINTR);
-	return ret;
-#endif
-}
-inline bool close(SocketHandle sd)
-{
-#ifdef _WIN32
-	// ::shutdown(sd, SD_SEND);
-	// shutdown is called in closesocket
-	return ::closesocket(sd) == 0;
-#else
-	return ::close(sd) == 0;
-#endif
-}
-
 struct InitTerm {
 	/** call once for init */
 	InitTerm()
@@ -122,13 +85,15 @@ class SocketAddr {
 	int family_;
 public:
 	SocketAddr()
+		: addrlen_(0)
+		, family_(0)
 	{
 	}
 	SocketAddr(const std::string& address, uint16_t port)
 	{
 		set(address, port);
 	}
-	bool set(const std::string& address, uint16_t port)
+	void set(const std::string& address, uint16_t port)
 	{
 		char portStr[32];
 		CYBOZU_SNPRINTF(portStr, sizeof(portStr), "%d", port);
@@ -149,26 +114,28 @@ public:
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_V4MAPPED;
 			int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
-			if (s) {
-				return false;
-			}
+			if (s) goto ERR_EXIT;
 		}
-		bool found = false;
-		for (const struct addrinfo *p = result; p; p = p->ai_next) {
-			const int family = p->ai_family;
-			if (family == AF_INET || family == AF_INET6) {
-				if (p->ai_addrlen > sizeof(addr_)) {
-					throw cybozu::Exception("SocketAddr:setName") << address << p->ai_addrlen;
+		{
+			bool found = false;
+			for (const struct addrinfo *p = result; p; p = p->ai_next) {
+				const int family = p->ai_family;
+				if (family == AF_INET || family == AF_INET6) {
+					if (p->ai_addrlen > sizeof(addr_)) {
+						break;
+					}
+					memcpy(&addr_, p->ai_addr, p->ai_addrlen);
+					addrlen_ = (socklen_t)p->ai_addrlen;
+					family_ = family;
+					found = true;
+					break;
 				}
-				memcpy(&addr_, p->ai_addr, p->ai_addrlen);
-				addrlen_ = (socklen_t)p->ai_addrlen;
-				family_ = family;
-				found = true;
-				break;
 			}
+			freeaddrinfo(result);
+			if (found) return;
 		}
-		freeaddrinfo(result);
-		return found;
+	ERR_EXIT:
+		throw cybozu::Exception("SocketAddr:set") << address << port << cybozu::ErrorNo();
 	}
 	socklen_t getSize() const { return addrlen_; }
 	int getFamily() const { return family_; }
@@ -183,53 +150,32 @@ class Socket {
 private:
 	cybozu::socket_local::SocketHandle sd_;
 #ifdef WIN32
-	bool setTimeout(int type, int msec)
+	void setTimeout(int type, int msec)
 	{
-		return setSocketOption(type, msec);
+		setSocketOption(type, msec);
 	}
+	/* return msec */
 	int getTimeout(int type) const
 	{
-		int val;
-		if (getSocketOption(type, &val)) {
-			return val;
-		} else {
-			return -1;
-		}
+		return getSocketOption(type);
 	}
 #else
-	bool setTimeout(int type, int msec)
+	void setTimeout(int type, int msec)
 	{
 		struct timeval t;
 		t.tv_sec = msec / 1000;
 		t.tv_usec = (msec % 1000) * 1000;
-		return ::setsockopt(sd_, SOL_SOCKET, type, cybozu::cast<const char*>(&t), sizeof(t)) == 0;
+		setSocketOption(type, &t);
 	}
+	/* return msec */
 	int getTimeout(int type) const
 	{
 		struct timeval t;
-		socklen_t len = sizeof(t);
-		if (::getsockopt(sd_, SOL_SOCKET, type, cybozu::cast<char*>(&t), &len) == 0) {
-			return t.tv_sec * 1000 + t.tv_usec / 1000; /* msec */
-		} else {
-			return -1;
-		}
+		getSocketOption(type, &t);
+		return t.tv_sec * 1000 + t.tv_usec / 1000; /* msec */
 	}
 #endif
-	int getError() const
-	{
-#ifdef _WIN32
-		return (::WSAGetLastError() == WSAETIMEDOUT) ? TIMEOUT : ERR;
-#else
-		return (errno == EAGAIN || errno == EWOULDBLOCK) ? TIMEOUT : ERR;
-#endif
-	}
 public:
-	enum {
-		NOERR = 1,
-		CLOSED = 0,
-		TIMEOUT = -1,
-		ERR = -2
-	};
 #ifndef _WIN32
 	static const int INVALID_SOCKET = -1;
 #endif
@@ -240,11 +186,13 @@ public:
 
 	bool isValid() const { return sd_ != INVALID_SOCKET; }
 
+	// move
 	Socket(Socket& rhs)
-		: sd_(rhs.sd_)
+		: sd_(INVALID_SOCKET)
 	{
-		rhs.sd_ = INVALID_SOCKET;
+		cybozu::AtomicExchange(&rhs.sd_, sd_);
 	}
+	// close and move
 	void operator=(Socket& rhs)
 	{
 		close();
@@ -253,43 +201,56 @@ public:
 
 	~Socket()
 	{
-		close();
+		close(cybozu::DontThrow);
 	}
 
-	bool close()
+	void close(bool dontThrow = false)
 	{
 		cybozu::socket_local::SocketHandle sd = cybozu::AtomicExchange(&sd_, INVALID_SOCKET);
-		if (sd == INVALID_SOCKET) return true;
-		return cybozu::socket_local::close(sd);
+		if (sd == INVALID_SOCKET) return;
+#ifdef _WIN32
+		// ::shutdown(sd, SD_SEND);
+		// shutdown is called in closesocket
+		bool isOK = ::closesocket(sd) == 0;
+#else
+		bool isOK = ::close(sd) == 0;
+#endif
+		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::ErrorNo();
 	}
 
 	/*!
 		receive data
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
-		@retval >= 0 recived size
 		@note always return true if success, otherwise throw exception
 	*/
-	size_t read(char *buf, size_t bufSize)
+	size_t readSome(void *buf, size_t bufSize)
 	{
-		ssize_t ret = cybozu::socket_local::read(sd_, buf, bufSize);
-		if (ret >= 0) return ret;
-		throw cybozu::Exception("Socket:read") << getError();
+		int size = (int)std::min((size_t)0x7fffffff, bufSize);
+#ifdef _WIN32
+		int readSize = ::recv(sd, buf, size, 0);
+#else
+	RETRY:
+		ssize_t readSize = ::read(sd_, buf, size);
+		if (readSize < 0 && errno == EINTR) goto RETRY;
+#endif
+		if (readSize < 0) throw cybozu::Exception("Socket:readSome") << cybozu::ErrorNo();
+		return readSize;
 	}
 
 	/*!
-		read all data unless timeout
+		receive all data unless timeout
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
 		@note always return true if success, otherwise throw exception
 	*/
-	void readAll(void *buf, size_t bufSize)
+	void read(void *buf, size_t bufSize)
 	{
 		char *p = (char *)buf;
 		while (bufSize > 0) {
-			size_t ret = read(p, bufSize);
-			p += ret;
-			bufSize -= ret;
+			size_t readSize = readSome(p, bufSize);
+			p += readSize;
+			bufSize -= readSize;
 		}
 	}
 	/*!
@@ -300,18 +261,17 @@ public:
 	void write(const void *buf, size_t bufSize)
 	{
 		const char *p = (const char *)buf;
-		if (bufSize == 0) {
-			ssize_t ret = cybozu::socket_local::write(sd_, p, 0);
-			if (ret < 0) throw cybozu::Exception("Socket:write:bufSize = 0");
-			return;
-		}
 		while (bufSize > 0) {
-			ssize_t ret = cybozu::socket_local::write(sd_, p, bufSize);
-			if (ret <= 0) {
-				throw cybozu::Exception("Socket:writeAll") << ret;
-			}
-			p += ret;
-			bufSize -= ret;
+			int size = (int)std::min(size_t(0x7fffffff), bufSize);
+#ifdef _WIN32
+			int writeSize = ::send(sd_, p, size, 0);
+#else
+			int writeSize = ::write(sd_, p, size);
+			if (writeSize < 0 && errno == EINTR) continue;
+#endif
+			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::ErrorNo();
+			p += writeSize;
+			bufSize -= writeSize;
 		}
 	}
 	/**
@@ -319,46 +279,39 @@ public:
 		@param address [in] address
 		@param port [in] port
 	*/
-	bool connect(const std::string& address, uint16_t port)
+	void connect(const std::string& address, uint16_t port)
 	{
 		SocketAddr addr;
-		if (!addr.set(address, port)) {
-			return false;
-		}
-		return connect(addr);
+		addr.set(address, port);
+		connect(addr);
 	}
 	/**
 		connect to resolved socket addr
 	*/
-	bool connect(const cybozu::SocketAddr& addr)
+	void connect(const cybozu::SocketAddr& addr)
 	{
 		sd_ = socket(addr.getFamily(), SOCK_STREAM, 0);
 		if (!isValid()) {
-			return false;
+			throw cybozu::Exception("Socket:connect:socket") << cybozu::ErrorNo();
 		}
-		if (::connect(sd_, addr.get(), addr.getSize())) {
-			int keep = errno;
-			close();
-			errno = keep;
-			return false;
-		}
-		return true;
+		if (!::connect(sd_, addr.get(), addr.getSize())) return;
+		int keep = errno;
+		close();
+		throw cybozu::Exception("Socket:connect:connect") << cybozu::ErrorNo(keep);
 	}
 
 	/**
 		init for server
 		@param port [in] port number
 	*/
-	bool bind(uint16_t port, bool onlyIpv4 = false)
+	void bind(uint16_t port, bool onlyIpv4 = false)
 	{
 		const int family = onlyIpv4 ? AF_INET : AF_INET6;
 		sd_ = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
-			return false;
+			throw cybozu::Exception("Socket:bind:socket") << cybozu::ErrorNo();
 		}
-		if (!setSocketOption(SO_REUSEADDR, 1)) {
-			return false;
-		}
+		setSocketOption(SO_REUSEADDR, 1);
 		struct sockaddr_in6 addr6;
 		struct sockaddr_in addr4;
 		struct sockaddr *addr;
@@ -378,12 +331,12 @@ public:
 		}
 		if (::bind(sd_, addr, addrLen) == 0) {
 			if (::listen(sd_, SOMAXCONN) == 0) {
-				return true;
+				return;
 			}
 		}
-		cybozu::socket_local::close(sd_);
-		sd_ = INVALID_SOCKET;
-		return false;
+		int keep = errno;
+		close(cybozu::DontThrow);
+		throw cybozu::Exception("Socket:bind") << cybozu::ErrorNo(keep);
 	}
 
 	/**
@@ -411,58 +364,43 @@ public:
 	/**
 		accept for server
 	*/
-	bool accept(Socket& client, struct sockaddr_storage *paddr = 0) const
+	void accept(Socket& client, struct sockaddr_storage *paddr = 0) const
 	{
 		struct sockaddr_storage addr;
 		socklen_t len = sizeof(addr);
 		if (paddr == 0) paddr = &addr;
 		client.sd_ = ::accept(sd_, (struct sockaddr *)paddr, &len);
-		return client.isValid();
+		if (!client.isValid()) throw cybozu::Exception("Socket:accept") << cybozu::ErrorNo();
 	}
 
-	/**
-		setsockopt() for int
-	*/
-	bool setSocketOption(int level, int optname, int value)
+	template<typename T>
+	void setSocketOption(int optname, const T& value, int level = SOL_SOCKET)
 	{
-		return setsockopt(sd_, level, optname, cybozu::cast<const char*>(&value), sizeof(value)) == 0;
-	}
-	bool setSocketOption(int optname, int value)
-	{
-		return setSocketOption(SOL_SOCKET, optname, value);
-	}
-	/**
-		getsockopt() for int
-	*/
-	bool getSocketOption(int level, int optname, int* value) const
-	{
-		socklen_t len = sizeof(*value);
-		return getsockopt(sd_, level, optname, cybozu::cast<char*>(value), &len) == 0;
-	}
-	bool getSocketOption(int optname, int* value) const
-	{
-		return getSocketOption(SOL_SOCKET, optname, value);
+		bool isOK = setsockopt(sd_, level, optname, cybozu::cast<const char*>(&value), sizeof(T)) == 0;
+		if (!isOK) throw cybozu::Exception("Socket:setSocketOption") << cybozu::ErrorNo();
 	}
 	template<typename T>
-	bool setSocketOption(int optname, const T& value)
+	void getSocketOption(int optname, T* value, int level = SOL_SOCKET) const
 	{
-		return setsockopt(sd_, SOL_SOCKET, optname, cybozu::cast<const char*>(&value), sizeof(T)) == 0;
+		socklen_t len = (socklen_t)sizeof(T);
+		bool isOK = getsockopt(sd_, level, optname, cybozu::cast<char*>(value), &len) == 0;
+		if (!isOK) throw cybozu::Exception("Socket:getSocketOption") << cybozu::ErrorNo();
 	}
-	template<typename T>
-	bool getSocketOption(int optname, T* value) const
+	int getSocketOption(int optname) const
 	{
-		socklen_t len = sizeof(T);
-		return getsockopt(sd_, SOL_SOCKET, optname, cybozu::cast<char*>(value), &len) == 0;
+		int ret;
+		getSocketOption(optname, &ret);
+		return ret;
 	}
 	/**
 		setup linger
 	*/
-	bool setLinger(uint16_t l_onoff, uint16_t l_linger)
+	void setLinger(uint16_t l_onoff, uint16_t l_linger)
 	{
 		struct linger linger;
 		linger.l_onoff = l_onoff;
 		linger.l_linger = l_linger;
-		return setSocketOption(SO_LINGER, &linger);
+		setSocketOption(SO_LINGER, &linger);
 	}
 	/**
 		get receive buffer size
@@ -471,20 +409,15 @@ public:
 	*/
 	int getReceiveBufferSize() const
 	{
-		int val;
-		if (getSocketOption(SO_RCVBUF, &val)) {
-			return val;
-		} else {
-			return -1;
-		}
+		return getSocketOption(SO_RCVBUF);
 	}
 	/**
 		set receive buffer size
 		@param size [in] buffer size(byte)
 	*/
-	bool setReceiveBufferSize(int size)
+	void setReceiveBufferSize(int size)
 	{
-		return setSocketOption(SO_RCVBUF, size);
+		setSocketOption(SO_RCVBUF, size);
 	}
 	/**
 		get send buffer size
@@ -493,36 +426,31 @@ public:
 	*/
 	int getSendBufferSize() const
 	{
-		int val;
-		if (getSocketOption(SO_SNDBUF, &val)) {
-			return val;
-		} else {
-			return -1;
-		}
+		return getSocketOption(SO_SNDBUF);
 	}
 	/**
 		sed send buffer size
 		@param size [in] buffer size(byte)
 	*/
-	bool setSendBufferSize(int size)
+	void setSendBufferSize(int size)
 	{
-		return setSocketOption(SO_SNDBUF, size);
+		setSocketOption(SO_SNDBUF, size);
 	}
 	/**
 		set send timeout
 		@param msec [in] msec
 	*/
-	bool setSendTimeout(int msec)
+	void setSendTimeout(int msec)
 	{
-		return setTimeout(SO_SNDTIMEO, msec);
+		setTimeout(SO_SNDTIMEO, msec);
 	}
 	/**
 		set receive timeout
 		@param msec [in] msec
 	*/
-	bool setReceiveTimeout(int msec)
+	void setReceiveTimeout(int msec)
 	{
-		return setTimeout(SO_RCVTIMEO, msec);
+		setTimeout(SO_RCVTIMEO, msec);
 	}
 	/**
 		get send timeout
@@ -537,14 +465,6 @@ public:
 	int getReceiveTimeout() const
 	{
 		return getTimeout(SO_RCVTIMEO);
-	}
-};
-
-template<>
-struct OutputStreamTag<cybozu::Socket> {
-	static inline void write(cybozu::Socket& os, const char *buf, size_t size)
-	{
-		os.write(buf, size);
 	}
 };
 
