@@ -15,22 +15,16 @@ int main(int argc, char *argv[])
 		const std::string path = argv[1];
 		cybozu::ssl::ClientSocket s;
 		printf("connect %s\n", host.c_str());
-		if (!s.connect(host, 443)) {
-			puts("can't connect in main");
-			return 1;
-		}
+		s.connect(host, 443);
 		const std::string http = "GET " + path + " HTTP/1.0\r\n\r\n";
 		printf("cmd=%s\n", http.c_str());
-		if (!s.write(http.c_str(), http.size())) {
-			puts("can't write");
-			return 1;
-		}
+		s.write(http.c_str(), http.size());
 		puts("write end");
 		ssize_t total = 0;
 		for (;;) {
 			char buf[1024];
-			ssize_t readSize = s.read(buf, sizeof(buf));
-			if (readSize <= 0) {
+			size_t readSize = s.readSome(buf, sizeof(buf));
+			if (readSize == 0) {
 				break;
 			}
 			total += readSize;

@@ -111,55 +111,67 @@ public:
 			throw cybozu::Exception("ssl:ClientSocket");
 		}
 	}
-	bool connect(const std::string& address, unsigned short port)
+	void connect(const std::string& address, uint16_t port)
 	{
 		SocketAddr addr;
-		if (!addr.set(address, port)) {
-			return false;
-		}
-		return connect(addr);
+		addr.set(address, port);
+		connect(addr);
 	}
-	bool connect(const cybozu::SocketAddr& addr)
+	void connect(const cybozu::SocketAddr& addr)
 	{
-		if (!soc_.connect(addr)) return false;
+		soc_.connect(addr);
 		bool isOK;
 #ifdef _WIN32
 		if (soc_.sd_ > INT_MAX) {
-			throw cybozu::Exception("ssl:large socket handle") << soc_.sd_;
+			throw cybozu::Exception("ssl:ClientSocket:connect:large socket handle") << soc_.sd_;
 		}
 #endif
 		isOK = SSL_set_fd(ssl_, static_cast<int>(soc_.sd_)) != 0;
 		if (!isOK) goto ERR_EXIT;
 		isOK = SSL_connect(ssl_) == 1;
 		if (!isOK) goto ERR_EXIT;
-		return true;
+		return;
 	ERR_EXIT:
 		Engine::getInstance().putError();
-		return false;
+		throw cybozu::Exception("ssl:ClientSocket:connect");
 	}
-	ssize_t read(char *buf, size_t bufSize)
+	size_t readSome(void *buf, size_t bufSize)
 	{
-		if (bufSize > 0x7fffffffU) {
-			return -1;
-		}
-		ssize_t ret = SSL_read(ssl_, buf, static_cast<int>(bufSize));
-		if (ret < 0) {
-			Engine::getInstance().putError();
-		}
-		return ret;
+		int size = (int)std::min((size_t)0x7fffffff, bufSize);
+	RETRY:
+		int ret = SSL_read(ssl_, buf, size);
+		if (ret > 0) return size;
+		ret = SSL_get_error(ssl_, ret);
+		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) goto RETRY;
+		Engine::getInstance().putError();
+		throw cybozu::Exception("ssl:ClientSocket:readSome") << ret;
 	}
-	ssize_t write(const char *buf, size_t bufSize)
+	void read(void *buf, size_t bufSize)
 	{
-		if (bufSize > 0x7fffffffU) {
-			return -1;
+		char *p = (char *)buf;
+		while (bufSize > 0) {
+			size_t readSize = readSome(p, bufSize);
+			p += readSize;
+			bufSize -= readSize;
 		}
-		ssize_t ret = SSL_write(ssl_, buf, static_cast<int>(bufSize));
-		if (ret < 1) {
-			Engine::getInstance().putError();
-		}
-		return ret;
 	}
-	bool close()
+	void write(const char *buf, size_t bufSize)
+	{
+		const char *p = (const char *)buf;
+		while (bufSize > 0) {
+			int size = (int)std::min((size_t)0x7fffffff, bufSize);
+			int ret = SSL_write(ssl_, p, size);
+			if (ret <= 0) {
+				ret = SSL_get_error(ssl_, ret);
+				if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) continue;
+				Engine::getInstance().putError();
+				throw cybozu::Exception("ssl:ClientSocket:write") << ret;
+			}
+			p += ret;
+			bufSize -= ret;
+		}
+	}
+	void close(bool dontThrow = false)
 	{
 		bool isOK = true;
 		if (soc_.isValid()) {
@@ -167,14 +179,14 @@ public:
 			if (!isOK) {
 				Engine::getInstance().putError();
 			}
-			soc_.close();
+			soc_.close(dontThrow);
 		}
-		return isOK;
+		if (!dontThrow && !isOK) throw cybozu::Exception("ssl:ClientSocket:close");
 	}
 	~ClientSocket()
 	{
 		if (ssl_) {
-			close();
+			close(cybozu::DontThrow);
 			SSL_free(ssl_);
 			ssl_ = 0;
 		}
