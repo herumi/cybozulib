@@ -31,10 +31,8 @@ else
 	OBJSUF=d
 endif
 
-#TOPDIR=$(shell 'pwd' | sed "s@cybozulib/.*@cybozulib/@")
-# find the most right DIR in pwd and cut from begin to the position
-TOPDIR=$(shell 'pwd' | awk 'END{for(e=NF;$$e != DIR;e--); for(i=1;i<=e;i++) p=p $$i "/";print p}' FS='/' DIR='cybozulib')
-EXTDIR=$(TOPDIR)../cybozulib_ext/
+TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
+EXTDIR:=$(TOPDIR)../cybozulib_ext/
 CFLAGS+= -I$(TOPDIR)include -m$(BIT)
 LDFLAGS+= -L$(TOPDIR)lib -m$(BIT) -Wl,-rpath,'$$ORIGIN/../lib'
 
