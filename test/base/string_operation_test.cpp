@@ -20,6 +20,26 @@ CYBOZU_TEST_AUTO(ascii_space)
 	}
 }
 
+CYBOZU_TEST_AUTO(skipSpace)
+{
+	const struct {
+		const char *in;
+		const char *out;
+	} tbl[] = {
+		{ "abc", "abc" },
+		{ "  abc", "abc" },
+		{ "      ", "" },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const char *begin = tbl[i].in;
+		const char *end = begin + strlen(begin);
+		const char *p = cybozu::SkipSpace(begin, end);
+		CYBOZU_TEST_EQUAL(p, tbl[i].out);
+		std::string str(begin, end);
+		CYBOZU_TEST_EQUAL(cybozu::SkipSpace(str.begin(), str.end()) - str.begin(), p - begin);
+	}
+}
+
 bool is_space_normal(cybozu::Char c)
 {
 	static const cybozu::Char spaceTbl[] = {
