@@ -228,7 +228,7 @@ public:
 	{
 		int size = (int)std::min((size_t)0x7fffffff, bufSize);
 #ifdef _WIN32
-		int readSize = ::recv(sd, buf, size, 0);
+		int readSize = ::recv(sd_, (char *)buf, size, 0);
 #else
 	RETRY:
 		ssize_t readSize = ::read(sd_, buf, size);
