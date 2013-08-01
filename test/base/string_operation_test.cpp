@@ -306,6 +306,8 @@ CYBOZU_TEST_AUTO(split)
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		StrVec out;
 		size_t splitNum = cybozu::Split(out, std::string(tbl[i].in), tbl[i].splitChar, tbl[i].maxNum);
+		std::vector<std::string> r = cybozu::Split(std::string(tbl[i].in), tbl[i].splitChar, tbl[i].maxNum);
+		CYBOZU_TEST_ASSERT(r == out);
 		CYBOZU_TEST_EQUAL(splitNum, tbl[i].splitNum);
 		if (splitNum == tbl[i].splitNum) {
 			for (size_t j = 0; j < splitNum; j++) {
