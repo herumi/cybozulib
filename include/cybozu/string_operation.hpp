@@ -93,7 +93,7 @@ inline bool IsSpace(char c)
 	@param isSpace [in] check for white-space characters
 */
 template<typename Iterator>
-inline Iterator SkipSpace(Iterator begin, Iterator end, bool (*isSpace)(typename string_local::CharTag<typename Iterator>::value_type) = cybozu::IsSpace)
+inline Iterator SkipSpace(Iterator begin, Iterator end, bool (*isSpace)(typename string_local::CharTag<Iterator>::value_type) = cybozu::IsSpace)
 {
 	while (begin < end) {
 		if (!isSpace(*begin)) break;
@@ -112,7 +112,7 @@ namespace string_local {
 	return new begin position
 */
 template<typename Iterator>
-inline Iterator GetTrimPosition(Iterator begin, Iterator &end, bool (*isSpace)(typename string_local::CharTag<typename Iterator>::value_type) = cybozu::IsSpace)
+inline Iterator GetTrimPosition(Iterator begin, Iterator &end, bool (*isSpace)(typename string_local::CharTag<Iterator>::value_type) = cybozu::IsSpace)
 {
 	begin = SkipSpace(begin, end, isSpace);
 	while (begin < end) {
