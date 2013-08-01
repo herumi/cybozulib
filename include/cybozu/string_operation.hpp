@@ -28,6 +28,18 @@ static const bool DoAppend = true;
 
 } // string
 
+namespace string_local {
+
+template<class Iterator>
+struct CharTag{ typedef typename Iterator::value_type value_type; };
+
+template<>struct CharTag<char*> { typedef char value_type; };
+template<>struct CharTag<const char*> { typedef char value_type; };
+
+template<>struct CharTag<cybozu::Char*> { typedef cybozu::Char value_type; };
+template<>struct CharTag<const cybozu::Char*> { typedef cybozu::Char value_type; };
+}
+
 /**
 	verify whether c is a space or 0xfeff(BOM)
 	the definition of space is
@@ -47,7 +59,11 @@ static const bool DoAppend = true;
 	+
 	0xfeff // zero width no-break space
 */
-inline bool IsSpace(Char c)
+template<class C>
+bool IsSpace(C c);
+
+template<>
+inline bool IsSpace(cybozu::Char c)
 {
 	if (c == 0x20 || c == 0x3000) return true;
 	if (unsigned(c - 0x09) <= 0x0d - 0x09) return true;
@@ -63,17 +79,24 @@ inline bool IsSpace(Char c)
 /*
 	c is space or tab(Don't modify this condition)
 */
+template<>
 inline bool IsSpace(char c)
 {
 	if (c == ' ' || c == '\t') return true;
 	return false;
 }
 
+/*
+	skip space
+	@param begin [in] begin of string
+	@param end [in] end of string
+	@param isSpace [in] check for white-space characters
+*/
 template<typename Iterator>
-inline Iterator SkipSpace(Iterator begin, Iterator end)
+inline Iterator SkipSpace(Iterator begin, Iterator end, bool (*isSpace)(typename string_local::CharTag<typename Iterator>::value_type) = cybozu::IsSpace)
 {
 	while (begin < end) {
-		if (!cybozu::IsSpace(*begin)) break;
+		if (!isSpace(*begin)) break;
 		++begin;
 	}
 	return begin;
@@ -85,14 +108,15 @@ namespace string_local {
 	get trimed position [begin, end)
 	@param begin [in] begin of string
 	@param end [inout] end of string
+	@param isSpace [in] check for white-space characters
 	return new begin position
 */
 template<typename Iterator>
-inline Iterator GetTrimPosition(Iterator begin, Iterator &end)
+inline Iterator GetTrimPosition(Iterator begin, Iterator &end, bool (*isSpace)(typename string_local::CharTag<typename Iterator>::value_type) = cybozu::IsSpace)
 {
-	begin = cybozu::SkipSpace(begin, end);
+	begin = SkipSpace(begin, end, isSpace);
 	while (begin < end) {
-		if (!cybozu::IsSpace(end[-1])) break;
+		if (!isSpace(end[-1])) break;
 		--end;
 	}
 	return begin;
@@ -116,13 +140,13 @@ template<> struct SelectString<cybozu::Char> { typedef cybozu::String string_typ
 	@param str [inout] string to be trimed
 */
 template<class StringT>
-inline void Trim(StringT& str)
+inline void Trim(StringT& str, bool (*isSpace)(typename StringT::value_type) = cybozu::IsSpace)
 {
 	typedef typename StringT::value_type CharT;
 	if (str.empty()) return;
 	CharT *begin = &str[0];
 	CharT *end = begin + str.size();
-	CharT *newBegin = cybozu::string_local::GetTrimPosition(begin, end);
+	CharT *newBegin = cybozu::string_local::GetTrimPosition(begin, end, isSpace);
 	size_t size = end - newBegin;
 	if (begin != newBegin) {
 		for (size_t i = 0; i < size; i++) {
@@ -133,13 +157,13 @@ inline void Trim(StringT& str)
 }
 
 template<class StringT>
-inline StringT TrimCopy(const StringT& str)
+inline StringT TrimCopy(const StringT& str, bool (*isSpace)(typename StringT::value_type) = cybozu::IsSpace)
 {
 	typedef typename StringT::value_type CharT;
 	if (str.empty()) return "";
 	const CharT *begin = &str[0];
 	const CharT *end = begin + str.size();
-	const CharT *newBegin = cybozu::string_local::GetTrimPosition(begin, end);
+	const CharT *newBegin = cybozu::string_local::GetTrimPosition(begin, end, isSpace);
 	return StringT(newBegin, end);
 }
 
