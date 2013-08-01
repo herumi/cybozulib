@@ -309,16 +309,19 @@ bool CaseEqualStartWith(const StringT& lhs, const char (&rhs)[N])
 
 /**
 	split inStr into out at splitChar
-	maxNum is maximum number of split str
-	out must have clear() and push_back()
+	@param out [out] ouput vector, which must have clear() and push_back()
+	@param inStr [in] input string
+	@param splitChar [in] char to split
+	@param maxNum [in] max split num
+	@return split num
 */
 template<class Out, class StringT>
-size_t Split(Out& out, const StringT& inStr, typename StringT::value_type splitChar = ',', size_t maxNum = 0x7fffffff)
+size_t Split(Out& out, const StringT& inStr, typename StringT::value_type splitChar = ',', size_t maxNum = 0x7fffffff, bool doClear = true)
 {
 	typedef StringT String;
 	size_t splitNum = 0;
 	size_t cur = 0;
-	out.clear();
+	if (doClear) out.clear();
 	for (;;) {
 		size_t pos = inStr.find_first_of(splitChar, cur);
 		if (pos == String::npos || splitNum == maxNum - 1) {
@@ -331,6 +334,14 @@ size_t Split(Out& out, const StringT& inStr, typename StringT::value_type splitC
 		splitNum++;
 	}
 	return splitNum;
+}
+
+template<class StringT>
+std::vector<StringT> Split(const StringT& inStr, typename StringT::value_type splitChar = ',', size_t maxNum = 0x7fffffff, bool doClear = true)
+{
+	std::vector<StringT> out;
+	Split(out, inStr, splitChar, maxNum, doClear);
+	return out;
 }
 
 } // cybozu
