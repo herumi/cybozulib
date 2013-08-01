@@ -70,7 +70,7 @@ inline bool IsSpace(char c)
 }
 
 template<typename Iterator>
-inline Iterator* SkipSpace(Iterator *begin, Iterator *end)
+inline Iterator SkipSpace(Iterator begin, Iterator end)
 {
 	while (begin < end) {
 		if (!cybozu::IsSpace(*begin)) break;
@@ -88,7 +88,7 @@ namespace string_local {
 	return new begin position
 */
 template<typename Iterator>
-inline Iterator* GetTrimPosition(Iterator *begin, Iterator *&end)
+inline Iterator GetTrimPosition(Iterator begin, Iterator &end)
 {
 	begin = cybozu::SkipSpace(begin, end);
 	while (begin < end) {
