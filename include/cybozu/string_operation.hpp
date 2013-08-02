@@ -13,6 +13,7 @@
 */
 
 #include <algorithm>
+#include <vector>
 #include <cybozu/string.hpp>
 
 #ifdef _MSC_VER
