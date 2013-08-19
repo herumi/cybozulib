@@ -78,9 +78,9 @@ public:
 			try {
 				flush();
 			} catch (std::exception& e) {
-				fprintf(stderr, "ZlibCompressor:flush:exception:%s\n", e.what());
+				fprintf(stderr, "zlib:ZlibCompressor:flush:exception:%s\n", e.what());
 			} catch (...) {
-				fprintf(stderr, "ZlibCompressor:flush:unknown exception\n");
+				fprintf(stderr, "zlib:ZlibCompressor:flush:unknown exception\n");
 			}
 		}
 		deflateEnd(&z_);
@@ -92,7 +92,7 @@ public:
 	*/
 	void write(const void *buf, size_t _size)
 	{
-		assert(_size < (1U << 31));
+		if (_size >= (1u << 31)) throw cybozu::Exception("zlib:ZlibCompressor:write:too large size") << _size;
 		uint32_t size = (uint32_t)_size;
 		if (useGzip_) {
 			crc_ = crc32(crc_, (const Bytef *)buf, size);
@@ -106,7 +106,7 @@ public:
 
 			int ret = deflate(&z_, Z_NO_FLUSH);
 			if (ret != Z_STREAM_END && ret != Z_OK) {
-				throw cybozu::Exception("zlib:exec:compress") << std::string(z_.msg);
+				throw cybozu::Exception("zlib:ZlibCompressor:exec:compress") << std::string(z_.msg);
 			}
 			write_os(buf_, maxBufSize - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
@@ -124,7 +124,7 @@ public:
 
 			int ret = deflate(&z_, Z_FINISH);
 			if (ret != Z_STREAM_END && ret != Z_OK) {
-				throw cybozu::Exception("zlib:flush") << std::string(z_.msg);
+				throw cybozu::Exception("zlib:ZlibCompressor:flush") << std::string(z_.msg);
 			}
 			write_os(buf_, sizeof(buf_) - z_.avail_out);
 			if (ret == Z_STREAM_END) break;
@@ -251,13 +251,13 @@ public:
 		decompress is
 		@param str [out] decompressed data
 		@param str [out] max buf size
-		@return written size
+		@return read size
 	*/
 	size_t readSome(void *buf, size_t _size)
 	{
-		assert(_size < (1U << 31));
+		if (_size == 0) return 0;
+		if (_size >= (1u << 31)) throw cybozu::Exception("zlib:ZlibDecompressorT:readSome:too large size") << _size;
 		uint32_t size = (uint32_t)_size;
-		if (size == 0) return 0;
 		if (useGzip_ && !readGzipHeader_) {
 			readGzipHeader();
 			readGzipHeader_ = true;
@@ -273,7 +273,7 @@ public:
 			ret_ = inflate(&z_, Z_NO_FLUSH);
 			if (ret_ == Z_STREAM_END) break;
 			if (ret_ != Z_OK) {
-				throw cybozu::Exception("zlib:readSome:decompress") << std::string(z_.msg);
+				throw cybozu::Exception("zlib:ZlibDecompressorT:readSome:inflate") << std::string(z_.msg);
 			}
 		} while (size == z_.avail_out);
 
@@ -284,7 +284,7 @@ public:
 		char *p = (char *)buf;
 		while (size > 0) {
 			size_t readSize = readSome(p, size);
-			if (readSize == 0) throw cybozu::Exception("zlib:read");
+			if (readSize == 0) throw cybozu::Exception("zlib:ZlibDecompressorT:read");
 			p += readSize;
 			size -= readSize;
 		}
