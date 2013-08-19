@@ -10,6 +10,7 @@
 #include <cybozu/endian.hpp>
 #include <cybozu/stream_fwd.hpp>
 #include <assert.h>
+#include <stdio.h>
 #include <zlib.h>
 
 #ifdef _MSC_VER
