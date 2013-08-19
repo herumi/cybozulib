@@ -103,13 +103,13 @@ class MemoryInputStream {
 	const char *p_;
 	size_t size_;
 public:
-	MemoryInputStream(const void *p, size_t size) : p_((const char *)p), size_(size) {}
+	size_t pos;
+	MemoryInputStream(const void *p, size_t size) : p_((const char *)p), size_(size), pos(0) {}
 	size_t readSome(void *buf, size_t size)
 	{
-		if (size > size_) size = size_;
-		memcpy(buf, p_, size);
-		p_ += size;
-		size_ -= size;
+		if (size > size_  - pos) size = size_ - pos;
+		memcpy(buf, p_ + pos, size);
+		pos += size;
 		return size;
 	}
 	void read(void *buf, size_t size)
@@ -122,13 +122,13 @@ class MemoryOutputStream {
 	char *p_;
 	size_t size_;
 public:
-	MemoryOutputStream(void *p, size_t size) : p_((char *)p), size_(size) {}
+	size_t pos;
+	MemoryOutputStream(void *p, size_t size) : p_((char *)p), size_(size), pos(0) {}
 	void write(const void *buf, size_t size)
 	{
-		if (size > size_) throw cybozu::Exception("MemoryOutputStream:write") << size << size_;
-		memcpy(p_, buf, size);
-		p_ += size;
-		size_ -= size;
+		if (size > size_ - pos) throw cybozu::Exception("MemoryOutputStream:write") << size << size_ << pos;
+		memcpy(p_ + pos, buf, size);
+		pos += size;
 	}
 };
 
