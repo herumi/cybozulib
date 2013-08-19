@@ -279,6 +279,7 @@ public:
 
 		return size - z_.avail_out;
 	}
+	bool isEmpty() const { return ret_ == Z_STREAM_END; }
 	void read(void *buf, size_t size)
 	{
 		char *p = (char *)buf;
