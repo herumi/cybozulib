@@ -64,7 +64,7 @@ public:
 	16byte aligment array
 	+16 to avoid overrunning by SSE4.2 string operation
 */
-template<class T>
+template<class T, size_t N = 16>
 class AlignedArray {
 	T *p_;
 	size_t size_;
@@ -80,7 +80,7 @@ public:
 	void resize(size_t size)
 	{
 		clear();
-		p_ = (T*)AlignedMalloc(size * sizeof(T) + 16, 16);
+		p_ = (T*)AlignedMalloc(size * sizeof(T) + N, N);
 		if (p_ == 0) throw std::bad_alloc();
 		size_ = size;
 		bool init = true;
