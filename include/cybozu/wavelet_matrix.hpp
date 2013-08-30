@@ -168,7 +168,7 @@ public:
 	void init(const Vec& vec, size_t valBitLen)
 	{
 		if (vec.size() > (uint64_t(1) << 32)) throw cybozu::Exception("WaveletMatrix:init:too large") << vec.size();
-		if (valBitLen >= 16) throw cybozu::Exception("WaveletMatrix:init:too large valBitLen") << valBitLen;
+		if (valBitLen > 16) throw cybozu::Exception("WaveletMatrix:init:too large valBitLen") << valBitLen;
 		valBitLen_ = valBitLen;
 		maxVal_ = uint64_t(1) << valBitLen_;
 		size_ = vec.size();
