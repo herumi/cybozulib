@@ -12,6 +12,10 @@
 	#include <unistd.h>
 #endif
 #include <cybozu/exception.hpp>
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#include <mutex>
+#include <condition_variable>
+#endif
 
 namespace cybozu {
 
@@ -51,6 +55,29 @@ public:
 	}
 };
 #else
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+
+class Event {
+	bool isSignaled_;
+	std::mutex m_;
+	std::condition_variable cv_;
+public:
+	Event() : isSignaled_(false) {}
+	void wakeup()
+	{
+        std::unique_lock<std::mutex> lk(m_);
+		isSignaled_ = true;
+		cv_.notify_one();
+	}
+	void wait()
+	{
+        std::unique_lock<std::mutex> lk(m_);
+		cv_.wait(lk, [this] { return isSignaled_; });
+		isSignaled_ = false;
+	}
+};
+
+#else
 class Event {
 	int pipefd_[2];
 public:
@@ -80,6 +107,7 @@ public:
 		cybozu::disable_warning_unused_variable(size);
 	}
 };
+#endif
 #endif
 
 } // cybozu
