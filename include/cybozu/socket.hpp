@@ -149,6 +149,8 @@ class Socket {
 	friend class cybozu::ssl::ClientSocket;
 private:
 	cybozu::socket_local::SocketHandle sd_;
+	Socket(const Socket&);
+	void operator=(const Socket&);
 #ifdef WIN32
 	void setTimeout(int type, int msec)
 	{
@@ -187,13 +189,21 @@ public:
 	bool isValid() const { return sd_ != INVALID_SOCKET; }
 
 	// move
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+	Socket(Socket&& rhs)
+#else
 	Socket(Socket& rhs)
+#endif
 		: sd_(INVALID_SOCKET)
 	{
 		sd_ = cybozu::AtomicExchange(&rhs.sd_, sd_);
 	}
 	// close and move
+#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+	void operator=(Socket&& rhs)
+#else
 	void operator=(Socket& rhs)
+#endif
 	{
 		close();
 		sd_ = cybozu::AtomicExchange(&rhs.sd_, INVALID_SOCKET);
