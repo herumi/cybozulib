@@ -190,7 +190,7 @@ public:
 	Socket(Socket& rhs)
 		: sd_(INVALID_SOCKET)
 	{
-		cybozu::AtomicExchange(&rhs.sd_, sd_);
+		sd_ = cybozu::AtomicExchange(&rhs.sd_, sd_);
 	}
 	// close and move
 	void operator=(Socket& rhs)
