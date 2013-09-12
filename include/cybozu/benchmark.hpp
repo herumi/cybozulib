@@ -143,7 +143,7 @@ static int CYBOZU_UNUSED g_loopNum;
 	cybozu::CpuClock clk; \
 	for (int i = 0; i < cybozu::CpuClock::loopN2; i++) { \
 		clk.begin(); \
-		for (int j = 0; j < cybozu::CpuClock::loopN1; j++) func(__VA_ARGS__); \
+		for (int j = 0; j < cybozu::CpuClock::loopN1; j++) { func(__VA_ARGS__); } \
 		clk.end(); \
 		if (clk.getClock() > maxClk) break; \
 	} \
@@ -160,7 +160,7 @@ static int CYBOZU_UNUSED g_loopNum;
 { \
 	cybozu::CpuClock clk; \
 	clk.begin(); \
-	for (int j = 0; j < _N; j++) func(__VA_ARGS__); \
+	for (int j = 0; j < _N; j++) { func(__VA_ARGS__); } \
 	clk.end(); \
 	if (msg && *msg) clk.put(msg, _N); \
 	cybozu::bench::g_clk = clk; cybozu::bench::g_loopNum = _N; \
