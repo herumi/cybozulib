@@ -30,6 +30,29 @@ struct enable_if { typedef T type; };
 template <class T>
 struct enable_if<false, T> {};
 
+struct DummyClass;
+template<typename S, void (S::*)(void*, size_t)>struct HasMemFunc {};
+
+// InputStream has read(), so use it
+template<typename InputStream>
+void dispatch_read(InputStream& is, void *buf, size_t size, int, HasMemFunc<InputStream, &InputStream::read>* = 0)
+{
+	is.read(buf, size);
+}
+
+// InputStream does not have read(), so use readSome()
+template<typename InputStream>
+void dispatch_read(InputStream& is, void *buf, size_t size, DummyClass*)
+{
+	char *p = (char*)buf;
+	while (size > 0) {
+		size_t readSize = is.readSome(p, size);
+		if (readSize == 0) throw cybozu::Exception("stream:dispatch_read");
+		p += readSize;
+		size -= readSize;
+	}
+}
+
 /* specialization for istream */
 template<class InputStream>
 size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
@@ -64,7 +87,7 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 template<class InputStream>
 void read_inner(InputStream& is, void *buf, size_t size, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
-	is.read(buf, size);
+	dispatch_read(is, buf, size, 0);
 }
 
 /* generic version for void write(const void*, size_t), which writes all data */
@@ -112,10 +135,6 @@ public:
 		pos += size;
 		return size;
 	}
-	void read(void *buf, size_t size)
-	{
-		if (readSome(buf, size) != size) throw cybozu::Exception("MemoryInputStream:read") << size;
-	}
 };
 
 class MemoryOutputStream {
@@ -134,22 +153,18 @@ public:
 
 class StringInputStream {
 	const std::string& str_;
-	size_t cur_;
 	StringInputStream(const StringInputStream&);
 	void operator=(const StringInputStream&);
 public:
-	explicit StringInputStream(const std::string& str) : str_(str), cur_(0) {}
+	size_t pos;
+	explicit StringInputStream(const std::string& str) : str_(str), pos(0) {}
 	size_t readSome(void *buf, size_t size)
 	{
-		const size_t remainSize = str_.size() - cur_;
+		const size_t remainSize = str_.size() - pos;
 		if (size > remainSize) size = remainSize;
-		memcpy(buf, &str_[cur_], size);
-		cur_ += size;
+		memcpy(buf, &str_[pos], size);
+		pos += size;
 		return size;
-	}
-	void read(void *buf, size_t size)
-	{
-		if (readSome(buf, size) != size) throw cybozu::Exception("StringInputStream:read") << size;
 	}
 };
 

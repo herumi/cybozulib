@@ -66,10 +66,36 @@ struct Data2 {
 	}
 };
 
-namespace cybozu {
+/*
+	how to make InputStream
+	InputStream must have size_t readSome(void *, size_t)
+	return read size
+*/
+struct VecInputStream {
+	std::vector<char> data;
+	size_t pos;
+	VecInputStream() : pos(0) {}
 
+	size_t readSome(void *buf, size_t size)
+	{
+		size_t readSize = std::min(size, data.size() - pos);
+		memcpy(buf, &data[pos], readSize);
+		pos += readSize;
+		return readSize;
+	}
+};
 
-} // cybozu
+/*
+	how to make OutputStream
+	OutputStream must have void write(const void *, size_t)
+*/
+struct VecOutputStream {
+	std::vector<char> data;
+	void write(const void *buf, size_t size)
+	{
+		data.insert(data.end(), (const char*)buf, (const char*)buf + size);
+	}
+};
 
 int main()
 {
@@ -115,6 +141,15 @@ int main()
 		cybozu::Mmap m(file);
 		cybozu::MemoryInputStream is(m.get(), m.size());
 
+		Data2 y2;
+		cybozu::load(y2, is);
+		puts(x2 == y2 ? "ok" : "ng");
+	}
+	{
+		VecOutputStream os;
+		cybozu::save(os, x2);
+		VecInputStream is;
+		is.data = os.data;
 		Data2 y2;
 		cybozu::load(y2, is);
 		puts(x2 == y2 ? "ok" : "ng");
