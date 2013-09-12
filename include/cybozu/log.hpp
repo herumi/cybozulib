@@ -26,10 +26,12 @@ namespace log_local {
 class Logger {
 	int priority_;
 	FILE *fp_;
+	bool doClose_;
 public:
 	Logger()
 		: priority_(cybozu::LogDebug)
 		, fp_(NULL)
+		, doClose_(true)
 	{
 	}
 	~Logger()
@@ -87,9 +89,20 @@ public:
 #endif
 		if (fp_ == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
 	}
+	/*
+		set FILE pointer
+		@note Logger does not close the pointer
+	*/
+	void set(FILE *fp)
+	{
+		if (fp == 0) throw cybozu::Exception("cybozu:Logger:set") << fp;
+		closeFile();
+		fp_ = fp;
+		doClose_ = false;
+	}
 	bool closeFile() throw()
 	{
-		if (fp_ == 0) return true;
+		if (!doClose_ || fp_ == 0) return true;
 		bool isOK = fclose(fp_) == 0;
 		fp_ = NULL;
 		return isOK;
@@ -109,6 +122,16 @@ public:
 inline void OpenLogFile(const std::string& path)
 {
 	return log_local::Logger::getInstance().openFile(path);
+}
+
+/*
+	set FILE pointer
+	@note Logger does not close the pointer
+	@note this function is not thread safe
+*/
+inline void SetLogFILE(FILE *fp)
+{
+	return log_local::Logger::getInstance().set(fp);
 }
 
 /*
