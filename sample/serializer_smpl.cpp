@@ -97,6 +97,35 @@ struct VecOutputStream {
 	}
 };
 
+/*
+	VecInputStream2 does not have readSome() then
+	specialize cybozu::InputStreamTag<VecInputStream2>
+*/
+struct VecInputStream2 {
+	std::vector<char> data;
+	size_t pos;
+	VecInputStream2() : pos(0) {}
+
+	size_t readsome(void *buf, size_t size)
+	{
+		size_t readSize = std::min(size, data.size() - pos);
+		memcpy(buf, &data[pos], readSize);
+		pos += readSize;
+		return readSize;
+	}
+};
+
+namespace cybozu {
+template<>
+struct InputStreamTag<VecInputStream2>
+{
+	static size_t readSome(VecInputStream2& is, void *buf, size_t size)
+	{
+		return is.readsome(buf, size);
+	}
+};
+} // cybozu
+
 int main()
 {
 	const char *file = "test.data";
@@ -145,13 +174,23 @@ int main()
 		cybozu::load(y2, is);
 		puts(x2 == y2 ? "ok" : "ng");
 	}
+	// how to use VecInputStream and VecOutputStream
 	{
 		VecOutputStream os;
 		cybozu::save(os, x2);
-		VecInputStream is;
-		is.data = os.data;
-		Data2 y2;
-		cybozu::load(y2, is);
-		puts(x2 == y2 ? "ok" : "ng");
+		{
+			VecInputStream is;
+			is.data = os.data;
+			Data2 y2;
+			cybozu::load(y2, is);
+			puts(x2 == y2 ? "ok" : "ng");
+		}
+		{
+			VecInputStream2 is;
+			is.data = os.data;
+			Data2 y2;
+			cybozu::load(y2, is);
+			puts(x2 == y2 ? "ok" : "ng");
+		}
 	}
 }
