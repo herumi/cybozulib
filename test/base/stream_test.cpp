@@ -20,7 +20,7 @@ CYBOZU_TEST_AUTO(sstream)
 	{
 		char buf[64] = {};
 		std::istringstream is(str);
-		cybozu::InputStreamTag<std::istringstream>::read(is, buf, str.size());
+		cybozu::stream::read(is, buf, str.size());
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
 	}
 }
@@ -45,7 +45,7 @@ CYBOZU_TEST_AUTO(memory)
 	{
 		cybozu::MemoryInputStream is(str.c_str(), str.size());
 		char buf[64] = {};
-		cybozu::InputStreamTag<cybozu::MemoryInputStream>::read(is, buf, str.size());
+		cybozu::stream::read(is, buf, str.size());
 		CYBOZU_TEST_EQUAL(str.size(), is.pos);
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
 	}
@@ -70,7 +70,7 @@ CYBOZU_TEST_AUTO(string)
 	{
 		cybozu::StringInputStream is(str);
 		char buf[64] = {};
-		cybozu::InputStreamTag<cybozu::StringInputStream>::read(is, buf, str.size());
+		cybozu::stream::read(is, buf, str.size());
 		CYBOZU_TEST_EQUAL(str.size(), is.pos);
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
 	}
