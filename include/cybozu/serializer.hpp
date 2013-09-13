@@ -30,7 +30,8 @@ union ci {
 template<class InputStream, class T>
 void loadRange(T *p, size_t num, InputStream& is)
 {
-	cybozu::InputStreamTag<InputStream>::read(is, p, num * sizeof(T));
+//	cybozu::InputStreamTag<InputStream>::read(is, p, num * sizeof(T));
+	cybozu::stream::read(is, p, num * sizeof(T));
 }
 
 template<class OutputStream, class T>

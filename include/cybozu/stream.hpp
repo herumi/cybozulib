@@ -30,29 +30,6 @@ struct enable_if { typedef T type; };
 template <class T>
 struct enable_if<false, T> {};
 
-struct DummyClass;
-template<typename S, void (S::*)(void*, size_t)>struct HasMemFunc {};
-
-// InputStream has read(), so use it
-template<typename InputStream>
-void dispatch_read(InputStream& is, void *buf, size_t size, int, HasMemFunc<InputStream, &InputStream::read>* = 0)
-{
-	is.read(buf, size);
-}
-
-// InputStream does not have read(), so use readSome()
-template<typename InputStream>
-void dispatch_read(InputStream& is, void *buf, size_t size, DummyClass*)
-{
-	char *p = (char*)buf;
-	while (size > 0) {
-		size_t readSize = is.readSome(p, size);
-		if (readSize == 0) throw cybozu::Exception("stream:dispatch_read");
-		p += readSize;
-		size -= readSize;
-	}
-}
-
 /* specialization for istream */
 template<class InputStream>
 size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
@@ -63,19 +40,6 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 	return readSize;
 }
 
-template<class InputStream>
-void read_inner(InputStream& is, void *buf, size_t size, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
-{
-	if (!is.read((char *)buf, size) || size != (size_t)is.gcount()) throw cybozu::Exception("stream:read_inner") << size;
-}
-
-/* specialization for ostream */
-template<class OutputStream>
-void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
-{
-	if (!os.write((const char *)buf, size)) throw cybozu::Exception("stream:writeSub") << size;
-}
-
 /* generic version for size_t readSome(void *, size_t) */
 template<class InputStream>
 size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
@@ -83,11 +47,11 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 	return is.readSome(buf, size);
 }
 
-/* generic version for void read(void *, size_t), which reads all data */
-template<class InputStream>
-void read_inner(InputStream& is, void *buf, size_t size, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
+/* specialization for ostream */
+template<class OutputStream>
+void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
-	dispatch_read(is, buf, size, 0);
+	if (!os.write((const char *)buf, size)) throw cybozu::Exception("stream:writeSub") << size;
 }
 
 /* generic version for void write(const void*, size_t), which writes all data */
@@ -107,10 +71,6 @@ struct InputStreamTag {
 	static size_t readSome(InputStream& is, void *buf, size_t size)
 	{
 		return stream_local::readSome_inner<InputStream>(is, buf, size);
-	}
-	static inline void read(InputStream& is, void *buf, size_t size)
-	{
-		stream_local::read_inner<InputStream>(is, buf, size);
 	}
 };
 
@@ -179,5 +139,21 @@ public:
 		str_.append((const char *)buf, size);
 	}
 };
+
+namespace stream {
+
+template<typename InputStream>
+void read(InputStream& is, void *buf, size_t size)
+{
+	char *p = (char*)buf;
+	while (size > 0) {
+		size_t readSize = InputStreamTag<InputStream>::readSome(is, p, size);
+		if (readSize == 0) throw cybozu::Exception("stream:InputStreamRead");
+		p += readSize;
+		size -= readSize;
+	}
+}
+
+} // cybozu::stream
 
 } // cybozu
