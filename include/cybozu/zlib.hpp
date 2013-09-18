@@ -6,9 +6,8 @@
 	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
 */
 
-#include <cybozu/exception.hpp>
-#include <cybozu/endian.hpp>
 #include <cybozu/stream_fwd.hpp>
+#include <cybozu/endian.hpp>
 #include <assert.h>
 #include <stdio.h>
 #include <zlib.h>
@@ -160,7 +159,7 @@ class ZlibDecompressorT {
 	bool readGzipHeader_;
 	void readAll(char *buf, size_t size)
 	{
-		In::read(is_, buf, size);
+		cybozu::stream::read(is_, buf, size);
 	}
 	void skipToZero()
 	{

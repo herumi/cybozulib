@@ -5,6 +5,7 @@
 
 	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 */
+#include <cybozu/exception.hpp>
 
 namespace cybozu {
 
@@ -14,5 +15,19 @@ struct InputStreamTag;
 template<class OutputStream>
 struct OutputStreamTag;
 
-} // cybozu
+namespace stream {
+
+template<typename InputStream>
+void read(InputStream& is, void *buf, size_t size)
+{
+	char *p = (char*)buf;
+	while (size > 0) {
+		size_t readSize = cybozu::InputStreamTag<InputStream>::readSome(is, p, size);
+		if (readSize == 0) throw cybozu::Exception("stream:InputStreamRead");
+		p += readSize;
+		size -= readSize;
+	}
+}
+
+} } // cybozu::stream
 
