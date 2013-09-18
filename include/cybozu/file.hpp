@@ -214,7 +214,7 @@ public:
 	ERR_EXIT:
 		throw cybozu::Exception("File:write") << name_ << cybozu::ErrorNo();
 	}
-	size_t readsome(void *buf, size_t bufSize)
+	size_t readSome(void *buf, size_t bufSize)
 	{
 		uint32_t size = (uint32_t)std::min(size_t(0x7fffffff), bufSize);
 #ifdef _WIN32
@@ -236,7 +236,7 @@ public:
 	{
 		char *p = (char *)buf;
 		while (bufSize > 0) {
-			size_t readSize = readsome(p, bufSize);
+			size_t readSize = readSome(p, bufSize);
 			p += readSize;
 			bufSize -= readSize;
 		}
