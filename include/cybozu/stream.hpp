@@ -68,7 +68,7 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 */
 template<class InputStream>
 struct InputStreamTag {
-	static size_t readSome(InputStream& is, void *buf, size_t size)
+	static inline size_t readSome(InputStream& is, void *buf, size_t size)
 	{
 		return stream_local::readSome_inner<InputStream>(is, buf, size);
 	}

@@ -29,6 +29,17 @@ CYBOZU_TEST_AUTO(read)
 	CYBOZU_TEST_EQUAL(f.getSize(), sizeof(testBuf));
 }
 
+CYBOZU_TEST_AUTO(readSome)
+{
+	cybozu::File f;
+	f.open(fileName, std::ios::in);
+	CYBOZU_TEST_ASSERT(f.isOpen());
+	char buf[1024] = {};
+	size_t readSize = f.readSome(buf, sizeof(buf));
+	CYBOZU_TEST_EQUAL(f.getSize(), readSize);
+	CYBOZU_TEST_ASSERT(memcmp(buf, testBuf, readSize) == 0);
+}
+
 CYBOZU_TEST_AUTO(size)
 {
 	CYBOZU_TEST_EQUAL(cybozu::GetFileSize(fileName), sizeof(testBuf));
