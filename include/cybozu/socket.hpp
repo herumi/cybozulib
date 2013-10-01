@@ -199,14 +199,18 @@ public:
 		sd_ = cybozu::AtomicExchange(&rhs.sd_, sd_);
 	}
 	// close and move
+	void moveFrom(Socket& rhs)
+	{
+		close();
+		sd_ = cybozu::AtomicExchange(&rhs.sd_, INVALID_SOCKET);
+	}
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
 	void operator=(Socket&& rhs)
 #else
 	void operator=(Socket& rhs)
 #endif
 	{
-		close();
-		sd_ = cybozu::AtomicExchange(&rhs.sd_, INVALID_SOCKET);
+		moveFrom(rhs);
 	}
 
 	~Socket()

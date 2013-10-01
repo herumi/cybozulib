@@ -22,4 +22,10 @@ CYBOZU_TEST_AUTO(open_move)
 #endif
 	CYBOZU_TEST_ASSERT(!t.isValid());
 	CYBOZU_TEST_ASSERT(u.isValid());
+
+	cybozu::Socket v;
+	CYBOZU_TEST_ASSERT(!v.isValid());
+	v.moveFrom(u);
+	CYBOZU_TEST_ASSERT(v.isValid());
+	CYBOZU_TEST_ASSERT(!u.isValid());
 }
