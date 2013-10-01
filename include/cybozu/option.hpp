@@ -275,7 +275,11 @@ class Option {
 		}
 		void usage() const
 		{
-			printf("  -%s %s [%s]\n", opt.c_str(), help.c_str(), isMust ? "must" : "opt");
+			printf("  -%s : %s%s\n", opt.c_str(), help.c_str(), isMust ? " (must)" : "");
+		}
+		void shortUsage() const
+		{
+			printf(" -%s %s", opt.c_str(), mode == N_is0 ? "" : mode == N_is1 ? "para" : "para...");
 		}
 	};
 	typedef std::vector<Info> InfoVec;
@@ -547,7 +551,11 @@ public:
 			printf("%s\n", usage_.c_str());
 			return;
 		}
-		printf("usage:%s (option)", progName_);
+		printf("usage:%s", progName_);
+		if (infoVec_.size()) printf(" [opt]");
+		for (size_t i = 0; i < infoVec_.size(); i++) {
+			if (infoVec_[i].isMust) infoVec_[i].shortUsage();
+		}
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			printf(" %s", paramVec_[i].opt.c_str());
 		}
@@ -561,7 +569,7 @@ public:
 		}
 		if (!remains_.help.empty()) printf("  %s:%s\n", remains_.opt.c_str(), remains_.help.c_str());
 		if (!helpOpt_.empty()) {
-			printf("  -%s put this message\n", helpOpt_.c_str());
+			printf("  -%s : put this message\n", helpOpt_.c_str());
 		}
 		for (size_t i = 0; i < infoVec_.size(); i++) {
 			infoVec_[i].usage();
