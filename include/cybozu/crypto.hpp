@@ -58,6 +58,23 @@ public:
 			throw cybozu::Exception("crypto:Hash:getName") << name;
 		}
 	}
+	static inline Name getName(const std::string& nameStr)
+	{
+		static const struct {
+			const char *nameStr;
+			Name name;
+		} tbl[] = {
+			{ "sha1", N_SHA1 },
+			{ "sha224", N_SHA224 },
+			{ "sha256", N_SHA256 },
+			{ "sha384", N_SHA384 },
+			{ "sha512", N_SHA512 },
+		};
+		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+			if (nameStr == tbl[i].nameStr) return tbl[i].name;
+		}
+		throw cybozu::Exception("crypto:Hash:getName") << nameStr;
+	}
 	explicit Hash(Name name = N_SHA1)
 		: name_(name)
 	{
