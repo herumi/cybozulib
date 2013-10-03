@@ -285,13 +285,14 @@ class Option {
 	typedef std::vector<Info> InfoVec;
 	typedef std::vector<std::string> StrVec;
 	typedef std::map<std::string, size_t> OptMap;
-	const char *progName_;
-	bool showOptUsage_;
 	InfoVec infoVec_;
 	InfoVec paramVec_;
 	ParamMode paramMode_;
 	Info remains_;
 	OptMap optMap_;
+	bool showOptUsage_;
+	std::string progName_;
+	std::string desc_;
 	std::string helpOpt_;
 	std::string help_;
 	std::string usage_;
@@ -332,10 +333,15 @@ class Option {
 	{
 		if (paramMode_ != P_exact) throw cybozu::Exception("Option:appendParamVec:appendParam is forbidden after appendParamOpt/appendParamVec");
 	}
+	std::string getBaseName(const std::string& name) const
+	{
+		size_t pos = name.find_last_of("/\\");
+		if (pos == std::string::npos) return name;
+		return name.substr(pos + 1);
+	}
 public:
 	Option()
-		: progName_(0)
-		, showOptUsage_(true)
+		: showOptUsage_(true)
 		, paramMode_(P_exact)
 	{
 	}
@@ -438,7 +444,7 @@ public:
 	*/
 	bool parse(int argc, char *argv[], bool doThrow = false)
 	{
-		progName_ = argv[0];
+		progName_ = getBaseName(argv[0]);
 		OptionError err;
 		for (int pos = 1; pos < argc; pos++) {
 			if (isOpt(argv[pos])) {
@@ -545,6 +551,17 @@ public:
 		printf("%s\n", err.what());
 		return false;
 	}
+	/*
+		show desc at first in usage()
+	*/
+	void setDescription(const std::string& desc)
+	{
+		desc_ = desc;
+	}
+	/*
+		show command line after desc
+		don't put option message if not showOptUsage
+	*/
 	void setUsage(const std::string& usage, bool showOptUsage = false)
 	{
 		usage_ = usage;
@@ -552,8 +569,9 @@ public:
 	}
 	void usage() const
 	{
+		if (!desc_.empty()) printf("%s\n", desc_.c_str());
 		if (usage_.empty()) {
-			printf("usage:%s", progName_);
+			printf("usage:%s", progName_.c_str());
 			if (!infoVec_.empty()) printf(" [opt]");
 			for (size_t i = 0; i < infoVec_.size(); i++) {
 				if (infoVec_[i].isMust) infoVec_[i].shortUsage();
