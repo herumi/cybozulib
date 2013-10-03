@@ -275,7 +275,7 @@ class Option {
 		}
 		void usage() const
 		{
-			printf("  -%s : %s%s\n", opt.c_str(), help.c_str(), isMust ? " (must)" : "");
+			printf("  -%s %s%s\n", opt.c_str(), help.c_str(), isMust ? " (must)" : "");
 		}
 		void shortUsage() const
 		{
@@ -286,12 +286,14 @@ class Option {
 	typedef std::vector<std::string> StrVec;
 	typedef std::map<std::string, size_t> OptMap;
 	const char *progName_;
+	bool showOptUsage_;
 	InfoVec infoVec_;
 	InfoVec paramVec_;
 	ParamMode paramMode_;
 	Info remains_;
 	OptMap optMap_;
 	std::string helpOpt_;
+	std::string help_;
 	std::string usage_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
@@ -333,6 +335,7 @@ class Option {
 public:
 	Option()
 		: progName_(0)
+		, showOptUsage_(true)
 		, paramMode_(P_exact)
 	{
 	}
@@ -422,9 +425,10 @@ public:
 		remains_.opt = name;
 		remains_.help = help;
 	}
-	void appendHelp(const char *opt)
+	void appendHelp(const char *opt, const char *help = "show this message")
 	{
 		helpOpt_ = opt;
+		help_ = help;
 	}
 	/*
 		parse (argc, argv)
@@ -439,7 +443,7 @@ public:
 		for (int pos = 1; pos < argc; pos++) {
 			if (isOpt(argv[pos])) {
 				const std::string str = argv[pos] + 1;
-				if (!helpOpt_.empty() && helpOpt_ == str) {
+				if (helpOpt_ == str) {
 					usage();
 					exit(1);
 				}
@@ -541,35 +545,37 @@ public:
 		printf("%s\n", err.what());
 		return false;
 	}
-	void setUsage(const std::string& usage)
+	void setUsage(const std::string& usage, bool showOptUsage = false)
 	{
 		usage_ = usage;
+		showOptUsage_ = showOptUsage;
 	}
 	void usage() const
 	{
-		if (!usage_.empty()) {
+		if (usage_.empty()) {
+			printf("usage:%s", progName_);
+			if (!infoVec_.empty()) printf(" [opt]");
+			for (size_t i = 0; i < infoVec_.size(); i++) {
+				if (infoVec_[i].isMust) infoVec_[i].shortUsage();
+			}
+			for (size_t i = 0; i < paramVec_.size(); i++) {
+				printf(" %s", paramVec_[i].opt.c_str());
+			}
+			if (paramMode_ == P_variable) {
+				printf(" %s", remains_.opt.c_str());
+			}
+			printf("\n");
+		} else {
 			printf("%s\n", usage_.c_str());
-			return;
+			if (!showOptUsage_) return;
 		}
-		printf("usage:%s", progName_);
-		if (infoVec_.size()) printf(" [opt]");
-		for (size_t i = 0; i < infoVec_.size(); i++) {
-			if (infoVec_[i].isMust) infoVec_[i].shortUsage();
-		}
-		for (size_t i = 0; i < paramVec_.size(); i++) {
-			printf(" %s", paramVec_[i].opt.c_str());
-		}
-		if (paramMode_ == P_variable) {
-			printf(" %s", remains_.opt.c_str());
-		}
-		printf("\n");
 		for (size_t i = 0; i < paramVec_.size(); i++) {
 			const Info& param = paramVec_[i];
-			if (!param.help.empty()) printf("  %s:%s\n", paramVec_[i].opt.c_str(), paramVec_[i].help.c_str());
+			if (!param.help.empty()) printf("  %s %s\n", paramVec_[i].opt.c_str(), paramVec_[i].help.c_str());
 		}
-		if (!remains_.help.empty()) printf("  %s:%s\n", remains_.opt.c_str(), remains_.help.c_str());
+		if (!remains_.help.empty()) printf("  %s %s\n", remains_.opt.c_str(), remains_.help.c_str());
 		if (!helpOpt_.empty()) {
-			printf("  -%s : put this message\n", helpOpt_.c_str());
+			printf("  -%s %s\n", helpOpt_.c_str(), help_.c_str());
 		}
 		for (size_t i = 0; i < infoVec_.size(); i++) {
 			infoVec_[i].usage();
