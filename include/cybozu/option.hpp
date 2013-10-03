@@ -445,7 +445,7 @@ public:
 				const std::string str = argv[pos] + 1;
 				if (helpOpt_ == str) {
 					usage();
-					exit(1);
+					exit(0);
 				}
 				OptMap::const_iterator i = optMap_.find(str);
 				if (i == optMap_.end()) {
