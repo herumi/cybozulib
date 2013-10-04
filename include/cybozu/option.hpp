@@ -117,6 +117,11 @@ bool convert(std::string* x, const char *str)
 template<class T>
 bool convertInt(T* x, const char *str)
 {
+	if (str[0] == '0' && str[1] == 'x') {
+		bool b;
+		*x = cybozu::hextoi(&b, str + 2);
+		return b;
+	}
 	size_t len = strlen(str);
 	int factor = 1;
 	if (len > 1) {
@@ -287,10 +292,10 @@ class Option {
 	typedef std::map<std::string, size_t> OptMap;
 	InfoVec infoVec_;
 	InfoVec paramVec_;
-	ParamMode paramMode_;
 	Info remains_;
 	OptMap optMap_;
 	bool showOptUsage_;
+	ParamMode paramMode_;
 	std::string progName_;
 	std::string desc_;
 	std::string helpOpt_;
@@ -442,7 +447,7 @@ public:
 		@param argv [in] argv of main
 		@param doThrow [in] whether throw exception or return false
 	*/
-	bool parse(int argc, char *argv[], bool doThrow = false)
+	bool parse(int argc, const char *const argv[], bool doThrow = false)
 	{
 		progName_ = getBaseName(argv[0]);
 		OptionError err;
