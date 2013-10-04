@@ -26,6 +26,7 @@ CYBOZU_TEST_AUTO(convert_int)
 		{ "2g", 2000000000, true },
 		{ "2G", 0, false },
 		{ "-2G", -1024 * 1024 * 1024 * 2, true },
+		{ "0x123", 0x123, true },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		int x;
