@@ -8,6 +8,7 @@
 
 #include <memory.h>
 #include <limits.h>
+#include <limits>
 #include <cybozu/exception.hpp>
 
 namespace cybozu {
@@ -108,7 +109,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 				break;
 			}
 			// avoid overflow
-			if (x >= T(1) << (sizeof(T) * 8 - 4)) break;
+			if (x > std::numeric_limits<T>::max() / 16) break;
 			x = x * 16 + T(c);
 			i++;
 		}
@@ -225,7 +226,14 @@ public:
 	operator unsigned char() const { return atoi_local::convertHexToInt<unsigned char>(b_, p_, size_); }
 	operator unsigned short() const { return atoi_local::convertHexToInt<unsigned short>(b_, p_, size_); }
 	operator unsigned int() const { return atoi_local::convertHexToInt<unsigned int>(b_, p_, size_); }
-	operator uint64_t() const { return atoi_local::convertHexToInt<uint64_t>(b_, p_, size_); }
+	operator unsigned long() const { return atoi_local::convertHexToInt<unsigned long>(b_, p_, size_); }
+	operator unsigned long long() const { return atoi_local::convertHexToInt<unsigned long long>(b_, p_, size_); }
+	operator char() const { return atoi_local::convertHexToInt<char>(b_, p_, size_); }
+	operator signed char() const { return atoi_local::convertHexToInt<signed char>(b_, p_, size_); }
+	operator short() const { return atoi_local::convertHexToInt<short>(b_, p_, size_); }
+	operator int() const { return atoi_local::convertHexToInt<int>(b_, p_, size_); }
+	operator long() const { return atoi_local::convertHexToInt<long>(b_, p_, size_); }
+	operator long long() const { return atoi_local::convertHexToInt<long long>(b_, p_, size_); }
 };
 
 } // cybozu

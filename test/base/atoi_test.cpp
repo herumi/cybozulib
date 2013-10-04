@@ -745,6 +745,17 @@ CYBOZU_TEST_AUTO(hextoi)
     CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("12345", 5), 0x12345U);
     CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("12345", 6), 0x12345U);
 
+    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("123xxx", 3), 0x123);
+    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("1234xx", 4), 0x1234);
+    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345x", 5), 0x12345);
+    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345", 5), 0x12345);
+    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345", 6), 0x12345);
+
+    CYBOZU_TEST_EQUAL((char)cybozu::hextoi("7f"), 0x7f);
+    CYBOZU_TEST_EQUAL((short)cybozu::hextoi("7fff"), 0x7fff);
+    CYBOZU_TEST_EXCEPTION((uint8_t)cybozu::hextoi("100"), cybozu::Exception);
+    CYBOZU_TEST_EXCEPTION((int8_t)cybozu::hextoi("80"), cybozu::Exception);
+
     const struct {
         const char *str;
         size_t len;
