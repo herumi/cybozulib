@@ -528,4 +528,11 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& s
 #endif
 }
 
+inline FileList GetFileList(const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
+{
+	FileList fl;
+	if (GetFileList(fl, dir, suffix, cond)) return fl;
+	throw cybozu::Exception("cybozu:GetFileList") << dir << cybozu::ErrorNo();
+}
+
 } // cybozu
