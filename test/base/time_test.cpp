@@ -87,6 +87,11 @@ CYBOZU_TEST_AUTO(fromString2)
 		const Data& d = tbl[i];
 		std::time_t time;
 		timeToStr(time, d.year, d.month, d.day, d.hour, d.minute, d.second, d.msec, 0);
+		{
+			cybozu::Time t;
+			t.fromString(std::string(d.str));
+			CYBOZU_TEST_EQUAL(t.getTime(), time);
+		}
 		cybozu::Time tm(d.str);
 		CYBOZU_TEST_EQUAL(tm.getTime(), time);
 		CYBOZU_TEST_EQUAL(tm.getMsec(), d.msec);
@@ -96,6 +101,12 @@ CYBOZU_TEST_AUTO(fromString2)
 		tm2.setByFILETIME(low, high);
 		CYBOZU_TEST_EQUAL(tm, tm2);
 	}
+	bool b;
+	cybozu::Time t;
+	t.fromString(&b, "2009-01-23T02:53:44Z");
+	CYBOZU_TEST_ASSERT(b);
+	t.fromString(&b, "2009-01-23T02:53:44x");
+	CYBOZU_TEST_ASSERT(!b);
 }
 
 CYBOZU_TEST_AUTO(toString)
