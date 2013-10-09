@@ -91,9 +91,10 @@ public:
 		2009-01-23T02:53:44.078Z
 		@note 'T' may be ' '. '-' may be '/'. last char 'Z' is omissible
 	*/
-	void fromString(const std::string& in) { fromString(&in[0], &in[0] + in.size()); }
+	void fromString(bool *pb, const std::string& in) { fromString(pb, &in[0], &in[0] + in.size()); }
+	void fromString(const std::string& in) { fromString(0, in); }
 
-	void fromString(const char *begin, const char *end)
+	void fromString(bool *pb, const char *begin, const char *end)
 	{
 		const size_t len = end - begin;
 		if (len >= 19) {
@@ -150,11 +151,19 @@ public:
 #else
 			time_ = timegm(&tm);
 #endif
+			if (pb) {
+				*pb = true;
+			}
 			return;
 		}
 	ERR:
+		if (pb) {
+			*pb = false;
+			return;
+		}
 		throw cybozu::Exception("time::fromString") << std::string(begin, 24);
 	}
+	void fromString(const char *begin, const char *end) { fromString(0, begin, end); }
 
 	/**
 		get current time with format
