@@ -74,7 +74,7 @@ public:
 		for (;;) {
 			const size_t remainSize = &buf_[bufSize_] - next_;
 			if (remainSize > 0) {
-				const char *endl = (const char *)memchr(next_, cybozu::line_stream::LF, remainSize);
+				const char *endl = static_cast<const char *>(memchr(next_, cybozu::line_stream::LF, remainSize));
 				if (endl) {
 					if (endl > next_ && endl[-1] == cybozu::line_stream::CR) {
 						*end = endl - 1;
@@ -83,7 +83,7 @@ public:
 					}
 					*begin = next_;
 					next_ = endl + 1;
-					if ((size_t)(*end - *begin) > maxLineSize) {
+					if ((*end - *begin) > maxLineSize) {
 						throw cybozu::Exception("LineStreamT:next:line is too long") << cybozu::exception::makeString(*begin, 10);
 					}
 					return true;
