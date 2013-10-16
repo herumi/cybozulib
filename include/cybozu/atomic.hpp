@@ -30,7 +30,7 @@ struct Tag<4> {
 #ifdef _WIN32
 		return (T)_InterlockedExchangeAdd((long*)p, (long)y);
 #else
-		return (T)__sync_fetch_and_add(p, y);
+		return static_cast<T>(__sync_fetch_and_add(p, y));
 #endif
 	}
 
@@ -40,7 +40,7 @@ struct Tag<4> {
 #ifdef _WIN32
 		return (T)InterlockedCompareExchange((long*)p, (long)newValue, (long)oldValue);
 #else
-		return (T)__sync_val_compare_and_swap(p, oldValue, newValue);
+		return static_cast<T>(__sync_val_compare_and_swap(p, oldValue, newValue));
 #endif
 	}
 
@@ -50,7 +50,7 @@ struct Tag<4> {
 #ifdef _WIN32
 		return (T)InterlockedExchange((long*)p, (long)newValue);
 #else
-		return (T)__sync_lock_test_and_set(p, newValue);
+		return static_cast<T>(__sync_lock_test_and_set(p, newValue));
 #endif
 	}
 };
@@ -64,7 +64,7 @@ struct Tag<8> {
 #ifdef _WIN32
 		return (T)_InterlockedExchangeAdd64((int64_t*)p, (int64_t)y);
 #else
-		return (T)__sync_fetch_and_add(p, y);
+		return static_cast<T>(__sync_fetch_and_add(p, y));
 #endif
 	}
 #endif
@@ -75,7 +75,7 @@ struct Tag<8> {
 #ifdef _WIN32
 		return (T)_InterlockedCompareExchange64((int64_t*)p, (int64_t)newValue, (int64_t)oldValue);
 #else
-		return (T)__sync_val_compare_and_swap(p, oldValue, newValue);
+		return static_cast<T>(__sync_val_compare_and_swap(p, oldValue, newValue));
 #endif
 	}
 
@@ -86,7 +86,7 @@ struct Tag<8> {
 #ifdef _WIN32
 		return (T)_InterlockedExchange64((int64_t*)p, (int64_t)newValue);
 #else
-		return (T)__sync_lock_test_and_set(p, newValue);
+		return static_cast<T>(__sync_lock_test_and_set(p, newValue));
 #endif
 	}
 #endif
