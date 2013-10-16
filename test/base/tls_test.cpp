@@ -25,9 +25,9 @@ public:
 		s_x = a_;
 		tls_->set(&a_);
 		cybozu::Sleep(500);
-		printf("tls=%d, s_x=%d, %p\n", *(int*)tls_->get(), s_x, &s_x);
+		printf("tls=%d, s_x=%d, %p\n", *static_cast<const int*>(tls_->get()), s_x, &s_x);
 		CYBOZU_TEST_EQUAL(a_, s_x);
-		CYBOZU_TEST_EQUAL(a_, *(int*)tls_->get());
+		CYBOZU_TEST_EQUAL(a_, *static_cast<const int*>(tls_->get()));
 	}
 };
 
