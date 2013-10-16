@@ -411,14 +411,16 @@ public:
 	/*
 		append optional parameter
 		@param pvar [in] pointer to parameter
+		@param defaultVal [in] default value
 		@param opt [in] option name
 		@param help [in] option help
 		@note you can call appendParamOpt once after appendParam
 	*/
-	template<class T>
-	void appendParamOpt(T *pvar, const char *opt, const std::string& help = "")
+	template<class T, class U>
+	void appendParamOpt(T *pvar, const U& defaultVal, const char *opt, const std::string& help = "")
 	{
 		verifyParamMode();
+		*pvar = defaultVal;
 		paramMode_ = P_optional;
 		paramVec_.push_back(Info(pvar, N_is1, false, opt, help));
 	}
