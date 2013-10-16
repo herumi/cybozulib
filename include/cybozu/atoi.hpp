@@ -36,7 +36,7 @@ T convertToInt(bool *b, const char *p, size_t size, const char (&max)[n], T min,
 			T x = 0;
 			for (;;) {
 				unsigned char c;
-				if (i == size || (c = (unsigned char)p[i]) == '\0') {
+				if (i == size || (c = static_cast<unsigned char>(p[i])) == '\0') {
 					if (b) *b = true;
 					return isMinus ? -x : x;
 				}
@@ -67,7 +67,7 @@ T convertToUint(bool *b, const char *p, size_t size, T overflow1, char overflow2
 		T x = 0;
 		for (;;) {
 			unsigned char c;
-			if (i == size || (c = (unsigned char)p[i]) == '\0') {
+			if (i == size || (c = static_cast<unsigned char>(p[i])) == '\0') {
 				if (b) *b = true;
 				return x;
 			}
@@ -95,7 +95,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 		T x = 0;
 		for (;;) {
 			unsigned int c;
-			if (i == size || (c = (unsigned char)p[i]) == '\0') {
+			if (i == size || (c = static_cast<unsigned char>(p[i])) == '\0') {
 				if (b) *b = true;
 				return x;
 			}
@@ -188,11 +188,11 @@ public:
 		return atoi_local::convertToUint<unsigned long long>(b_, p_, size_, 1844674407370955161ULL, '6');
 	}
 #if defined(__SIZEOF_LONG__) && (__SIZEOF_LONG__ == 8)
-	inline operator long() const { return (long)(long long)(*this); }
-	inline operator unsigned long() const { return (unsigned long)(unsigned long long)(*this); }
+	inline operator long() const { return static_cast<long>(static_cast<long long>(*this)); }
+	inline operator unsigned long() const { return static_cast<unsigned long>(static_cast<unsigned long long>(*this)); }
 #else
-	inline operator long() const { return (long)(int)(*this); }
-	inline operator unsigned long() const { return (unsigned long)(unsigned int)(*this); }
+	inline operator long() const { return static_cast<long>(static_cast<int>(*this)); }
+	inline operator unsigned long() const { return static_cast<unsigned long>(static_cast<unsigned int>(*this)); }
 #endif
 };
 
