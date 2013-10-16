@@ -266,7 +266,7 @@ class Option {
 
 		Info() : mode(N_is0) {}
 		template<class T>
-		Info(T* pvar, Mode mode, bool isMust, const char *opt, const char *help)
+		Info(T* pvar, Mode mode, bool isMust, const char *opt, const std::string& help)
 			: var(pvar)
 			, mode(mode)
 			, isMust(isMust)
@@ -302,7 +302,7 @@ class Option {
 	std::string help_;
 	std::string usage_;
 	template<class T>
-	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const char *help)
+	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const std::string& help)
 	{
 		const char c = opt[0];
 		if ('0' <= c && c <= '9') throw cybozu::Exception("Option::appendSub:opt must begin with not number") << opt;
@@ -314,7 +314,7 @@ class Option {
 	}
 
 	template<class T, class U>
-	void append(T *pvar, const U& defaultVal, bool isMust, const char *opt, const char *help = "")
+	void append(T *pvar, const U& defaultVal, bool isMust, const char *opt, const std::string& help = "")
 	{
 		*pvar = defaultVal;
 		appendSub(pvar, N_is1, isMust, opt, help);
@@ -329,7 +329,7 @@ class Option {
 		if ('0' <= c && c <= '9') return false;
 		return true;
 	}
-	void append(bool *pvar, const bool& defaultVal, bool isMust, const char *opt, const char *help = "")
+	void append(bool *pvar, const bool& defaultVal, bool isMust, const char *opt, const std::string& help = "")
 	{
 		*pvar = defaultVal;
 		appendSub(pvar, N_is0, isMust, opt, help);
@@ -366,7 +366,7 @@ public:
 		G : *1024*1024*1024
 	*/
 	template<class T, class U>
-	void appendOpt(T *pvar, const U& defaultVal, const char *opt, const char *help = "")
+	void appendOpt(T *pvar, const U& defaultVal, const char *opt, const std::string& help = "")
 	{
 		append(pvar, defaultVal, false, opt, help);
 	}
@@ -377,7 +377,7 @@ public:
 		@param help [in] option help
 	*/
 	template<class T>
-	void appendMust(T *pvar, const char *opt, const char *help = "")
+	void appendMust(T *pvar, const char *opt, const std::string& help = "")
 	{
 		append(pvar, T(), true, opt, help);
 	}
@@ -388,7 +388,7 @@ public:
 		@param help [in] option help
 	*/
 	template<class T, class Alloc, template<class T_, class Alloc_>class Container>
-	void appendVec(Container<T, Alloc> *pvar, const char *opt, const char *help = "")
+	void appendVec(Container<T, Alloc> *pvar, const char *opt, const std::string& help = "")
 	{
 		appendSub(pvar, N_any, false, opt, help);
 	}
@@ -399,7 +399,7 @@ public:
 		@param help [in] option help
 	*/
 	template<class T>
-	void appendParam(T *pvar, const char *opt, const char *help = "")
+	void appendParam(T *pvar, const char *opt, const std::string& help = "")
 	{
 		verifyParamMode();
 		paramVec_.push_back(Info(pvar, N_is1, true, opt, help));
@@ -412,7 +412,7 @@ public:
 		@note you can call appendParamOpt once after appendParam
 	*/
 	template<class T>
-	void appendParamOpt(T *pvar, const char *opt, const char *help = "")
+	void appendParamOpt(T *pvar, const char *opt, const std::string& help = "")
 	{
 		verifyParamMode();
 		paramMode_ = P_optional;
@@ -426,7 +426,7 @@ public:
 		@note you can call appendParamVec once after appendParam
 	*/
 	template<class T, class Alloc, template<class T_, class Alloc_>class Container>
-	void appendParamVec(Container<T, Alloc> *pvar, const char *name, const char *help = "")
+	void appendParamVec(Container<T, Alloc> *pvar, const char *name, const std::string& help = "")
 	{
 		verifyParamMode();
 		paramMode_ = P_variable;
@@ -436,7 +436,7 @@ public:
 		remains_.opt = name;
 		remains_.help = help;
 	}
-	void appendHelp(const char *opt, const char *help = "show this message")
+	void appendHelp(const char *opt, const std::string& help = "show this message")
 	{
 		helpOpt_ = opt;
 		help_ = help;
