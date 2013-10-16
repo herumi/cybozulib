@@ -72,7 +72,7 @@ void convertFromInt(std::string& out, T x, T minusMax, const char (&minusMaxStr)
 	char buf[40];
 	int p = 0;
 	while (absX > 0) {
-		buf[p++] = '0' + (int)(absX % 10);
+		buf[p++] = '0' + static_cast<int>(absX % 10);
 		absX /= 10;
 	}
 	if (x < 0) {
@@ -94,7 +94,7 @@ void convertFromUint(std::string& out, T x)
 	char buf[40];
 	int p = 0;
 	while (x > 0) {
-		buf[p++] = '0' + (int)(x % 10);
+		buf[p++] = '0' + static_cast<int>(x % 10);
 		x /= 10;
 	}
 	out.resize(p);
@@ -162,11 +162,11 @@ inline void itoa(std::string& out, unsigned long long x)
 }
 
 #if defined(__SIZEOF_LONG__) && (__SIZEOF_LONG__ == 8)
-inline void itoa(std::string& out, long x) { itoa(out, (long long)x); }
-inline void itoa(std::string& out, unsigned long x) { itoa(out, (unsigned long long)x); }
+inline void itoa(std::string& out, long x) { itoa(out, static_cast<long long>(x)); }
+inline void itoa(std::string& out, unsigned long x) { itoa(out, static_cast<unsigned long long>(x)); }
 #else
-inline void itoa(std::string& out, long x) { itoa(out, (int)x); }
-inline void itoa(std::string& out, unsigned long x) { itoa(out, (int)x); }
+inline void itoa(std::string& out, long x) { itoa(out, static_cast<int>(x)); }
+inline void itoa(std::string& out, unsigned long x) { itoa(out, static_cast<int>(x)); }
 #endif
 /**
 	convert integer to string

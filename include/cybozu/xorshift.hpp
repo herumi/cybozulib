@@ -41,9 +41,9 @@ public:
 	void read(T *x, size_t n)
 	{
 		const size_t size = sizeof(T) * n;
-		uint8_t *p8 = (uint8_t*)x;
+		uint8_t *p8 = static_cast<uint8_t*>(x);
 		for (size_t i = 0; i < size; i++) {
-			p8[i] = (uint8_t)get32();
+			p8[i] = static_cast<uint8_t>(get32());
 		}
 	}
 	void read(uint32_t *x, size_t n)

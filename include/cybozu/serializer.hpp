@@ -155,7 +155,7 @@ void loadVariableInt(T& x, InputStream& is)
 		if (sizeof(T) == 4) throw cybozu::Exception("loadVariableInt:bad header") << h;
 		uint64_t v;
 		loadPod(v, is);
-		x = (T)v;
+		x = static_cast<T>(v);
 	} else if (h == 0x84) {
 		int8_t v;
 		loadPod(v, is);
@@ -172,9 +172,9 @@ void loadVariableInt(T& x, InputStream& is)
 		if (sizeof(T) == 4) throw cybozu::Exception("loadVariableInt:bad header") << h;
 		int64_t v;
 		loadPod(v, is);
-		x = (T)v;
+		x = static_cast<T>(v);
 	} else {
-		x = (int8_t)h;
+		x = static_cast<int8_t>(h);
 	}
 }
 

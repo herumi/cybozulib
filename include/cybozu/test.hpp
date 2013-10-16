@@ -213,8 +213,8 @@ int main(int argc, char *argv[])
 	bool eq = x == y; \
 	cybozu::test::test(eq, "CYBOZU_TEST_EQUAL_POINTER", #x ", " #y, __FILE__, __LINE__); \
 	if (!eq) { \
-		std::cout << "ctest:  lhs=" << (const void*)(x) << std::endl; \
-		std::cout << "ctest:  rhs=" << (const void*)(y) << std::endl; \
+		std::cout << "ctest:  lhs=" << static_cast<const void*>(x) << std::endl; \
+		std::cout << "ctest:  rhs=" << static_cast<const void*>(y) << std::endl; \
 	} \
 }
 
