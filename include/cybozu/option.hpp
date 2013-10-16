@@ -370,6 +370,10 @@ public:
 	{
 		append(pvar, defaultVal, false, opt, help);
 	}
+	void appendBoolOpt(bool *pvar, const char *opt, const std::string& help = "")
+	{
+		append(pvar, false, false, opt, help);
+	}
 	/*
 		append necessary option
 		@param pvar [in] pointer to option variable
