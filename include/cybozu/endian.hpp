@@ -78,8 +78,8 @@ inline uint64_t Get64bitAsBE(const void *src)
 inline void Set16bitAsLE(void *src, uint16_t x)
 {
 	uint8_t *p = static_cast<uint8_t *>(src);
-	p[0] = (uint8_t)x;
-	p[1] = (uint8_t)(x >> 8);
+	p[0] = static_cast<uint8_t>(x);
+	p[1] = static_cast<uint8_t>(x >> 8);
 }
 /**
 	set 32bit integer as little endian

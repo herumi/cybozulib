@@ -138,7 +138,7 @@ public:
 private:
 	void addChar(std::string& str, int c)
 	{
-		str += (char)c;
+		str += static_cast<char>(c);
 		lineSize_++;
 		if (lineSize_ == MAX_LINE_SIZE) {
 			throw cybozu::Exception("csv:addChar:too large size") << line_ << str << MAX_LINE_SIZE;

@@ -112,16 +112,16 @@ uint32_t popcnt(T x);
 template<>
 inline uint32_t popcnt<uint32_t>(uint32_t x)
 {
-	return (uint32_t)_mm_popcnt_u32(x);
+	return static_cast<uint32_t>(_mm_popcnt_u32(x));
 }
 
 template<>
 inline uint32_t popcnt<uint64_t>(uint64_t x)
 {
 #if defined(_WIN64) || defined(__x86_64__)
-	return (uint32_t)_mm_popcnt_u64(x);
+	return static_cast<uint32_t>(_mm_popcnt_u64(x));
 #else
-	return popcnt<uint32_t>(uint32_t(x)) + popcnt<uint32_t>(uint32_t(x >> 32));
+	return popcnt<uint32_t>(static_cast<uint32_t>(x)) + popcnt<uint32_t>(static_cast<uint32_t>(x >> 32));
 #endif
 }
 

@@ -83,7 +83,7 @@ public:
 					}
 					*begin = next_;
 					next_ = endl + 1;
-					if ((*end - *begin) > maxLineSize) {
+					if (static_cast<uintptr_t>(*end - *begin) > maxLineSize) {
 						throw cybozu::Exception("LineStreamT:next:line is too long") << cybozu::exception::makeString(*begin, 10);
 					}
 					return true;
