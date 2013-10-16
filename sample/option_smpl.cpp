@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	cybozu::Option opt;
 
 	opt.appendOpt(&x, 5, "x", "int");
-	opt.appendOpt(&b, false, "b", "bool");
+	opt.appendBoolOpt(&b, "b", "bool");
 	opt.appendMust(&d, "d", "double");
 	opt.appendMust(&y, "y", "string");
 	opt.appendVec(&z, "z", "int int int ...");
