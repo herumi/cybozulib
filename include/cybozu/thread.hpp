@@ -75,7 +75,7 @@ inline int GetProcessorNum()
 #else
 	long ret = sysconf(_SC_NPROCESSORS_ONLN);
 	if (ret < 0) return 0;
-	return (int)ret;
+	return static_cast<int>(ret);
 #endif
 }
 
@@ -192,7 +192,7 @@ public:
 
 	bool beginThread(int stackSize = 0)
 	{
-		return thread::Begin(threadHdl_, (thread::ThreadEntryCallback*)threadLoopIF, this, stackSize);
+		return thread::Begin(threadHdl_, reinterpret_cast<thread::ThreadEntryCallback*>(threadLoopIF), this, stackSize);
 	}
 
 	bool detachThread()
