@@ -26,8 +26,8 @@ namespace base64_local {
 static inline void addEndLine(char *outBuf, size_t& outBufSize, int mode)
 {
 	if (mode == base64::noEndLine) return;
-	if (mode == base64::useCRLF) outBuf[outBufSize++] = (char)0x0d;
-	outBuf[outBufSize++] = (char)0x0a;
+	if (mode == base64::useCRLF) outBuf[outBufSize++] = cybozu::line_stream::CR;
+	outBuf[outBufSize++] = cybozu::line_stream::LF;
 }
 
 } // base64_local
@@ -63,7 +63,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 		size_t readSize = In::readSome(is, inBuf, sizeof(inBuf));
 		if (readSize == 0) break;
 		for (size_t i = 0; i < readSize; i++) {
-			unsigned int c = (unsigned char)inBuf[i];
+			unsigned int c = static_cast<unsigned char>(inBuf[i]);
 			if (idx == 0) {
 				remain = (c & 3) << 4;
 				outBuf[outBufSize++] = tbl[c >> 2];
@@ -156,7 +156,7 @@ public:
 			S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		};
 		for (size_t i = 0; i < size; i++) {
-			unsigned int t = tbl[(unsigned char)buf[i]];
+			unsigned int t = tbl[static_cast<unsigned char>(buf[i])];
 			if (t == S) continue;
 			if (idx_ == 0) {
 				cur_ = t << 2;
