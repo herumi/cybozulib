@@ -298,7 +298,7 @@ CYBOZU_TEST_AUTO(appendParamOpt)
 {
 	cybozu::Option opt;
 	std::string x;
-	opt.appendParamOpt(&x, "x");
+	opt.appendParamOpt(&x, "", "x");
 	{
 		char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
@@ -347,7 +347,7 @@ CYBOZU_TEST_AUTO(appendParamErr)
 	int x;
 	int y;
 	std::vector<int> z;
-	opt.appendParamOpt(&x, "x");
+	opt.appendParamOpt(&x, 3, "x");
 	CYBOZU_TEST_EXCEPTION(opt.appendParam(&y, "y"), cybozu::Exception);
 	CYBOZU_TEST_EXCEPTION(opt.appendParamVec(&z, "z"), cybozu::Exception);
 }
