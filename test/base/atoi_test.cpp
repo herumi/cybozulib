@@ -55,7 +55,7 @@ CYBOZU_TEST_AUTO(test_int8_t)
         "128", "129", "-129", "-130",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int8_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int8_t>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -68,7 +68,7 @@ CYBOZU_TEST_AUTO(test_int8_t)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int8_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int8_t>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -113,7 +113,7 @@ CYBOZU_TEST_AUTO(test_uint8_t)
         "-2", "4294967296", "4294967297", "4294967298", "4294967299", "4294967300"
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint8_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<uint8_t>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -126,7 +126,7 @@ CYBOZU_TEST_AUTO(test_uint8_t)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint8_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<uint8_t>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -210,7 +210,7 @@ CYBOZU_TEST_AUTO(test_int)
         "-2147483649", "-2147483650", "-2147483651",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -223,7 +223,7 @@ CYBOZU_TEST_AUTO(test_int)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -285,7 +285,7 @@ CYBOZU_TEST_AUTO(test_short)
         "-32769", "-32770", "-32771",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((short)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<short>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -298,7 +298,7 @@ CYBOZU_TEST_AUTO(test_short)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((short)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<short>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -348,7 +348,7 @@ CYBOZU_TEST_AUTO(test_unsigned_short)
         "-2", "65536", "65537",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((unsigned short)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<unsigned short>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -361,7 +361,7 @@ CYBOZU_TEST_AUTO(test_unsigned_short)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((unsigned short)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<unsigned short>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -439,7 +439,7 @@ CYBOZU_TEST_AUTO(test_uint)
         "-2", "4294967296", "4294967297", "4294967298", "4294967299", "4294967300"
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((unsigned int)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<unsigned int>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -452,7 +452,7 @@ CYBOZU_TEST_AUTO(test_uint)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((unsigned int)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<unsigned int>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -563,7 +563,7 @@ CYBOZU_TEST_AUTO(test_int64)
         "-9223372036854775809",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int64_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int64_t>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -576,7 +576,7 @@ CYBOZU_TEST_AUTO(test_int64)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((int64_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int64_t>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -660,7 +660,7 @@ CYBOZU_TEST_AUTO(test_uint64)
         "18446744073709551619", "18446744073709551620"
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint64_t)cybozu::atoi(ngTbl[i])), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<uint64_t>(cybozu::atoi(ngTbl[i]))), cybozu::Exception);
     }
     const struct {
         const char *str;
@@ -673,7 +673,7 @@ CYBOZU_TEST_AUTO(test_uint64)
         { "234b", 4 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ng2Tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((uint64_t)cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<uint64_t>(cybozu::atoi(ng2Tbl[i].str, ng2Tbl[i].len))), cybozu::Exception);
     }
 }
 
@@ -726,35 +726,35 @@ CYBOZU_TEST_AUTO(itohexchar)
 
 CYBOZU_TEST_AUTO(hextoi)
 {
-    CYBOZU_TEST_EQUAL((unsigned char)cybozu::hextoi("ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("ffff"), 0xffff);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("ffffffff"), 0xffffffff);
-    CYBOZU_TEST_EQUAL((uint64_t)cybozu::hextoi("ffffffff"), uint64_t(0xffffffffULL));
-    CYBOZU_TEST_EQUAL((unsigned char)cybozu::hextoi("00000ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ff"), 0xff);
-    CYBOZU_TEST_EQUAL((unsigned short)cybozu::hextoi("00000ffff"), 0xffff);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("00000ffffffff"), 0xffffffff);
-    CYBOZU_TEST_EQUAL((uint64_t)cybozu::hextoi("00000ffffffff"), uint64_t(0xffffffffULL));
+    CYBOZU_TEST_EQUAL(static_cast<unsigned char>(cybozu::hextoi("ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("ffff")), 0xffff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("ffffffff")), 0xffffffff);
+    CYBOZU_TEST_EQUAL(static_cast<uint64_t>(cybozu::hextoi("ffffffff")), uint64_t(0xffffffffULL));
+    CYBOZU_TEST_EQUAL(static_cast<unsigned char>(cybozu::hextoi("00000ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("00000ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("00000ff")), 0xff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned short>(cybozu::hextoi("00000ffff")), 0xffff);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("00000ffffffff")), 0xffffffff);
+    CYBOZU_TEST_EQUAL(static_cast<uint64_t>(cybozu::hextoi("00000ffffffff")), uint64_t(0xffffffffULL));
 
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("123xxx", 3), 0x123U);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("1234xx", 4), 0x1234U);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("12345x", 5), 0x12345U);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("12345", 5), 0x12345U);
-    CYBOZU_TEST_EQUAL((unsigned int)cybozu::hextoi("12345", 6), 0x12345U);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("123xxx", 3)), 0x123U);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("1234xx", 4)), 0x1234U);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("12345x", 5)), 0x12345U);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("12345", 5)), 0x12345U);
+    CYBOZU_TEST_EQUAL(static_cast<unsigned int>(cybozu::hextoi("12345", 6)), 0x12345U);
 
-    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("123xxx", 3), 0x123);
-    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("1234xx", 4), 0x1234);
-    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345x", 5), 0x12345);
-    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345", 5), 0x12345);
-    CYBOZU_TEST_EQUAL((int)cybozu::hextoi("12345", 6), 0x12345);
+    CYBOZU_TEST_EQUAL(static_cast<int>(cybozu::hextoi("123xxx", 3)), 0x123);
+    CYBOZU_TEST_EQUAL(static_cast<int>(cybozu::hextoi("1234xx", 4)), 0x1234);
+    CYBOZU_TEST_EQUAL(static_cast<int>(cybozu::hextoi("12345x", 5)), 0x12345);
+    CYBOZU_TEST_EQUAL(static_cast<int>(cybozu::hextoi("12345", 5)), 0x12345);
+    CYBOZU_TEST_EQUAL(static_cast<int>(cybozu::hextoi("12345", 6)), 0x12345);
 
-    CYBOZU_TEST_EQUAL((char)cybozu::hextoi("7f"), 0x7f);
-    CYBOZU_TEST_EQUAL((short)cybozu::hextoi("7fff"), 0x7fff);
-    CYBOZU_TEST_EXCEPTION((uint8_t)cybozu::hextoi("100"), cybozu::Exception);
-    CYBOZU_TEST_EXCEPTION((int8_t)cybozu::hextoi("80"), cybozu::Exception);
+    CYBOZU_TEST_EQUAL(static_cast<char>(cybozu::hextoi("7f")), 0x7f);
+    CYBOZU_TEST_EQUAL(static_cast<short>(cybozu::hextoi("7fff")), 0x7fff);
+    CYBOZU_TEST_EXCEPTION(static_cast<uint8_t>(cybozu::hextoi("100")), cybozu::Exception);
+    CYBOZU_TEST_EXCEPTION(static_cast<int8_t>(cybozu::hextoi("80")), cybozu::Exception);
 
     const struct {
         const char *str;
@@ -769,6 +769,6 @@ CYBOZU_TEST_AUTO(hextoi)
         { "fffffffff", 9 },
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable((unsigned int)cybozu::hextoi(tbl[i].str, tbl[i].len)), cybozu::Exception);
+        CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<unsigned int>(cybozu::hextoi(tbl[i].str, tbl[i].len))), cybozu::Exception);
     }
 }
