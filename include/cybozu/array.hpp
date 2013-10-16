@@ -80,7 +80,7 @@ public:
 	void resize(size_t size)
 	{
 		clear();
-		p_ = (T*)AlignedMalloc(size * sizeof(T) + N, N);
+		p_ = static_cast<T*>(AlignedMalloc(size * sizeof(T) + N, N));
 		if (p_ == 0) throw std::bad_alloc();
 		size_ = size;
 		bool init = true;
