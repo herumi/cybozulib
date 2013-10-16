@@ -194,9 +194,9 @@ public:
 	}
 	void write(const void *buf, size_t bufSize)
 	{
-		const char *p = (const char *)buf;
+		const char *p = static_cast<const char *>(buf);
 		while (bufSize > 0) {
-			uint32_t size = (uint32_t)std::min(size_t(0x7fffffff), bufSize);
+			uint32_t size = static_cast<uint32_t>(std::min<size_t>(0x7fffffff, bufSize));
 #ifdef _WIN32
 			DWORD writeSize;
 			if (!::WriteFile(hdl_, p, size, &writeSize, NULL)) goto ERR_EXIT;
@@ -216,7 +216,7 @@ public:
 	}
 	size_t readSome(void *buf, size_t bufSize)
 	{
-		uint32_t size = (uint32_t)std::min(size_t(0x7fffffff), bufSize);
+		uint32_t size = static_cast<uint32_t>(std::min<size_t>(0x7fffffff, bufSize));
 #ifdef _WIN32
 		DWORD readSize;
 		if (!::ReadFile(hdl_, buf, size, &readSize, NULL)) goto ERR_EXIT;
@@ -234,7 +234,7 @@ public:
 	}
 	void read(void *buf, size_t bufSize)
 	{
-		char *p = (char *)buf;
+		char *p = static_cast<char *>(buf);
 		while (bufSize > 0) {
 			size_t readSize = readSome(p, bufSize);
 			p += readSize;
