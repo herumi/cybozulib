@@ -1,7 +1,7 @@
 #include <cybozu/option.hpp>
 #include <cybozu/test.hpp>
 
-char progName[] = "test";
+const char progName[] = "test";
 
 CYBOZU_TEST_AUTO(convert_int)
 {
@@ -224,16 +224,18 @@ CYBOZU_TEST_AUTO(appendOpt)
 	int x;
 	opt.appendOpt(&x, 3, "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
 		CYBOZU_TEST_EQUAL(x, 3);
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char optX[] = "-x";
-		char i999[] = "999";
-		char *argv[] = { progName, optX, i999 };
+		const char optX[] = "-x";
+		const char i999[] = "999";
+		const char *argv[] = { progName, optX, i999 };
 		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
 		CYBOZU_TEST_EQUAL(x, 999);
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
@@ -243,15 +245,17 @@ CYBOZU_TEST_AUTO(appendMust)
 	int x = 9;
 	opt.appendMust(&x, "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(!opt.parse(1, argv));
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char optX[] = "-x";
-		char i999[] = "999";
-		char *argv[] = { progName, optX, i999 };
+		const char optX[] = "-x";
+		const char i999[] = "999";
+		const char *argv[] = { progName, optX, i999 };
 		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
 		CYBOZU_TEST_EQUAL(x, 999);
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
@@ -261,19 +265,21 @@ CYBOZU_TEST_AUTO(appendVec)
 	std::vector<int> x;
 	opt.appendVec(&x, "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
 		CYBOZU_TEST_ASSERT(x.empty());
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char optX[] = "-x";
-		char i999[] = "999";
-		char i123[] = "123";
-		char *argv[] = { progName, optX, i999, i123 };
+		const char optX[] = "-x";
+		const char i999[] = "999";
+		const char i123[] = "123";
+		const char *argv[] = { progName, optX, i999, i123 };
 		CYBOZU_TEST_ASSERT(opt.parse(4, argv));
 		CYBOZU_TEST_EQUAL(x.size(), 2u);
 		CYBOZU_TEST_EQUAL(x[0], 999);
 		CYBOZU_TEST_EQUAL(x[1], 123);
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
@@ -283,14 +289,16 @@ CYBOZU_TEST_AUTO(appendParam)
 	std::string x;
 	opt.appendParam(&x, "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(!opt.parse(1, argv));
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char aaa[] = "aaa";
-		char *argv[] = { progName, aaa };
+		const char aaa[] = "aaa";
+		const char *argv[] = { progName, aaa };
 		CYBOZU_TEST_ASSERT(opt.parse(2, argv));
 		CYBOZU_TEST_EQUAL(x, "aaa");
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
@@ -300,15 +308,17 @@ CYBOZU_TEST_AUTO(appendParamOpt)
 	std::string x;
 	opt.appendParamOpt(&x, "", "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
 		CYBOZU_TEST_ASSERT(x.empty());
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char aaa[] = "aaa";
-		char *argv[] = { progName, aaa };
+		const char aaa[] = "aaa";
+		const char *argv[] = { progName, aaa };
 		CYBOZU_TEST_ASSERT(opt.parse(2, argv));
 		CYBOZU_TEST_EQUAL(x, "aaa");
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
@@ -318,27 +328,40 @@ CYBOZU_TEST_AUTO(appendParamVec)
 	std::vector<char> x;
 	opt.appendParamVec(&x, "x");
 	{
-		char *argv[] = { progName };
+		const char *argv[] = { progName };
 		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
 		CYBOZU_TEST_ASSERT(x.empty());
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
 	}
 	{
-		char a[] = "a";
-		char z[] = "z";
-		char *argv[] = { progName, a, z };
+		const char a[] = "a";
+		const char z[] = "z";
+		const char *argv[] = { progName, a, z };
 		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
 		CYBOZU_TEST_EQUAL(x.size(), 2u);
 		CYBOZU_TEST_EQUAL(x[0], 'a');
 		CYBOZU_TEST_EQUAL(x[1], 'z');
+		CYBOZU_TEST_ASSERT(opt.isSet(&x));
 	}
 }
 
-CYBOZU_TEST_AUTO(dupplicate)
+// forbitten duplicate opt
+CYBOZU_TEST_AUTO(duplicateOpt)
 {
 	cybozu::Option opt;
 	int x;
+	int y;
 	opt.appendMust(&x, "x");
-	CYBOZU_TEST_EXCEPTION(opt.appendMust(&x, "x"), cybozu::Exception);
+	CYBOZU_TEST_EXCEPTION(opt.appendMust(&y, "x"), cybozu::Exception);
+}
+
+// permit duplicate var
+CYBOZU_TEST_AUTO(duplicateVar)
+{
+	cybozu::Option opt;
+	int x;
+	opt.appendMust(&x, "z");
+	CYBOZU_TEST_NO_EXCEPTION(opt.appendMust(&x, "-zero"));
 }
 
 CYBOZU_TEST_AUTO(appendParamErr)
@@ -358,4 +381,18 @@ CYBOZU_TEST_AUTO(opt_begin_with_not_a_number)
 	int x;
 	// opt can't srat number
 	CYBOZU_TEST_EXCEPTION(opt.appendOpt(&x, 9, "3a"), cybozu::Exception);
+}
+
+CYBOZU_TEST_AUTO(isSet)
+{
+	{
+		cybozu::Option opt;
+		int x;
+		opt.appendOpt(&x, 3, "x");
+		const char *argv[] = { progName };
+		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
+		CYBOZU_TEST_ASSERT(!opt.isSet(&x));
+		int y;
+		CYBOZU_TEST_EXCEPTION(opt.isSet(&y), cybozu::Exception);
+	}
 }
