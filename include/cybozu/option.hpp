@@ -169,6 +169,7 @@ struct HolderBase {
 	virtual bool set(const char*) = 0;
 	virtual HolderBase *clone() const = 0;
 	virtual std::string toStr() const = 0;
+	virtual const void *get() const = 0;
 };
 
 template<class T>
@@ -183,6 +184,7 @@ struct Holder : public HolderBase {
 		os << *p_;
 		return os.str();
 	}
+	const void *get() const { return (void*)p_; }
 };
 
 template<class T, class Alloc, template<class T_, class Alloc_>class Container>
@@ -212,6 +214,7 @@ struct Holder<Container<T, Alloc> > : public HolderBase {
 		}
 		return os.str();
 	}
+	const void *get() const { return (void*)p_; }
 };
 
 class Var {
@@ -242,6 +245,7 @@ public:
 	}
 	std::string toStr() const { return p_ ? p_->toStr() : ""; }
 	bool isSet() const { return isSet_; }
+	const void *get() const { return p_ ? p_->get() : 0; }
 };
 
 } // option_local
@@ -286,6 +290,8 @@ class Option {
 		{
 			printf(" -%s %s", opt.c_str(), mode == N_is0 ? "" : mode == N_is1 ? "para" : "para...");
 		}
+		bool isSet() const { return var.isSet(); }
+		const void *get() const { return var.get(); }
 	};
 	typedef std::vector<Info> InfoVec;
 	typedef std::vector<std::string> StrVec;
@@ -622,6 +628,24 @@ public:
 		for (size_t i = 0; i < infoVec_.size(); i++) {
 			infoVec_[i].put();
 		}
+	}
+	/*
+		whether pvar is set or not
+	*/
+	template<class T>
+	bool isSet(const T* pvar) const
+	{
+		const void *p = static_cast<const void*>(pvar);
+		for (size_t i = 0; i < paramVec_.size(); i++) {
+			const Info& v = paramVec_[i];
+			if (v.get() == p) return v.isSet();
+		}
+		if (remains_.get() == p) return remains_.isSet();
+		for (size_t i = 0; i < infoVec_.size(); i++) {
+			const Info& v = infoVec_[i];
+			if (v.get() == p) return v.isSet();
+		}
+		throw cybozu::Exception("Option:isSet:no assigned var") << pvar;
 	}
 };
 
