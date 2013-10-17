@@ -205,7 +205,7 @@ void loadPodVec(V& v, InputStream& is)
 	size_t size;
 	load(size, is);
 	v.resize(size);
-	loadRange(&v[0], size, is);
+	if (size > 0) loadRange(&v[0], size, is);
 }
 
 // only for std::vector<POD>
@@ -213,7 +213,7 @@ template<class V, class OutputStream>
 void savePodVec(OutputStream& os, const V& v)
 {
 	save(os, v.size());
-	saveRange(os, &v[0], v.size());
+	if (!v.empty()) saveRange(os, &v[0], v.size());
 }
 
 template<class InputStream>
