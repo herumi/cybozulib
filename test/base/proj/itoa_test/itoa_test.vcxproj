@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{719B8E39-BF10-4505-A845-89DD037E8607}</ProjectGuid>
+    <ProjectGuid>{C91C3371-DFAD-4882-A4F4-E246FBB70939}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ec_test</RootNamespace>
   </PropertyGroup>
@@ -78,7 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(SolutionDir)test\base\convert_int_test.cpp" />
+    <ClCompile Include="$(SolutionDir)test\base\itoa_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
