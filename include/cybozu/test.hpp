@@ -118,7 +118,7 @@ inline void test(bool ret, const std::string& msg, const std::string& param, con
 {
 	autoRun.set(ret);
 	if (!ret) {
-		std::cout << file << "(" << line << "):" << "ctest:" << msg << "(" << param << ");" << std::endl;
+		printf("%s(%d):ctest:%s(%s);\n", file, line, msg.c_str(), param.c_str());
 	}
 }
 
