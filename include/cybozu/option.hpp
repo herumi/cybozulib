@@ -448,7 +448,7 @@ public:
 		remains_.opt = name;
 		remains_.help = help;
 	}
-	void appendHelp(const char *opt, const std::string& help = "show this message")
+	void appendHelp(const char *opt, const std::string& help = ": show this message")
 	{
 		helpOpt_ = opt;
 		help_ = help;
