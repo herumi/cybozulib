@@ -75,7 +75,7 @@ inline void split(std::string& key, std::string& value, const std::string& line)
 	VALUE = [^\\r\\n]*
 	LINE = (EMPTY | COMMENT | SECTION | KEY_VALUE) CF
 	EMPTY = ""
-	COMMENT = ";" [^\\r\\n]*
+	COMMENT = "[;#]" [^\\r\\n]*
 	SECTION = "[" NAME "]"
 	SP = [ \t]
 	KEY_VALUE = NAME SP* "=" VALUE
@@ -353,7 +353,7 @@ public:
 			}
 			// skip if comment
 			c = line[0];
-			if (c == ';') continue;
+			if (c == ';' || c == '#') continue;
 			// section
 			if (c == '[') {
 				if (line[n - 1] != ']') {
