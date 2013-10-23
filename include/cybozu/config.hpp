@@ -24,7 +24,7 @@ inline bool isName(const std::string& str, char *badChar)
 		if (!('0' <= c && c <= '9')
 			&& !('a' <= c && c <= 'z')
 			&& !('A' <= c && c <= 'Z')
-			&& !strchr("_.:\\-", c)) {
+			&& c != '_') {
 			*badChar = c;
 			return false;
 		}
@@ -71,7 +71,7 @@ inline void split(std::string& key, std::string& value, const std::string& line)
 	config format is the following
 	<pre>
 	CF = "\r\n" | "\n"
-	NAME = [0-9a-zA-Z_.:\-]+
+	NAME = [0-9a-zA-Z_]+
 	VALUE = [^\\r\\n]*
 	LINE = (EMPTY | COMMENT | SECTION | KEY_VALUE) CF
 	EMPTY = ""

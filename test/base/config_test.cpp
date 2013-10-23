@@ -15,7 +15,7 @@ CYBOZU_TEST_AUTO(isName)
 		{ "", true, 0 },
 		{ "abc", true, 0 },
 		{ "abc$", false, '$' },
-		{ "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.:\\-", true, 0 },
+		{ "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_", true, 0 },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		char badChar = 0;
@@ -207,6 +207,8 @@ CYBOZU_TEST_AUTO(append)
 	CYBOZU_TEST_EQUAL(a, 123);
 	std::string b = section->getValue("val");
 	CYBOZU_TEST_EQUAL(b, "123");
+	uint64_t c = section->getValue("val");
+	CYBOZU_TEST_EQUAL(c, 123);
 }
 
 CYBOZU_TEST_AUTO(trim)
