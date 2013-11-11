@@ -39,6 +39,11 @@ inline void vformat(std::string& str, const char *format, va_list args)
 #endif
 }
 
+#ifdef __GNUC__
+inline void format(std::string& str, const char *format, ...) __attribute__((format(printf, 2, 3)));
+inline std::string format(const char *format, ...) __attribute__((format(printf, 1, 2)));
+#endif
+
 inline void format(std::string& str, const char *format, ...)
 {
 	va_list args;
