@@ -147,6 +147,9 @@ inline void SetLogPriority(LogPriority priority)
 	Linux : default is syslog
 	Windows : default is file(use openFile)
 */
+#ifdef __GNUC__
+inline void PutLog(LogPriority priority, const char *format, ...) throw() __attribute__((format(printf, 2, 3)));
+#endif
 inline void PutLog(LogPriority priority, const char *format, ...) throw()
 	try
 {
