@@ -40,7 +40,7 @@ public:
 	}
 	void put(LogPriority priority, const std::string& str)
 	{
-		if (priority <= priority_) return;
+		if (priority < priority_) return;
 		if (fp_) {
 			cybozu::Time cur(true);
 			if (fprintf(fp_, "%s %s\n", cur.toString(false).c_str(), str.c_str()) < 0) {
