@@ -65,7 +65,7 @@ public:
 	}
 	void put(LogPriority priority, const char *format, va_list args)
 	{
-		if (priority <= priority_) return;
+		if (priority < priority_) return;
 		std::string str;
 		cybozu::vformat(str, format, args);
 		put(priority, str);
