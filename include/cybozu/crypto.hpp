@@ -28,6 +28,7 @@ public:
 	};
 private:
 	Name name_;
+	size_t hashSize_;
 	union {
 		SHA_CTX sha1;
 		SHA256_CTX sha256;
@@ -77,6 +78,7 @@ public:
 	}
 	explicit Hash(Name name = N_SHA1)
 		: name_(name)
+		, hashSize_(getSize(name))
 	{
 		reset();
 	}
@@ -107,12 +109,13 @@ public:
 		}
 	}
 	/*
+		md must have hashSize byte
 		@note clear inner buffer after calling digest
 	*/
-	std::string digest(const char *buf, size_t bufSize)
+	void digest(char *out, const char *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
-		unsigned char md[128];
+		unsigned char *md = reinterpret_cast<unsigned char*>(out);
 		switch (name_) {
 		case N_SHA1:   SHA1_Final(md, &ctx_.sha1);     break;
 		case N_SHA224: SHA224_Final(md, &ctx_.sha256); break;
@@ -123,7 +126,13 @@ public:
 			throw cybozu::Exception("crypto:Hash:digest") << name_;
 		}
 		reset();
-		return std::string(cybozu::cast<const char*>(md), getSize(name_));
+	}
+	std::string digest(const char *buf, size_t bufSize)
+	{
+		std::string ret;
+		ret.resize(hashSize_);
+		digest(&ret[0], buf, bufSize);
+		return ret;
 	}
 	std::string digest(const std::string& buf = "")
 	{
