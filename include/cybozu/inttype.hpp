@@ -99,6 +99,18 @@
 	#endif
 #endif
 
+
+#ifndef CYBOZU_ENDIAN
+	#define CYBOZU_ENDIAN_UNKNOWN 0
+	#define CYBOZU_ENDIAN_LITTLE 1
+	#define CYBOZU_ENDIAN_BIG 2
+	#if defined(_M_IX86) || defined(_M_AMD64) || defined(__x86_64__) || defined(__i386__)
+		#define CYBOZU_ENDIAN CYBOZU_ENDIAN_LITTLE
+	#else
+		#define CYBOZU_ENDIAN CYBOZU_ENDIAN_UNKNOWN
+	#endif
+#endif
+
 namespace cybozu {
 template<class T>
 void disable_warning_unused_variable(const T&) { }
