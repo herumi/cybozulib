@@ -9,7 +9,7 @@
 #include <cybozu/inttype.hpp>
 #include <string.h>
 #include <stdlib.h>
-#include <memory.h>
+#include <stdio.h>
 
 namespace cybozu {
 
@@ -18,7 +18,8 @@ inline uint16_t byteSwap(uint16_t x) { return _byteswap_ushort(x); }
 inline uint32_t byteSwap(uint32_t x) { return _byteswap_ulong(x); }
 inline uint64_t byteSwap(uint64_t x) { return _byteswap_uint64(x); }
 #else
-inline uint16_t byteSwap(uint16_t x) { return (x >> 8) | (x << 8); }
+//inline uint16_t byteSwap(uint16_t x) { return (x >> 8) | (x << 8); }
+inline uint16_t byteSwap(uint16_t x) { return __builtin_bswap16(x); }
 inline uint32_t byteSwap(uint32_t x) { return __builtin_bswap32(x); }
 inline uint64_t byteSwap(uint64_t x) { return __builtin_bswap64(x); }
 #endif
