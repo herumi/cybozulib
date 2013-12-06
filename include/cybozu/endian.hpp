@@ -18,8 +18,11 @@ inline uint16_t byteSwap(uint16_t x) { return _byteswap_ushort(x); }
 inline uint32_t byteSwap(uint32_t x) { return _byteswap_ulong(x); }
 inline uint64_t byteSwap(uint64_t x) { return _byteswap_uint64(x); }
 #else
-//inline uint16_t byteSwap(uint16_t x) { return (x >> 8) | (x << 8); }
+#if (((__GNUC__) << 16) + (__GNUC_MINOR__)) >= ((4 << 16) + 8)
 inline uint16_t byteSwap(uint16_t x) { return __builtin_bswap16(x); }
+#else
+inline uint16_t byteSwap(uint16_t x) { return (x >> 8) | (x << 8); }
+#endif
 inline uint32_t byteSwap(uint32_t x) { return __builtin_bswap32(x); }
 inline uint64_t byteSwap(uint64_t x) { return __builtin_bswap64(x); }
 #endif
