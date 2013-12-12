@@ -3,11 +3,14 @@
 #include <cybozu/file.hpp>
 #include <cybozu/stream.hpp>
 #include <cybozu/serializer.hpp>
+#include <cybozu/nlp/sparse.hpp>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <map>
+
+const char *g_testFile = "zlib_test.log";
 
 CYBOZU_TEST_AUTO(test1_deflate)
 {
@@ -167,26 +170,86 @@ CYBOZU_TEST_AUTO(output_gzip2)
 	}
 }
 
-CYBOZU_TEST_AUTO(serializer)
+template<class InputStream, class OutputStream>
+void testSerializer(InputStream& is, OutputStream& os)
 {
-	typedef std::map<int, double> Map;
-	Map m, mm;
-	for (int i = 0; i < 100; i++) {
-		m[i * i] = (i + i * i) / 3.42;
-	}
-	std::stringstream ss;
-
 	{
-		cybozu::ZlibCompressorT<std::stringstream> enc(ss);
+		cybozu::ZlibCompressorT<OutputStream> enc(os);
 		cybozu::save(enc, m);
 	}
 	{
-		cybozu::ZlibDecompressorT<std::stringstream> dec(ss);
+		cybozu::ZlibDecompressorT<InputStream> dec(is);
 		cybozu::load(mm, dec);
 	}
-	CYBOZU_TEST_EQUAL(m.size(), mm.size());
-	for (Map::const_iterator i = m.begin(), ie = m.end(), j = mm.begin(); i != ie; ++i, ++j) {
+}
+
+template<class Map>
+void compareMap(const Map& x, const Map& y)
+{
+	CYBOZU_TEST_EQUAL(x.size(), y.size());
+	for (Map::const_iterator i = x.begin(), ie = x.end(), j = y.begin(); i != ie; ++i, ++j) {
 		CYBOZU_TEST_EQUAL(i->first, j->first);
 		CYBOZU_TEST_EQUAL(i->second, j->second);
 	}
 }
+
+CYBOZU_TEST_AUTO(serializer_with_zlib)
+{
+	typedef std::map<int, double> Map;
+	Map src;
+	for (int i = 0; i < 100; i++) {
+		src[i * i] = (i + i * i) / 3.42;
+	}
+	std::stringstream ss;
+	{
+		cybozu::ZlibCompressorT<std::stringstream> enc(ss);
+		cybozu::save(enc, src);
+	}
+	{
+		cybozu::ZlibDecompressorT<std::stringstream> dec(ss);
+		Map dst;
+		cybozu::load(dst, dec);
+		compareMap(src, dst);
+	}
+	{
+		std::ofstream ofs(g_testFile, std::ios::binary);
+		cybozu::ZlibCompressorT<std::ofstream> enc(ofs);
+		cybozu::save(enc, src);
+	}
+	{
+		std::ifstream ifs(g_testFile, std::ios::binary);
+		cybozu::ZlibDecompressorT<std::ifstream> dec(ifs);
+		Map dst;
+		cybozu::load(dst, dec);
+		compareMap(src, dst);
+	}
+}
+
+#if 0
+CYBOZU_TEST_AUTO(sparse_with_zlib)
+{
+	typedef cybozu::nlp::SparseVector<double> Vec;
+	Vec x;
+	const struct {
+		int pos;
+		double val;
+	} tbl[] = {
+		{ 3, 1.2 }, { 5, 9.4 }, { 8, 123.4 }, { 999, -324.0 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		x.push_back(tbl[i].pos, tbl[i].val);
+	}
+	{
+		std::ofstream ofs(g_testFile, std::ios::binary);
+		cybozu::ZlibCompressorT<std::ofstream> enc(ofs);
+		cybozu::save(enc, x);
+	}
+	{
+		Vec y;
+		std::ifstream ifs(g_testFile, std::ios::binary);
+		cybozu::ZlibCompressorT<std::ifstream> dec(ifs);
+//		cybozu::load(y, ifs);
+//		CYBOZU_TEST_EQUAL(x, y);
+	}
+}
+#endif
