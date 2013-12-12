@@ -212,7 +212,6 @@ CYBOZU_TEST_AUTO(serializer_with_zlib)
 	}
 }
 
-#if 0
 CYBOZU_TEST_AUTO(sparse_with_zlib)
 {
 	typedef cybozu::nlp::SparseVector<double> Vec;
@@ -234,9 +233,8 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 	{
 		Vec y;
 		std::ifstream ifs(g_testFile, std::ios::binary);
-		cybozu::ZlibCompressorT<std::ifstream> dec(ifs);
-//		cybozu::load(y, ifs);
-//		CYBOZU_TEST_EQUAL(x, y);
+		cybozu::ZlibDecompressorT<std::ifstream> dec(ifs);
+		cybozu::load(y, dec);
+		CYBOZU_TEST_ASSERT(x == y);
 	}
 }
-#endif
