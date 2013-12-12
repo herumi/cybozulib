@@ -170,24 +170,11 @@ CYBOZU_TEST_AUTO(output_gzip2)
 	}
 }
 
-template<class InputStream, class OutputStream>
-void testSerializer(InputStream& is, OutputStream& os)
-{
-	{
-		cybozu::ZlibCompressorT<OutputStream> enc(os);
-		cybozu::save(enc, m);
-	}
-	{
-		cybozu::ZlibDecompressorT<InputStream> dec(is);
-		cybozu::load(mm, dec);
-	}
-}
-
 template<class Map>
 void compareMap(const Map& x, const Map& y)
 {
 	CYBOZU_TEST_EQUAL(x.size(), y.size());
-	for (Map::const_iterator i = x.begin(), ie = x.end(), j = y.begin(); i != ie; ++i, ++j) {
+	for (typename Map::const_iterator i = x.begin(), ie = x.end(), j = y.begin(); i != ie; ++i, ++j) {
 		CYBOZU_TEST_EQUAL(i->first, j->first);
 		CYBOZU_TEST_EQUAL(i->second, j->second);
 	}
