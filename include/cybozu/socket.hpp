@@ -378,12 +378,13 @@ public:
 	/**
 		accept for server
 	*/
-	void accept(Socket& client, struct sockaddr_storage *paddr = 0) const
+	void accept(Socket& client, struct sockaddr_storage *paddr = 0, socklen_t *plen = 0) const
 	{
 		struct sockaddr_storage addr;
 		socklen_t len = sizeof(addr);
 		if (paddr == 0) paddr = &addr;
 		client.sd_ = ::accept(sd_, (struct sockaddr *)paddr, &len);
+		if (plen) *plen = len;
 		if (!client.isValid()) throw cybozu::Exception("Socket:accept") << cybozu::ErrorNo();
 	}
 
