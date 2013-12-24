@@ -104,7 +104,7 @@ bool convert(T* x, const char *str)
 {
 	std::istringstream is(str);
 	is >> *x;
-	return is != 0;
+	return !!is;
 }
 
 template<>
