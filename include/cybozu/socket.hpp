@@ -68,7 +68,11 @@ struct InitTerm {
 	{
 #ifdef _WIN32
 		WSADATA data;
-		::WSAStartup(MAKEWORD(2, 2), &data);
+		int err = ::WSAStartup(MAKEWORD(2, 2), &data);
+		if (err) {
+			fprintf(stderr, "WSAStartup failed : %d\n", err);
+			exit(1);
+		}
 #else
 		::signal(SIGPIPE, SIG_IGN);
 #endif
@@ -249,13 +253,11 @@ public:
 	// move
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
 	Socket(Socket&& rhs)
-#else
-	Socket(Socket& rhs)
-#endif
 		: sd_(INVALID_SOCKET)
 	{
 		sd_ = cybozu::AtomicExchange(&rhs.sd_, sd_);
 	}
+#endif
 	// close and move
 	void moveFrom(Socket& rhs)
 	{
@@ -427,7 +429,7 @@ public:
 		FD_ZERO(&fds);
 		FD_SET((unsigned)sd_, &fds);
 		int ret = ::select((int)sd_ + 1, &fds, 0, 0, &timeout);
-		if (ret > 0) {// && ret != SOCKET_ERROR) {
+		if (ret > 0) {
 			return FD_ISSET(sd_, &fds) != 0;
 		}
 		return false;
