@@ -38,7 +38,7 @@ struct Tag<4> {
 	static inline T AtomicCompareExchangeSub(T *p, T newValue, T oldValue)
 	{
 #ifdef _WIN32
-		return (T)InterlockedCompareExchange((long*)p, (long)newValue, (long)oldValue);
+		return (T)_InterlockedCompareExchange((long*)p, (long)newValue, (long)oldValue);
 #else
 		return static_cast<T>(__sync_val_compare_and_swap(p, oldValue, newValue));
 #endif
@@ -48,7 +48,7 @@ struct Tag<4> {
 	static inline T AtomicExchangeSub(T *p, T newValue)
 	{
 #ifdef _WIN32
-		return (T)InterlockedExchange((long*)p, (long)newValue);
+		return (T)_InterlockedExchange((long*)p, (long)newValue);
 #else
 		return static_cast<T>(__sync_lock_test_and_set(p, newValue));
 #endif
