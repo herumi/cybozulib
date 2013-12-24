@@ -81,13 +81,12 @@ public:
 };
 
 class ErrorNo {
+public:
 #ifdef _WIN32
 	typedef unsigned int NativeErrorNo;
 #else
 	typedef int NativeErrorNo;
 #endif
-	NativeErrorNo err_;
-public:
 	explicit ErrorNo(NativeErrorNo err)
 		: err_(err)
 	{
@@ -141,6 +140,8 @@ public:
 		return ConvertErrorNoToString(err_);
 #endif
 	}
+private:
+	NativeErrorNo err_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const cybozu::ErrorNo& self)

@@ -35,6 +35,21 @@
 
 namespace cybozu {
 
+#ifdef _MSC_VER
+struct NetErrorNo : public cybozu::ErrorNo {
+	NetErrorNo(NativeErrorNo err)
+		: cybozu::ErrorNo(err)
+	{
+	}
+	NetErrorNo()
+		: cybozu::ErrorNo(WSAGetLastError())
+	{
+	}
+};
+#else
+typedef cybozu::ErrorNo NetErrorNo;
+#endif
+
 namespace ssl {
 class ClientSocket;
 };
@@ -154,7 +169,7 @@ public:
 			if (found) return;
 		}
 	ERR_EXIT:
-		throw cybozu::Exception("SocketAddr:set") << address << port << cybozu::ErrorNo();
+		throw cybozu::Exception("SocketAddr:set") << address << port << cybozu::NetErrorNo();
 	}
 	socklen_t getSize() const { return addrlen_; }
 	int getFamily() const { return family_; }
@@ -178,7 +193,7 @@ public:
 			if (p) {
 				return p;
 			} else {
-				throw cybozu::Exception("cybozu:SocketAddr:toStr") << cybozu::ErrorNo();
+				throw cybozu::Exception("cybozu:SocketAddr:toStr") << cybozu::NetErrorNo();
 			}
 		}
 		throw cybozu::Exception("cybozu:SocketAddr:toStr:bad family_") << family_;
@@ -272,7 +287,7 @@ public:
 #else
 		bool isOK = ::close(sd) == 0;
 #endif
-		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::ErrorNo();
+		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::NetErrorNo();
 	}
 
 	/*!
@@ -291,7 +306,7 @@ public:
 		ssize_t readSize = ::read(sd_, buf, size);
 		if (readSize < 0 && errno == EINTR) goto RETRY;
 #endif
-		if (readSize < 0) throw cybozu::Exception("Socket:readSome") << cybozu::ErrorNo();
+		if (readSize < 0) throw cybozu::Exception("Socket:readSome") << cybozu::NetErrorNo();
 		return readSize;
 	}
 
@@ -326,7 +341,7 @@ public:
 			int writeSize = ::write(sd_, p, size);
 			if (writeSize < 0 && errno == EINTR) continue;
 #endif
-			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::ErrorNo();
+			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::NetErrorNo();
 			p += writeSize;
 			bufSize -= writeSize;
 		}
@@ -349,12 +364,12 @@ public:
 	{
 		sd_ = socket(addr.getFamily(), SOCK_STREAM, 0);
 		if (!isValid()) {
-			throw cybozu::Exception("Socket:connect:socket") << cybozu::ErrorNo();
+			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
 		}
 		if (!::connect(sd_, addr.get(), addr.getSize())) return;
-		int keep = errno;
+		NetErrorNo keep;
 		close();
-		throw cybozu::Exception("Socket:connect:connect") << cybozu::ErrorNo(keep);
+		throw cybozu::Exception("Socket:connect:connect") << keep;
 	}
 
 	/**
@@ -366,7 +381,7 @@ public:
 		const int family = onlyIpv4 ? AF_INET : AF_INET6;
 		sd_ = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
-			throw cybozu::Exception("Socket:bind:socket") << cybozu::ErrorNo();
+			throw cybozu::Exception("Socket:bind:socket") << cybozu::NetErrorNo();
 		}
 		setSocketOption(SO_REUSEADDR, 1);
 		struct sockaddr_in6 addr6;
@@ -391,9 +406,9 @@ public:
 				return;
 			}
 		}
-		int keep = errno;
+		cybozu::NetErrorNo keep;
 		close(cybozu::DontThrow);
-		throw cybozu::Exception("Socket:bind") << cybozu::ErrorNo(keep);
+		throw cybozu::Exception("Socket:bind") << keep;
 	}
 
 	/**
@@ -431,21 +446,21 @@ public:
 		} else {
 			client.sd_ = ::accept(sd_, 0, 0);
 		}
-		if (!client.isValid()) throw cybozu::Exception("Socket:accept") << cybozu::ErrorNo();
+		if (!client.isValid()) throw cybozu::Exception("Socket:accept") << cybozu::NetErrorNo();
 	}
 
 	template<typename T>
 	void setSocketOption(int optname, const T& value, int level = SOL_SOCKET)
 	{
 		bool isOK = setsockopt(sd_, level, optname, cybozu::cast<const char*>(&value), sizeof(T)) == 0;
-		if (!isOK) throw cybozu::Exception("Socket:setSocketOption") << cybozu::ErrorNo();
+		if (!isOK) throw cybozu::Exception("Socket:setSocketOption") << cybozu::NetErrorNo();
 	}
 	template<typename T>
 	void getSocketOption(int optname, T* value, int level = SOL_SOCKET) const
 	{
 		socklen_t len = (socklen_t)sizeof(T);
 		bool isOK = getsockopt(sd_, level, optname, cybozu::cast<char*>(value), &len) == 0;
-		if (!isOK) throw cybozu::Exception("Socket:getSocketOption") << cybozu::ErrorNo();
+		if (!isOK) throw cybozu::Exception("Socket:getSocketOption") << cybozu::NetErrorNo();
 	}
 	int getSocketOption(int optname) const
 	{
