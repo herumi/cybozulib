@@ -25,10 +25,10 @@ const bool DontThrow = true;
 
 namespace exception {
 
-/* get max 10 characters to avoid buffer overrun */
+/* get max 16 characters to avoid buffer overrun */
 inline std::string makeString(const char *str, size_t size)
 {
-	return std::string(str, std::min<size_t>(size, 10));
+	return std::string(str, std::min<size_t>(size, 16));
 }
 
 } // cybozu::exception
