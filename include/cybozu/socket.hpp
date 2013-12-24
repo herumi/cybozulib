@@ -19,6 +19,7 @@
 	#include <unistd.h>
 	#include <sys/socket.h>
 	#include <netinet/tcp.h>
+	#include <arpa/inet.h>
 	#include <netdb.h>
 	#include <memory.h>
 	#include <signal.h>
@@ -80,9 +81,27 @@ struct DummyCall {
 } // cybozu::socket_local
 
 class SocketAddr {
-	struct sockaddr_storage addr_;
+	union {
+		// http://www.coins.tsukuba.ac.jp/~syspro/2010/No6_files/sockaddr.html
+		struct sockaddr sa; /* 16byte */
+		struct sockaddr_in v4; /* 16byte */
+		struct sockaddr_in6 v6;
+	} addr_;
 	socklen_t addrlen_;
 	int family_;
+	friend class Socket;
+	void verify() // call in only Socket::accept
+	{
+		if (addrlen_ == sizeof(addr_.v4) && addr_.sa.sa_family == AF_INET) {
+			family_ = AF_INET;
+			return;
+		}
+		if (addrlen_ == sizeof(addr_.v6) && addr_.sa.sa_family == AF_INET6) {
+			family_ = AF_INET6;
+			return;
+		}
+		throw cybozu::Exception("cybozu:SocketAddr:verify") << addrlen_;
+	}
 public:
 	SocketAddr()
 		: addrlen_(0)
@@ -139,7 +158,31 @@ public:
 	}
 	socklen_t getSize() const { return addrlen_; }
 	int getFamily() const { return family_; }
-	const struct sockaddr *get() const { return (const struct sockaddr*)&addr_; }
+	const struct sockaddr *get() const { return &addr_.sa; }
+	bool operator==(const SocketAddr& rhs) const
+	{
+		if (family_ == rhs.family_ && addrlen_ == rhs.addrlen_) {
+			return memcmp(&addr_.sa, &rhs.addr_.sa, addrlen_) == 0;
+		}
+		return false;
+	}
+	bool operator!=(const SocketAddr& rhs) const { return !(*this == rhs); }
+	std::string toStr() const
+	{
+		if (family_ == AF_INET || family_ == AF_INET6) {
+			char buf[INET6_ADDRSTRLEN];
+			assert(INET_ADDRSTRLEN <= INET6_ADDRSTRLEN);
+			// not "const void*" because of vc
+			void *pa = family_ == AF_INET ? (void*)&addr_.v4.sin_addr : (void*)&addr_.v6.sin6_addr;
+			const char *p = inet_ntop(family_, pa, buf, sizeof(buf));
+			if (p) {
+				return p;
+			} else {
+				throw cybozu::Exception("cybozu:SocketAddr:toStr") << cybozu::ErrorNo();
+			}
+		}
+		throw cybozu::Exception("cybozu:SocketAddr:toStr:bad family_") << family_;
+	}
 };
 /*
 	socket class
@@ -378,13 +421,16 @@ public:
 	/**
 		accept for server
 	*/
-	void accept(Socket& client, struct sockaddr_storage *paddr = 0, socklen_t *plen = 0) const
+	void accept(Socket& client, SocketAddr *paddr = 0) const
 	{
-		struct sockaddr_storage addr;
-		socklen_t len = sizeof(addr);
-		if (paddr == 0) paddr = &addr;
-		client.sd_ = ::accept(sd_, (struct sockaddr *)paddr, &len);
-		if (plen) *plen = len;
+		if (paddr) {
+			struct sockaddr *psa = &paddr->addr_.sa;
+			paddr->addrlen_ = sizeof(paddr->addr_);
+			client.sd_ = ::accept(sd_, psa, &paddr->addrlen_);
+			paddr->verify();
+		} else {
+			client.sd_ = ::accept(sd_, 0, 0);
+		}
 		if (!client.isValid()) throw cybozu::Exception("Socket:accept") << cybozu::ErrorNo();
 	}
 
