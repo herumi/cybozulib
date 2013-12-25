@@ -8,6 +8,7 @@
 */
 #include <errno.h>
 #include <assert.h>
+#include <stdio.h>
 #ifdef _WIN32
 	#include <winsock2.h>
 	#include <ws2tcpip.h> // for socklen_t
@@ -133,7 +134,7 @@ public:
 	}
 	void set(const std::string& address, uint16_t port)
 	{
-		char portStr[32];
+		char portStr[16];
 		CYBOZU_SNPRINTF(portStr, sizeof(portStr), "%d", port);
 		memset(&addr_, 0, sizeof(addr_));
 		addrlen_ = 0;
@@ -145,7 +146,7 @@ public:
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
-		hints.ai_flags = 0; // AI_PASSIVE;
+		hints.ai_flags = AI_NUMERICSERV; // AI_PASSIVE;
 		int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
 		// s == EAI_AGAIN
 		if (s) {
@@ -158,7 +159,7 @@ public:
 			bool found = false;
 			for (const struct addrinfo *p = result; p; p = p->ai_next) {
 				const int family = p->ai_family;
-				if (family == AF_INET || family == AF_INET6) {
+				if (family == hints.ai_family) {
 					if (p->ai_addrlen > sizeof(addr_)) {
 						break;
 					}
@@ -363,7 +364,7 @@ public:
 	*/
 	void connect(const cybozu::SocketAddr& addr)
 	{
-		sd_ = socket(addr.getFamily(), SOCK_STREAM, 0);
+		sd_ = ::socket(addr.getFamily(), SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
 		}
@@ -373,13 +374,15 @@ public:
 		throw cybozu::Exception("Socket:connect:connect") << keep;
 	}
 
+	static const int allowIPv4 = 1;
+	static const int allowIPv6 = 2;
 	/**
 		init for server
 		@param port [in] port number
 	*/
-	void bind(uint16_t port, bool onlyIpv4 = false)
+	void bind(uint16_t port, int mode = allowIPv4 | allowIPv6)
 	{
-		const int family = onlyIpv4 ? AF_INET : AF_INET6;
+		const int family = (mode & allowIPv6) ? AF_INET6 : AF_INET;
 		sd_ = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			throw cybozu::Exception("Socket:bind:socket") << cybozu::NetErrorNo();
@@ -389,18 +392,19 @@ public:
 		struct sockaddr_in addr4;
 		struct sockaddr *addr;
 		socklen_t addrLen;
-		if (onlyIpv4) {
-			memset(&addr4, 0, sizeof(addr4));
-			addr4.sin_family = AF_INET;
-			addr4.sin_port = htons(port);
-			addr = (struct sockaddr*)&addr4;
-			addrLen = sizeof(addr4);
-		} else {
+		if (mode & allowIPv6) {
+			setSocketOption(IPV6_V6ONLY, (mode & allowIPv4) ? 0 : 1, IPPROTO_IPV6);
 			memset(&addr6, 0, sizeof(addr6));
 			addr6.sin6_family = AF_INET6;
 			addr6.sin6_port = htons(port);
 			addr = (struct sockaddr*)&addr6;
 			addrLen = sizeof(addr6);
+		} else {
+			memset(&addr4, 0, sizeof(addr4));
+			addr4.sin_family = AF_INET;
+			addr4.sin_port = htons(port);
+			addr = (struct sockaddr*)&addr4;
+			addrLen = sizeof(addr4);
 		}
 		if (::bind(sd_, addr, addrLen) == 0) {
 			if (::listen(sd_, SOMAXCONN) == 0) {
