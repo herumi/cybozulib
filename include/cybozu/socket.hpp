@@ -296,7 +296,7 @@ public:
 		receive data
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
-		@note always return true if success, otherwise throw exception
+		@note return read size
 	*/
 	size_t readSome(void *buf, size_t bufSize)
 	{
@@ -316,7 +316,6 @@ public:
 		receive all data unless timeout
 		@param buf [out] receive buffer
 		@param bufSize [in] receive buffer size(byte)
-		@note always return true if success, otherwise throw exception
 	*/
 	void read(void *buf, size_t bufSize)
 	{
@@ -328,7 +327,7 @@ public:
 		}
 	}
 	/*!
-		write all data unless timeout
+		write all data
 		@param buf [out] send buffer
 		@param bufSize [in] send buffer size(byte)
 	*/
