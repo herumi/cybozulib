@@ -17,7 +17,7 @@
 
 namespace cybozu {
 
-namespace atomic_util {
+namespace atomic_local {
 
 template<size_t S>
 struct Tag {};
@@ -92,7 +92,7 @@ struct Tag<8> {
 #endif
 };
 
-} // atomic_util
+} // atomic_local
 
 /**
 	atomic operation
@@ -107,7 +107,7 @@ struct Tag<8> {
 template<class T>
 T AtomicAdd(T *p, T y)
 {
-	return atomic_util::Tag<sizeof(T)>::AtomicAddSub(p, y);
+	return atomic_local::Tag<sizeof(T)>::AtomicAddSub(p, y);
 }
 
 /**
@@ -118,7 +118,7 @@ T AtomicAdd(T *p, T y)
 template<class T>
 T AtomicCompareExchange(T *p, T newValue, T oldValue)
 {
-	return atomic_util::Tag<sizeof(T)>::AtomicCompareExchangeSub(p, newValue, oldValue);
+	return atomic_local::Tag<sizeof(T)>::AtomicCompareExchangeSub(p, newValue, oldValue);
 }
 
 /**
@@ -129,7 +129,7 @@ T AtomicCompareExchange(T *p, T newValue, T oldValue)
 template<class T>
 T AtomicExchange(T *p, T newValue)
 {
-	return atomic_util::Tag<sizeof(T)>::AtomicExchangeSub(p, newValue);
+	return atomic_local::Tag<sizeof(T)>::AtomicExchangeSub(p, newValue);
 }
 
 inline void mfence()
