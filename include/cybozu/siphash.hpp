@@ -35,18 +35,15 @@ inline void doubleRound(uint64_t &v0, uint64_t &v1, uint64_t &v2, uint64_t &v3)
 
 } // cybozu::siphash_local
 
-uint64_t siphash24(const void *src, size_t srcSize, const char key[16])
+uint64_t siphash24(const void *src, size_t srcSize, uint64_t k0 = uint64_t(0x0706050403020100ULL), uint64_t k1 = uint64_t(0x0f0e0d0c0b0a0908ULL))
 {
-	const uint64_t k0 = cybozu::Get64bitAsLE(key);
-	const uint64_t k1 = cybozu::Get64bitAsLE(key + 8);
-	uint64_t b = (uint64_t)srcSize << 56;
-
 	uint64_t v0 = k0 ^ uint64_t(0x736f6d6570736575ULL);
 	uint64_t v1 = k1 ^ uint64_t(0x646f72616e646f6dULL);
 	uint64_t v2 = k0 ^ uint64_t(0x6c7967656e657261ULL);
 	uint64_t v3 = k1 ^ uint64_t(0x7465646279746573ULL);
 
 	const uint8_t *in = (const uint8_t*)src;
+	uint64_t b = (uint64_t)srcSize << 56;
 
 	while (srcSize >= 8) {
 		uint64_t mi = cybozu::Get64bitAsLE(in);
