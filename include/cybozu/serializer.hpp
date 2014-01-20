@@ -25,6 +25,26 @@ union ci {
 	uint8_t c[sizeof(T)];
 };
 
+template<class S, void (S::*)(size_t)>
+struct HasMemFunc { };
+
+template<class T>
+void dispatch_reserve(T& t, size_t size, int, HasMemFunc<T, &T::reserve>* = 0)
+{
+	t.reserve(size);
+}
+
+template<class T>
+void dispatch_reserve(T&, size_t, int*)
+{
+}
+
+template<class T>
+void reserve_if_exists(T& t, size_t size)
+{
+	dispatch_reserve(t, size, 0);
+}
+
 } // serializer_local
 
 template<class InputStream, class T>
@@ -67,7 +87,6 @@ void save(OutputStream& os, const T& x)
 {
 	x.save(os);
 }
-
 
 #define CYBOZU_SERIALIZER_MAKE_SERIALIZER_F(type) \
 template<class InputStream>void load(type& x, InputStream& is) { loadPod(x, is); } \
@@ -246,6 +265,7 @@ void load(Container<T, Alloc>& x, InputStream& is)
 {
 	size_t size;
 	load(size, is);
+	serializer_local::reserve_if_exists(x, size);
 	for (size_t i = 0; i < size; i++) {
 		x.push_back(T());
 		T& t = x.back();
@@ -319,6 +339,8 @@ void load(Container<K, V, Hash, Pred, Alloc>& x, InputStream& is)
 	typedef Container<K, V, Hash, Pred, Alloc> Map;
 	size_t size;
 	load(size, is);
+//	x.reserve(size); // tr1::unordered_map may not have reserve
+	cybozu::serializer_local::reserve_if_exists(x, size);
 	for (size_t i = 0; i < size; i++) {
 		std::pair<typename Map::key_type, typename Map::mapped_type> vt;
 		load(vt.first, is);
