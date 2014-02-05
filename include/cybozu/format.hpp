@@ -26,6 +26,7 @@ inline void vformat(std::string& str, const char *format, va_list args)
 	if (ret < 0) throw cybozu::Exception("vformat:_vsprintf_s_l");
 	str.resize(size);
 #else
+#if 1
 	char *p;
 	int ret = vasprintf(&p, format, args);
 	if (ret < 0) throw cybozu::Exception("vformat:vasnprintf");
@@ -36,6 +37,17 @@ inline void vformat(std::string& str, const char *format, va_list args)
 		free(p);
 		throw std::bad_alloc();
 	}
+#else
+	// slow
+	va_list keep;
+	va_copy(keep, args);
+	int len = vsnprintf(0, 0, format, args); // len excludes the null byte
+	if (len < 0) throw cybozu::Exception("vformat:vasnprintf err1");
+	str.resize(len + 1);
+	len = vsnprintf(&str[0], str.size(), format, keep); // len incluedes the null byte
+	if (len < 0) throw cybozu::Exception("vformat:vasnprintf err2");
+	str.resize(len);
+#endif
 #endif
 }
 
