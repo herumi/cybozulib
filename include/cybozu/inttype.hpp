@@ -59,9 +59,9 @@
 #endif
 #ifndef CYBOZU_SNPRINTF
 	#ifdef _MSC_VER
-		#define CYBOZU_SNPRINTF(x, len, ...) _snprintf_s(x, len - 1, __VA_ARGS__)
+		#define CYBOZU_SNPRINTF(x, len, ...) (void)_snprintf_s(x, len, len - 1, __VA_ARGS__)
 	#else
-		#define CYBOZU_SNPRINTF(x, len, ...) snprintf(x, len, __VA_ARGS__)
+		#define CYBOZU_SNPRINTF(x, len, ...) (void)snprintf(x, len, __VA_ARGS__)
 	#endif
 #endif
 
