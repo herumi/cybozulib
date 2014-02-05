@@ -30,6 +30,7 @@ struct Tag<false> {
 #if defined(_WIN32)
 		unsigned long out;
 		_BitScanForward(&out, x);
+#pragma warning(suppress: 6102)
 		return out;
 #else
 		return __builtin_ctz(x);
@@ -41,6 +42,7 @@ struct Tag<false> {
 #if defined(_MSC_VER)
 		unsigned long out;
 		_BitScanReverse(&out, x);
+#pragma warning(suppress: 6102)
 		return out;
 #else
 		return __builtin_clz(x) ^ 0x1f;
@@ -57,6 +59,7 @@ struct Tag<true> {
 #if defined(_MSC_VER) && defined(_WIN64)
 		unsigned long out;
 		_BitScanForward64(&out, x);
+#pragma warning(suppress: 6102)
 		return out;
 #elif defined(__x86_64__)
 		return __builtin_ctzl(x);
@@ -73,6 +76,7 @@ struct Tag<true> {
 #if defined(_MSC_VER) && defined(_WIN64)
 		unsigned long out;
 		_BitScanReverse64(&out, x);
+#pragma warning(suppress: 6102)
 		return out;
 #elif defined(__x86_64__)
 		return __builtin_clzl(x) ^ 0x3f;
