@@ -29,7 +29,7 @@ inline void vformat(std::string& str, const char *format, va_list args)
 	char *p;
 	int ret = vasprintf(&p, format, args);
 	if (ret < 0) throw cybozu::Exception("vformat:vasnprintf");
-    try {
+	try {
 		str.assign(p, ret);
 		free(p);
 	} catch (...) {
