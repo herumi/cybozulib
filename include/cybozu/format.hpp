@@ -39,12 +39,16 @@ inline void vformat(std::string& str, const char *format, va_list args)
 #endif
 }
 
-#ifdef __GNUC__
-inline void format(std::string& str, const char *format, ...) __attribute__((format(printf, 2, 3)));
-inline std::string format(const char *format, ...) __attribute__((format(printf, 1, 2)));
+#ifdef _MSC_VER
+	#define CYBOZU_FORMAT_PRINTF _Printf_format_string_
+#else
+	#define CYBOZU_FORMAT_PRINTF
 #endif
 
-inline void format(std::string& str, const char *format, ...)
+#ifdef __GNUC__
+__attribute__((format(printf, 2, 3)))
+#endif
+inline void format(std::string& str, CYBOZU_FORMAT_PRINTF const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -52,7 +56,10 @@ inline void format(std::string& str, const char *format, ...)
 	va_end(args);
 }
 
-inline std::string format(const char *format, ...)
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+inline std::string format(CYBOZU_FORMAT_PRINTF const char *format, ...)
 {
 	std::string str;
 	va_list args;
