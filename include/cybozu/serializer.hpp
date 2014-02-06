@@ -259,6 +259,15 @@ void save(OutputStream& os, const cybozu::String& str)
 	savePodVec(os, str);
 }
 
+template<class OutputStream>
+void save(OutputStream& os, const char *x)
+{
+	const size_t len = strlen(x);
+	save(os, len);
+	if (len > 0) saveRange(os, x, len);
+}
+
+
 // for vector, list
 template<class InputStream, class T, class Alloc, template<class T_, class Alloc_>class Container>
 void load(Container<T, Alloc>& x, InputStream& is)

@@ -152,6 +152,18 @@ CYBOZU_TEST_AUTO(string)
 		SaveAndLoad(y, x);
 		CYBOZU_TEST_EQUAL(x, y);
 	}
+	const char *tbl2[] = {
+		"",
+		"abc this is a pen",
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl2); i++) {
+		const char *msg = tbl2[i];
+		std::stringstream ss;
+		cybozu::save(ss, msg);
+		std::string y;
+		cybozu::load(y, ss);
+		CYBOZU_TEST_EQUAL(y, msg);
+	}
 }
 
 template<typename V, typename T>
