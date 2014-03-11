@@ -37,7 +37,7 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 	is.read(static_cast<char *>(buf), size);
 	const std::streamsize readSize = is.gcount();
 	if (readSize < 0) throw cybozu::Exception("stream:readSome_inner:bad readSize") << size << readSize;
-	if (readSize > size_t(-1)) throw cybozu::Exception("stream:readSome_inner:too large") << readSize;
+	if (readSize > 0xffffffff && size_t(-1) == 0xffffffff) throw cybozu::Exception("stream:readSome_inner:too large") << readSize;
 	return static_cast<size_t>(readSize);
 }
 

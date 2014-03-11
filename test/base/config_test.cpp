@@ -208,7 +208,7 @@ CYBOZU_TEST_AUTO(append)
 	std::string b = section->getValue("val");
 	CYBOZU_TEST_EQUAL(b, "123");
 	uint64_t c = section->getValue("val");
-	CYBOZU_TEST_EQUAL(c, 123);
+	CYBOZU_TEST_EQUAL(c, 123u);
 }
 
 CYBOZU_TEST_AUTO(trim)

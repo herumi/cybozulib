@@ -235,6 +235,16 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 		std::ifstream ifs(g_testFile, std::ios::binary);
 		cybozu::ZlibDecompressorT<std::ifstream> dec(ifs);
 		cybozu::load(y, dec);
-		CYBOZU_TEST_ASSERT(x == y);
+//		CYBOZU_TEST_ASSERT(x == y);
+		CYBOZU_TEST_EQUAL(x.size(), y.size());
+		Vec::const_iterator xi = x.begin();
+		Vec::const_iterator yi = y.begin();
+		while (xi != x.end()) {
+			CYBOZU_TEST_EQUAL(xi->pos(), yi->pos());
+			CYBOZU_TEST_EQUAL(xi->val(), yi->val());
+			++xi;
+			++yi;
+		}
+		CYBOZU_TEST_ASSERT(yi == y.end());
 	}
 }
