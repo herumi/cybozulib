@@ -214,7 +214,7 @@ CYBOZU_TEST_AUTO(GetBaseName)
 	}
 }
 
-CYBOZU_TEST_AUTO(HasSuffix)
+CYBOZU_TEST_AUTO(HasExtension)
 {
 	const struct {
 		const char *name;
@@ -228,6 +228,6 @@ CYBOZU_TEST_AUTO(HasSuffix)
 		{ "", "a", false },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
-		CYBOZU_TEST_EQUAL(cybozu::HasSuffix(tbl[i].name, tbl[i].suf), tbl[i].has);
+		CYBOZU_TEST_EQUAL(cybozu::HasExtension(tbl[i].name, tbl[i].suf), tbl[i].has);
 	}
 }

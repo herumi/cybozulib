@@ -298,16 +298,16 @@ public:
 };
 
 /*
-	name has suffix
+	name has extension
 */
-inline bool HasSuffix(const std::string& name, const std::string& suffix)
+inline bool HasExtension(const std::string& name, const std::string& extension)
 {
+	const size_t extensionSize = extension.size();
+	if (extensionSize == 0) return true;
 	const size_t nameSize = name.size();
-	const size_t suffixSize = suffix.size();
-	if (suffixSize == 0) return true;
-	if (nameSize < suffixSize + 1) return false;
-	const char *p = &name[nameSize - suffixSize - 1];
-	return *p == '.' && memcmp(p + 1, &suffix[0], suffixSize) == 0;
+	if (nameSize < extensionSize + 1) return false;
+	const char *p = &name[nameSize - extensionSize - 1];
+	return *p == '.' && memcmp(p + 1, &extension[0], extensionSize) == 0;
 }
 /*
 	split name as basename.suffix
@@ -467,16 +467,31 @@ struct FileInfo {
 
 typedef std::vector<FileInfo> FileList;
 
+
+namespace file_local {
+
+void filterAndPush(FileList& list, const FileInfo& fi, const std::string& extension, bool cond(const std::string&, const std::string&))
+{
+	if (fi.name == "." || fi.name == "..") {
+		return;
+	}
+	if (cond(fi.name, extension)) {
+		list.push_back(fi);
+	}
+}
+
+} // cybozu::file_local
+
 /**
 	get file name in dir
 	@param list [out] FileList
 	@param dir [in] directory
-	@param suffix [in] select files having suffix and all directory
+	@param extension [in] select files(including directory) having extension such as "cpp" ; select all if suffix is empty
 	@param cond [in] filter function (select if cond(targetFile, suffix) is true)
+	@note "." and ".." are excluded
 */
-inline bool GetFileList(FileList &list, const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
+inline bool GetFileList(FileList &list, const std::string& dir, const std::string& extension = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasExtension)
 {
-	const bool selectAll = suffix.empty();
 #ifdef _WIN32
 	std::string path = dir + "/*";
 	WIN32_FIND_DATAA fd;
@@ -499,12 +514,7 @@ inline bool GetFileList(FileList &list, const std::string& dir, const std::strin
 	}
 	do {
 		FileInfo fi(fd.cFileName, fd.dwFileAttributes);
-		if (fi.name == "." || fi.name == "..") {
-			continue;
-		}
-		if (selectAll || (fi.isFile() && cond(fi.name, suffix))) {
-			list.push_back(fi);
-		}
+		file_local::filterAndPush(list, fi, extension, cond);
 	} while (FindNextFileA(hdl.hdl_, &fd) != 0);
 	return true;
 #else
@@ -533,20 +543,15 @@ inline bool GetFileList(FileList &list, const std::string& dir, const std::strin
 		struct dirent *dp = ::readdir(hdl.dir_);
 		if (dp == 0) return true;
 		FileInfo fi(dp->d_name, (uint8_t)dp->d_type);
-		if (fi.name == "." || fi.name == "..") {
-			continue;
-		}
-		if (selectAll || (fi.isFile() && cond(fi.name, suffix))) {
-			list.push_back(fi);
-		}
+		file_local::filterAndPush(list, fi, extension, cond);
 	}
 #endif
 }
 
-inline FileList GetFileList(const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
+inline FileList GetFileList(const std::string& dir, const std::string& extension = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasExtension)
 {
 	FileList fl;
-	if (GetFileList(fl, dir, suffix, cond)) return fl;
+	if (GetFileList(fl, dir, extension, cond)) return fl;
 	throw cybozu::Exception("cybozu:GetFileList") << dir << cybozu::ErrorNo();
 }
 
