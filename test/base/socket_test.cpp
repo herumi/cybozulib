@@ -11,14 +11,16 @@ CYBOZU_TEST_AUTO(open_move)
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
 	cybozu::Socket t(std::move(s));
 #else
-	cybozu::Socket t(s);
+	cybozu::Socket t;
+	t.moveFrom(s);
 #endif
 	CYBOZU_TEST_ASSERT(!s.isValid());
 	CYBOZU_TEST_ASSERT(t.isValid());
 #if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
 	cybozu::Socket u(std::move(t));
 #else
-	cybozu::Socket u(t);
+	cybozu::Socket u;
+	u.moveFrom(t);
 #endif
 	CYBOZU_TEST_ASSERT(!t.isValid());
 	CYBOZU_TEST_ASSERT(u.isValid());
