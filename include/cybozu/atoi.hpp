@@ -109,7 +109,7 @@ T convertHexToInt(bool *b, const char *p, size_t size)
 				break;
 			}
 			// avoid overflow
-			if (x > std::numeric_limits<T>::max() / 16) break;
+			if (x > (std::numeric_limits<T>::max)() / 16) break;
 			x = x * 16 + T(c);
 			i++;
 		}

@@ -19,6 +19,7 @@
 #else
 	#include <unistd.h>
 	#include <sys/socket.h>
+	#include <sys/ioctl.h>
 	#include <netinet/tcp.h>
 	#include <arpa/inet.h>
 	#include <netdb.h>
@@ -240,6 +241,23 @@ private:
 		return t.tv_sec * 1000 + t.tv_usec / 1000; /* msec */
 	}
 #endif
+	void setBlock(bool isNonBlock)
+	{
+#ifdef _WIN32
+		u_long val = isNonBlock ? 1 : 0;
+		int ret = ::ioctlsocket(sd_, FIONBIO, &val);
+#else
+		int val = isNonBlock ? 1 : 0;
+		int ret = ::ioctl(sd_, FIONBIO, &val);
+#endif
+		if (ret < 0) throw cybozu::Exception("Socket:setBlock") << cybozu::NetErrorNo() << isNonBlock;
+	}
+	void connect_inner(const cybozu::SocketAddr& addr)
+	{
+		if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
+			throw cybozu::Exception("Socket:connect_inner") << cybozu::NetErrorNo() << addr.toStr();
+		}
+	}
 public:
 #ifndef _WIN32
 	static const int INVALID_SOCKET = -1;
@@ -301,7 +319,7 @@ public:
 	*/
 	size_t readSome(void *buf, size_t bufSize)
 	{
-		int size = (int)std::min((size_t)0x7fffffff, bufSize);
+		int size = (int)(std::min)((size_t)0x7fffffff, bufSize);
 #ifdef _WIN32
 		int readSize = ::recv(sd_, (char *)buf, size, 0);
 #else
@@ -336,7 +354,7 @@ public:
 	{
 		const char *p = (const char *)buf;
 		while (bufSize > 0) {
-			int size = (int)std::min(size_t(0x7fffffff), bufSize);
+			int size = (int)(std::min)(size_t(0x7fffffff), bufSize);
 #ifdef _WIN32
 			int writeSize = ::send(sd_, p, size, 0);
 #else
@@ -353,25 +371,38 @@ public:
 		@param address [in] address
 		@param port [in] port
 	*/
-	void connect(const std::string& address, uint16_t port)
+	void connect(const std::string& address, uint16_t port, int timeoutMsec = 0)
 	{
 		SocketAddr addr;
 		addr.set(address, port);
-		connect(addr);
+		connect(addr, timeoutMsec);
 	}
 	/**
 		connect to resolved socket addr
 	*/
-	void connect(const cybozu::SocketAddr& addr)
+	void connect(const cybozu::SocketAddr& addr, int timeoutMsec = 0)
 	{
 		sd_ = ::socket(addr.getFamily(), SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
 		}
-		if (!::connect(sd_, addr.get(), addr.getSize())) return;
-		NetErrorNo keep;
-		close();
-		throw cybozu::Exception("Socket:connect:connect") << keep;
+		if (timeoutMsec == 0) {
+			connect_inner(addr);
+		} else {
+			setBlock(true);
+			if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
+#ifdef _WIN32
+				bool inProgress = WSAGetLastError() == WSAEWOULDBLOCK;
+#else
+				bool inProgress = errno == EINPROGRESS;
+#endif
+				if (!inProgress) throw cybozu::Exception("Socket:connect:connect") << cybozu::NetErrorNo() << addr.toStr();
+				if (!queryAccept(timeoutMsec, false)) throw cybozu::Exception("Socket:connect:timeout") << addr.toStr();
+				int err = getSocketOption(SO_ERROR);
+				if (err != 0) throw cybozu::Exception("Socket::connect:bad socket") << cybozu::NetErrorNo(err);
+			}
+			setBlock(false);
+		}
 	}
 
 	static const int allowIPv4 = 1;
@@ -423,15 +454,21 @@ public:
 		}
 		client.accept(server);
 	*/
-	bool queryAccept()
+	bool queryAccept(int msec = 1000, bool checkWrite = true)
 	{
 		struct timeval timeout;
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
+		timeout.tv_sec = msec / 1000;
+		timeout.tv_usec = (msec % 1000) * 1000;
 		fd_set fds;
 		FD_ZERO(&fds);
 		FD_SET((unsigned)sd_, &fds);
-		int ret = ::select((int)sd_ + 1, &fds, 0, 0, &timeout);
+		int ret;
+		if (checkWrite) {
+			ret = ::select((int)sd_ + 1, &fds, 0, 0, &timeout);
+		} else {
+			ret = ::select((int)sd_ + 1, 0, &fds, 0, &timeout);
+		}
+		if (ret < 0) throw cybozu::Exception("Socket:queryAccept") << cybozu::NetErrorNo();
 		if (ret > 0) {
 			return FD_ISSET(sd_, &fds) != 0;
 		}

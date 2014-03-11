@@ -9,12 +9,14 @@ int main(int argc, char *argv[])
 	std::string cmd;
 	bool verbose = false;
 	int mode = 0;
+	int timeoutSec = 0;
 
 	cybozu::Option opt;
 	opt.appendOpt(&ip, "", "ip", ": ip address");
 	opt.appendBoolOpt(&verbose, "v", ": verbose");
 	opt.appendOpt(&mode, 0, "m", ": mode = 4(v4only), 6(v6only), 0(both)");
 	opt.appendOpt(&port, uint16_t(50000), "p", ": port");
+	opt.appendOpt(&timeoutSec, 5, "t", ": timeout(sec)");
 	opt.appendParamOpt(&cmd, "cmd", ":string to send");
 	switch (mode) {
 	case 0:
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
 	} else {
 		printf("client ip=%s port=%d\n", ip.c_str(), port);
 		cybozu::Socket client;
-		client.connect(ip, port);
+		client.connect(ip, port, timeoutSec * 1000);
 		client.write(cmd.c_str(), cmd.size());
 	}
 } catch (std::exception& e) {

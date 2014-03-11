@@ -139,8 +139,8 @@ bool convertInt(T* x, const char *str)
 	T y = cybozu::atoi(&b, str, len);
 	if (!b) return false;
 	if (factor > 1) {
-		if (std::numeric_limits<T>::min() / factor <= y
-			&& y <= std::numeric_limits<T>::max() / factor) {
+		if ((std::numeric_limits<T>::min)() / factor <= y
+			&& y <= (std::numeric_limits<T>::max)() / factor) {
 			*x = y * factor;
 		} else {
 			return false;
