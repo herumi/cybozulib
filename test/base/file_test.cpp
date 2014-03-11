@@ -132,7 +132,7 @@ bool findIn(const std::string& name, const char (&tbl)[N][16])
 	return false;
 }
 
-CYBOZU_TEST_AUTO(GetFilesInDir)
+CYBOZU_TEST_AUTO(GetFilesInDir1)
 {
 	std::string path = cybozu::GetExePath() + "../include/cybozu/";
 	cybozu::FileList list;
@@ -146,9 +146,31 @@ CYBOZU_TEST_AUTO(GetFilesInDir)
 		"stacktrace.hpp",
 		"mutex.hpp",
 	};
+	size_t foundFileNum = 0;
+	for (size_t i = 0; i < list.size(); i++) {
+		const std::string& name = list[i].name;
+		if (findIn(name, fileTbl)) {
+			CYBOZU_TEST_ASSERT(list[i].isFile());
+			foundFileNum++;
+		}
+	}
+	CYBOZU_TEST_EQUAL(CYBOZU_NUM_OF_ARRAY(fileTbl), foundFileNum);
+}
+
+CYBOZU_TEST_AUTO(GetFilesInDir2)
+{
+	std::string path = cybozu::GetExePath() + "../include/cybozu/";
+	cybozu::FileList list = cybozu::GetFileList(path);
+
+	const char fileTbl[][16] = {
+		"inttype.hpp",
+		"file.hpp",
+		"exception.hpp",
+		"atoi.hpp",
+		"stacktrace.hpp",
+		"mutex.hpp",
+	};
 	const char dirTbl[][16] = {
-		".",
-		"..",
 		"nlp",
 	};
 
@@ -157,14 +179,13 @@ CYBOZU_TEST_AUTO(GetFilesInDir)
 	for (size_t i = 0; i < list.size(); i++) {
 		const std::string& name = list[i].name;
 		if (findIn(name, fileTbl)) {
-			CYBOZU_TEST_ASSERT(list[i].isFile);
+			CYBOZU_TEST_ASSERT(list[i].isFile());
 			foundFileNum++;
 		}
 		if (findIn(name, dirTbl)) {
-			CYBOZU_TEST_ASSERT(!list[i].isFile);
+			CYBOZU_TEST_ASSERT(list[i].isDirectory());
 			foundDirNum++;
 		}
-		printf("%s %d\n", list[i].name.c_str(), list[i].isFile);
 	}
 	CYBOZU_TEST_EQUAL(CYBOZU_NUM_OF_ARRAY(fileTbl), foundFileNum);
 	CYBOZU_TEST_EQUAL(CYBOZU_NUM_OF_ARRAY(dirTbl), foundDirNum);

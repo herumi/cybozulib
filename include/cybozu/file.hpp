@@ -446,24 +446,37 @@ inline void RemoveFile(const std::string& name)
 	}
 }
 
+/*
+	remark of isFile()
+	not directory on Windows
+	not contain symbolic link on Linux
+*/
 struct FileInfo {
 	std::string name;
-	bool isFile;
-	FileInfo() : isFile(false) {}
+	uint32_t attr; // dwFileAttributes for Windows, d_type for Linux
+#ifdef _WIN32
+	bool isDirectory() const { return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0; }
+	bool isFile() const { return !isDirectory(); }
+#else
+	bool isDirectory() const { return attr == DT_DIR; }
+	bool isFile() const { return attr == DT_REG; }
+#endif
+	FileInfo() : attr(0) {}
+	FileInfo(const std::string& name, uint32_t attr) : name(name), attr(attr) {}
 };
 
 typedef std::vector<FileInfo> FileList;
 
 /**
 	get file name in dir
-	@param list [out] list must be able to push_back(file::Info)
+	@param list [out] FileList
 	@param dir [in] directory
 	@param suffix [in] select files having suffix and all directory
 	@param cond [in] filter function (select if cond(targetFile, suffix) is true)
 */
-template<class List>
-inline bool GetFileList(List &list, const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
+inline bool GetFileList(FileList &list, const std::string& dir, const std::string& suffix = "", bool (*cond)(const std::string&, const std::string&) = cybozu::HasSuffix)
 {
+	const bool selectAll = suffix.empty();
 #ifdef _WIN32
 	std::string path = dir + "/*";
 	WIN32_FIND_DATAA fd;
@@ -485,10 +498,11 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& s
 		return false;
 	}
 	do {
-		FileInfo fi;
-		fi.name = fd.cFileName;
-		fi.isFile = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
-		if (!fi.isFile || cond(fi.name, suffix)) {
+		FileInfo fi(fd.cFileName, fd.dwFileAttributes);
+		if (fi.name == "." || fi.name == "..") {
+			continue;
+		}
+		if (selectAll || (fi.isFile() && cond(fi.name, suffix))) {
 			list.push_back(fi);
 		}
 	} while (FindNextFileA(hdl.hdl_, &fd) != 0);
@@ -518,10 +532,11 @@ inline bool GetFileList(List &list, const std::string& dir, const std::string& s
 	for (;;) {
 		struct dirent *dp = ::readdir(hdl.dir_);
 		if (dp == 0) return true;
-		FileInfo fi;
-		fi.name = dp->d_name;
-		fi.isFile = dp->d_type == DT_REG;
-		if (!fi.isFile || cond(fi.name, suffix)) {
+		FileInfo fi(dp->d_name, (uint8_t)dp->d_type);
+		if (fi.name == "." || fi.name == "..") {
+			continue;
+		}
+		if (selectAll || (fi.isFile() && cond(fi.name, suffix))) {
 			list.push_back(fi);
 		}
 	}
