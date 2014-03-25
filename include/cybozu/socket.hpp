@@ -252,12 +252,6 @@ private:
 #endif
 		if (ret < 0) throw cybozu::Exception("Socket:setBlock") << cybozu::NetErrorNo() << isNonBlock;
 	}
-	void connect_inner(const cybozu::SocketAddr& addr)
-	{
-		if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
-			throw cybozu::Exception("Socket:connect_inner") << cybozu::NetErrorNo() << addr.toStr();
-		}
-	}
 public:
 #ifndef _WIN32
 	static const int INVALID_SOCKET = -1;
@@ -387,7 +381,9 @@ public:
 			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
 		}
 		if (timeoutMsec == 0) {
-			connect_inner(addr);
+			if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
+				throw cybozu::Exception("Socket:connect") << cybozu::NetErrorNo() << addr.toStr();
+			}
 		} else {
 			setBlock(true);
 			if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
@@ -396,7 +392,7 @@ public:
 #else
 				bool inProgress = errno == EINPROGRESS;
 #endif
-				if (!inProgress) throw cybozu::Exception("Socket:connect:connect") << cybozu::NetErrorNo() << addr.toStr();
+				if (!inProgress) throw cybozu::Exception("Socket:connect:not in progress") << cybozu::NetErrorNo() << addr.toStr();
 				if (!queryAccept(timeoutMsec, false)) throw cybozu::Exception("Socket:connect:timeout") << addr.toStr();
 				int err = getSocketOption(SO_ERROR);
 				if (err != 0) throw cybozu::Exception("Socket::connect:bad socket") << cybozu::NetErrorNo(err);
