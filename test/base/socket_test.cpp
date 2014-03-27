@@ -31,3 +31,13 @@ CYBOZU_TEST_AUTO(open_move)
 	CYBOZU_TEST_ASSERT(v.isValid());
 	CYBOZU_TEST_ASSERT(!u.isValid());
 }
+
+CYBOZU_TEST_AUTO(timeout)
+{
+	cybozu::Socket s;
+	s.bind(10000);
+	s.setSendTimeout(12000);
+	CYBOZU_TEST_EQUAL(s.getSendTimeout(), 12000);
+	s.setReceiveTimeout(54000);
+	CYBOZU_TEST_EQUAL(s.getReceiveTimeout(), 54000);
+}
