@@ -231,7 +231,7 @@ private:
 		struct timeval t;
 		t.tv_sec = msec / 1000;
 		t.tv_usec = (msec % 1000) * 1000;
-		setSocketOption(type, &t);
+		setSocketOption(type, t);
 	}
 	/* return msec */
 	int getTimeout(int type) const

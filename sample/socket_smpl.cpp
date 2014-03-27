@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
 		opt.usage();
 		return 1;
 	}
+	if (verbose) opt.put();
+	const int timeoutMsec = timeoutSec * 1000;
 	if (ip.empty()) {
 		printf("server port=%d\n", port);
 		cybozu::Socket server;
@@ -52,6 +54,8 @@ int main(int argc, char *argv[])
 			} else {
 				server.accept(client);
 			}
+			client.setSendTimeout(timeoutMsec);
+			client.setReceiveTimeout(timeoutMsec);
 			{
 				char buf[128];
 				size_t readSize = client.readSome(buf, sizeof(buf));
@@ -61,7 +65,9 @@ int main(int argc, char *argv[])
 	} else {
 		printf("client ip=%s port=%d\n", ip.c_str(), port);
 		cybozu::Socket client;
-		client.connect(ip, port, timeoutSec * 1000);
+		client.connect(ip, port, timeoutMsec);
+		client.setSendTimeout(timeoutMsec);
+		client.setReceiveTimeout(timeoutMsec);
 		client.write(cmd.c_str(), cmd.size());
 	}
 } catch (std::exception& e) {
