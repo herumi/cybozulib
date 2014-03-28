@@ -1,3 +1,8 @@
+/*
+	cf. ping6 -I eth0 <IPv6 addr>
+	Linux : <IPv6>%eth0
+	Windows : <IPv6>%<number>
+*/
 #include <cybozu/option.hpp>
 #include <cybozu/socket.hpp>
 
@@ -64,8 +69,10 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		printf("client ip=%s port=%d\n", ip.c_str(), port);
+		cybozu::SocketAddr sa(ip, port);
+		printf("addr=%s\n", sa.toStr().c_str());
 		cybozu::Socket client;
-		client.connect(ip, port, timeoutMsec);
+		client.connect(sa, timeoutMsec);
 		client.setSendTimeout(timeoutMsec);
 		client.setReceiveTimeout(timeoutMsec);
 		client.write(cmd.c_str(), cmd.size());
