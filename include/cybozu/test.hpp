@@ -128,6 +128,15 @@ bool isEqual(const T& lhs, const U& rhs)
 	return lhs == rhs;
 }
 
+// avoid warning of comparision of integers of different signs
+inline bool isEqual(size_t lhs, int rhs)
+{
+	return lhs == size_t(rhs);
+}
+inline bool isEqual(int lhs, size_t rhs)
+{
+	return size_t(lhs) == rhs;
+}
 inline bool isEqual(const char *lhs, const char *rhs)
 {
 	return strcmp(lhs, rhs) == 0;

@@ -1484,14 +1484,14 @@ CYBOZU_TEST_AUTO(string_replace_iterator_iterator)
 CYBOZU_TEST_AUTO(string_size_test_size)
 {
 	String s("aiueo");
-	CYBOZU_TEST_EQUAL(s.size(), size_t(5));
+	CYBOZU_TEST_EQUAL(s.size(), 5);
 }
 
 // return length of sequence
 CYBOZU_TEST_AUTO(string_size_test_length)
 {
 	String s("aiueo");
-	CYBOZU_TEST_EQUAL(s.length(), size_t(5));
+	CYBOZU_TEST_EQUAL(s.length(), 5);
 }
 
 // return maximum possible length of sequence
@@ -1506,7 +1506,7 @@ CYBOZU_TEST_AUTO(string_size_test_resize_null)
 {
 	String s1("aiueo");
 	s1.resize(10);
-	CYBOZU_TEST_EQUAL(s1.length(), size_t(10));
+	CYBOZU_TEST_EQUAL(s1.length(), 10);
 
 	String t("aiueo");
 	t.resize(2);
