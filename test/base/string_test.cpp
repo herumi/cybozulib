@@ -686,8 +686,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_string)
 	/* const String t("い"); */
 	const String t("\xe3\x81\x84");
 
-	CYBOZU_TEST_EQUAL(s.find(t), size_t(1));
-	CYBOZU_TEST_EQUAL(s.find(t, 2), size_t(4));
+	CYBOZU_TEST_EQUAL(s.find(t), 1);
+	CYBOZU_TEST_EQUAL(s.find(t, 2), 4);
 }
 
 // look for [str, str + count) beginnng at or after off
@@ -696,7 +696,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array)
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	const Char t[] = {'u','e'};
-	CYBOZU_TEST_EQUAL(s.find(t, 0, 2), size_t(2));
+	CYBOZU_TEST_EQUAL(s.find(t, 0, 2), 2);
 	CYBOZU_TEST_EQUAL(s.find(t, 3, 1), size_t(-1));
 }
 
@@ -706,7 +706,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char_array_zero)
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	const Char t[] = {'u','e', 0};
-	CYBOZU_TEST_EQUAL(s.find(t, 0), size_t(2));
+	CYBOZU_TEST_EQUAL(s.find(t, 0), 2);
 	CYBOZU_TEST_EQUAL(s.find(t, 3), size_t(-1));
 }
 
@@ -715,7 +715,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_cybozu_char)
 {
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
-	CYBOZU_TEST_EQUAL(s.find('u', 0), size_t(2));
+	CYBOZU_TEST_EQUAL(s.find('u', 0), 2);
 	CYBOZU_TEST_EQUAL(s.find('u', 3), size_t(-1));
 }
 
@@ -724,8 +724,8 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_string)
 {
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
-	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84"), size_t(4));
-	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84", 3), size_t(1));
+	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84"), 4);
+	CYBOZU_TEST_EQUAL(s.rfind("\xe3\x81\x84", 3), 1);
 }
 
 // look for [str, str + count) beginning before off
@@ -734,7 +734,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array)
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char cs[] = {'u', 'e'};
-	CYBOZU_TEST_EQUAL(s.rfind(cs,4,2), size_t(2));
+	CYBOZU_TEST_EQUAL(s.rfind(cs,4,2), 2);
 }
 
 CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array_zero)
@@ -743,7 +743,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char_array_zero)
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char cs[] = {'u', 'e', 0};
-	CYBOZU_TEST_EQUAL(s.rfind(cs,4), size_t(2));
+	CYBOZU_TEST_EQUAL(s.rfind(cs,4), 2);
 	CYBOZU_TEST_EQUAL(s.rfind(cs,0), size_t(-1));
 }
 
@@ -753,7 +753,7 @@ CYBOZU_TEST_AUTO(string_size_test_rfind_cybozu_char)
 	/* String s("あいueい"); */
 	String s("\xe3\x81\x82\xe3\x81\x84\x75\x65\xe3\x81\x84");
 	Char c = 'u';
-	CYBOZU_TEST_EQUAL(s.rfind(c), size_t(2));
+	CYBOZU_TEST_EQUAL(s.rfind(c), 2);
 	CYBOZU_TEST_EQUAL(s.rfind(c,1), size_t(-1));
 }
 
@@ -764,8 +764,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_string)
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	/* String c("わをん"); */
 	String c("\xE3\x82\x8F\xE3\x82\x92\xE3\x82\x93");
-	CYBOZU_TEST_EQUAL(s.find_first_of(c), size_t(7));
-	CYBOZU_TEST_EQUAL(s.find_first_of(c,8), size_t(10));
+	CYBOZU_TEST_EQUAL(s.find_first_of(c), 7);
+	CYBOZU_TEST_EQUAL(s.find_first_of(c,8), 10);
 }
 
 
@@ -776,7 +776,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char_array)
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e'};
 	CYBOZU_TEST_EQUAL(s.find_first_of(c, 0, 2), size_t(-1));
-	CYBOZU_TEST_EQUAL(s.find_first_of(c, 0, 3), size_t(3));
+	CYBOZU_TEST_EQUAL(s.find_first_of(c, 0, 3), 3);
 }
 
 // look for c at or after off
@@ -785,7 +785,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_of_cybozu_char)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c = 'e';
-	CYBOZU_TEST_EQUAL(s.find_first_of(c), size_t(3));
+	CYBOZU_TEST_EQUAL(s.find_first_of(c), 3);
 	CYBOZU_TEST_EQUAL(s.find_first_of(c, 6), size_t(-1));
 }
 
@@ -796,7 +796,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_string)
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	/* String cs("わをん"); */
 	String cs("\xE3\x82\x8F\xE3\x82\x92\xE3\x82\x93");
-	CYBOZU_TEST_EQUAL( s.find_last_of(cs), size_t(10));
+	CYBOZU_TEST_EQUAL( s.find_last_of(cs), 10);
 	CYBOZU_TEST_EQUAL( s.find_last_of(cs, 4), size_t(-1));
 }
 
@@ -806,7 +806,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e'};
-	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20, 3), size_t(3));
+	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20, 3), 3);
 	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20, 2), size_t(-1));
 }
 
@@ -816,7 +816,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_of_cybozu_char_array_zero)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char c[] = {'c', 'd', 'e', 0};
-	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20), size_t(3));
+	CYBOZU_TEST_EQUAL( s.find_last_of(c, 20), 3);
 	CYBOZU_TEST_EQUAL( s.find_last_of(c, 2), size_t(-1));
 }
 
@@ -830,8 +830,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_string)
 	/* String u("えん"); */
 	String u ("\xE3\x81\x88\xE3\x82\x93");
 	CYBOZU_TEST_EQUAL( s.find_first_not_of(t), size_t(-1));
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(u, 3), size_t(3));
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(u), size_t(1));
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(u, 3), 3);
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(u), 1);
 }
 
 // look for none of [str, str + count) at or after off
@@ -840,8 +840,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char_array)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o'};
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0, 4), size_t(0));
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 3, 2), size_t(5));
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0, 4), 0);
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 3, 2), 5);
 }
 
 // look for one of [str, <null>) at or after off
@@ -850,8 +850,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char_array_zero)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o', 0};
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0), size_t(0));
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 3), size_t(7));
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0), 0);
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 3), 7);
 }
 
 // look for non c at or after off
@@ -859,8 +859,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_first_not_of_cybozu_char)
 {
 	String s("mmmmmOPmmmmmQ");
 	Char t = 'm';
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0), size_t(5));
-	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 8), size_t(12));
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 0), 5);
+	CYBOZU_TEST_EQUAL( s.find_first_not_of(t, 8), 12);
 }
 
 // look for none of rhs before off
@@ -869,8 +869,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_string)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	String t("eimo");
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t), size_t(10));
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4), size_t(2));
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t), 10);
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4), 2);
 }
 
 // look for none of [str, str + count) before off
@@ -879,8 +879,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_char_array)
 	/* String s("えいもeimoんせすん"); */
 	String s("\xE3\x81\x88\xE3\x81\x84\xE3\x82\x82" "eimo" "\xE3\x82\x93\xE3\x81\x9B\xE3\x81\x99\xE3\x82\x93");
 	Char t[] = {'e','i','m','o'};
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4, 2), size_t(2));
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 100, 4), size_t(10));
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4, 2), 2);
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 100, 4), 10);
 }
 
 // look for none of [str, <null>) before off
@@ -890,7 +890,7 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_char_array_zero)
 	Char t[] = {'e','i','m','o', 0};
 	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 4), size_t(-1));
 	Char u[] = {'a','b','c','d','e',0};
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(u, 4), size_t(3));
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(u, 4), 3);
 }
 
 // look for non c before off
@@ -898,8 +898,8 @@ CYBOZU_TEST_AUTO(string_size_test_find_last_not_of_cybozu_char)
 {
 	String s("mmmmmOPmmmmmQ");
 	Char t = 'm';
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 100), size_t(12));
-	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 8), size_t(6));
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 100), 12);
+	CYBOZU_TEST_EQUAL( s.find_last_not_of(t, 8), 6);
 }
 
 // insert rhs at off
@@ -1518,7 +1518,7 @@ CYBOZU_TEST_AUTO(string_size_test_resize_padding)
 {
 	String s1("aiueo");
 	s1.resize(10, 'C');
-	CYBOZU_TEST_EQUAL(s1.length(), size_t(10));
+	CYBOZU_TEST_EQUAL(s1.length(), 10);
 	CYBOZU_TEST_EQUAL(s1, "aiueoCCCCC");
 }
 
@@ -1528,7 +1528,7 @@ CYBOZU_TEST_AUTO(string_size_test_capacity)
 	String s1("aiueo");
 	CYBOZU_TEST_ASSERT(s1.capacity() < s1.max_size());
 	s1.reserve(100);
-	CYBOZU_TEST_ASSERT(s1.capacity() >= size_t(100));
+	CYBOZU_TEST_ASSERT(s1.capacity() >= 100);
 }
 
 // test if sequence is empty
