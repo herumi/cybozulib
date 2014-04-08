@@ -41,3 +41,31 @@ CYBOZU_TEST_AUTO(timeout)
 	s.setReceiveTimeout(54000);
 	CYBOZU_TEST_EQUAL(s.getReceiveTimeout(), 54000);
 }
+
+CYBOZU_TEST_AUTO(compare_SocketAddr)
+{
+	cybozu::SocketAddr v4("74.125.235.73", 80, false);
+	cybozu::SocketAddr v6("74.125.235.73", 80, true);
+	cybozu::SocketAddr v4x("74.125.235.72", 80, false);
+	cybozu::SocketAddr v6x("2001:db8::1234:ace:6006:1e", 80, true);
+
+	CYBOZU_TEST_ASSERT(v4.hasSameAddr(v4));
+	CYBOZU_TEST_ASSERT(v4.hasSameAddr(v6));
+	CYBOZU_TEST_ASSERT(!v4.hasSameAddr(v4x));
+	CYBOZU_TEST_ASSERT(!v4.hasSameAddr(v6x));
+
+	CYBOZU_TEST_ASSERT(v6.hasSameAddr(v4));
+	CYBOZU_TEST_ASSERT(v6.hasSameAddr(v6));
+	CYBOZU_TEST_ASSERT(!v6.hasSameAddr(v4x));
+	CYBOZU_TEST_ASSERT(!v6.hasSameAddr(v6x));
+
+	CYBOZU_TEST_ASSERT(!v4x.hasSameAddr(v4));
+	CYBOZU_TEST_ASSERT(!v4x.hasSameAddr(v6));
+	CYBOZU_TEST_ASSERT(v4x.hasSameAddr(v4x));
+	CYBOZU_TEST_ASSERT(!v4x.hasSameAddr(v6x));
+
+	CYBOZU_TEST_ASSERT(!v6x.hasSameAddr(v4));
+	CYBOZU_TEST_ASSERT(!v6x.hasSameAddr(v6));
+	CYBOZU_TEST_ASSERT(!v6x.hasSameAddr(v4x));
+	CYBOZU_TEST_ASSERT(v6x.hasSameAddr(v6x));
+}

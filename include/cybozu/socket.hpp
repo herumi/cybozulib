@@ -180,14 +180,28 @@ public:
 	socklen_t getSize() const { return addrlen_; }
 	int getFamily() const { return family_; }
 	const struct sockaddr *get() const { return &addr_.sa; }
-	bool operator==(const SocketAddr& rhs) const
+	// compare addr without port
+	bool hasSameAddr(const SocketAddr& rhs) const
 	{
-		if (family_ == rhs.family_ && addrlen_ == rhs.addrlen_) {
-			return memcmp(&addr_.sa, &rhs.addr_.sa, addrlen_) == 0;
+		const uint8_t *v4 = 0;
+		const uint8_t *v6 = 0;
+		if (family_ == AF_INET) {
+			if (rhs.family_ == AF_INET) return memcmp(&addr_.v4.sin_addr, &rhs.addr_.v4.sin_addr, sizeof(in_addr)) == 0;
+			if (rhs.family_ != AF_INET6) return false;
+			v4 = (const uint8_t*)&addr_.v4.sin_addr;
+			v6 = (const uint8_t*)&rhs.addr_.v6.sin6_addr;
+		} else if (family_ != AF_INET6) {
+			return false;
+		} else {
+			if (rhs.family_ == AF_INET6) return memcmp(&addr_.v6.sin6_addr, &rhs.addr_.v6.sin6_addr, sizeof(in6_addr)) == 0;
+			if (rhs.family_ != AF_INET) return false;
+			v4 = (const uint8_t*)&rhs.addr_.v4.sin_addr;
+			v6 = (const uint8_t*)&addr_.v6.sin6_addr;
 		}
-		return false;
+		// Ipv6-mapped?
+		const uint8_t header[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+		return memcmp(v6, header, 12) == 0 && memcmp(v6 + 12, v4, 4) == 0;
 	}
-	bool operator!=(const SocketAddr& rhs) const { return !(*this == rhs); }
 	std::string toStr() const
 	{
 		if (family_ == AF_INET || family_ == AF_INET6) {
