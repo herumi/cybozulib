@@ -129,11 +129,11 @@ public:
 		, family_(0)
 	{
 	}
-	SocketAddr(const std::string& address, uint16_t port)
+	SocketAddr(const std::string& address, uint16_t port, bool forceIpV6 = false)
 	{
-		set(address, port);
+		set(address, port, forceIpV6);
 	}
-	void set(const std::string& address, uint16_t port)
+	void set(const std::string& address, uint16_t port, bool forceIpV6 = false)
 	{
 		char portStr[16];
 		CYBOZU_SNPRINTF(portStr, sizeof(portStr), "%d", port);
@@ -150,7 +150,7 @@ public:
 		hints.ai_flags = AI_NUMERICSERV; // AI_PASSIVE;
 		int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
 		// s == EAI_AGAIN
-		if (s) {
+		if (s || forceIpV6) {
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_V4MAPPED;
 			int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
