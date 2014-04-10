@@ -78,7 +78,7 @@ public:
 	}
 private:
 	HCRYPTPROV prov_;
-	static const size_t bufSize = 120;
+	static const size_t bufSize = 1024;
 	char buf_[bufSize];
 	size_t pos_;
 #else
