@@ -23,14 +23,6 @@ namespace cybozu {
 class RandomGenerator {
 	RandomGenerator(const RandomGenerator&);
 	void operator=(const RandomGenerator&);
-	union cu32 {
-		unsigned char c[4];
-		uint32_t i;
-	};
-	union cu64 {
-		unsigned char c[8];
-		uint64_t i;
-	};
 public:
 	uint32_t operator()()
 	{
@@ -38,19 +30,20 @@ public:
 	}
 	uint32_t get32()
 	{
-		cu32 cu;
-		read(cu.c, 4);
-		return cu.i;
+		uint32_t ret;
+		read(&ret, sizeof(ret));
+		return ret;
 	}
 	uint64_t get64()
 	{
-		cu64 cu;
-		read(cu.c, 8);
-		return cu.i;
+		uint64_t ret;
+		read(&ret, sizeof(ret));
+		return ret;
 	}
 #ifdef _WIN32
 	RandomGenerator()
 		: prov_(0)
+		, pos_(bufSize)
 	{
 		DWORD flagTbl[] = { 0, CRYPT_NEWKEYSET };
 		for (int i = 0; i < 2; i++) {
@@ -58,7 +51,7 @@ public:
 		}
 		throw cybozu::Exception("randomgenerator");
 	}
-	void read(void *buf, size_t byteSize)
+	void read_inner(void *buf, size_t byteSize)
 	{
 		if (CryptGenRandom(prov_, static_cast<DWORD>(byteSize), static_cast<BYTE*>(buf)) == 0) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
@@ -70,27 +63,43 @@ public:
 			CryptReleaseContext(prov_, 0);
 		}
 	}
+	void read(void *buf, size_t byteSize)
+	{
+		if (byteSize > bufSize) {
+			read_inner(buf, byteSize);
+		} else {
+			if (pos_ + byteSize > bufSize) {
+				read_inner(buf_, bufSize);
+				pos_ = 0;
+			}
+			memcpy(buf, buf_ + pos_, byteSize);
+			pos_ += byteSize;
+		}
+	}
 private:
 	HCRYPTPROV prov_;
+	static const size_t bufSize = 120;
+	char buf_[bufSize];
+	size_t pos_;
 #else
 	RandomGenerator()
-		: fd_(::open("/dev/urandom", O_RDONLY, 0))
+		: fp_(::fopen("/dev/urandom", "rb"))
 	{
-		if (fd_ < 0) throw cybozu::Exception("randomgenerator");
+		if (!fp_) throw cybozu::Exception("randomgenerator");
 	}
 	~RandomGenerator()
 	{
-		if (fd_ >= 0) ::close(fd_);
+		if (fp_) ::fclose(fp_);
 	}
 	void read(void *buf, size_t byteSize)
 	{
-		if (static_cast<size_t>(::read(fd_, buf, byteSize)) != byteSize) {
+		if (::fread(buf, 1, byteSize, fp_) != byteSize) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
 	}
 #endif
 private:
-	int fd_;
+	FILE *fp_;
 };
 
 } // cybozu
