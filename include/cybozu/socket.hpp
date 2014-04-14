@@ -180,6 +180,14 @@ public:
 	socklen_t getSize() const { return addrlen_; }
 	int getFamily() const { return family_; }
 	const struct sockaddr *get() const { return &addr_.sa; }
+	uint16_t getPort() const {
+		if (family_ == AF_INET) {
+			return ntohs(addr_.v4.sin_port);
+		} else if (family_ == AF_INET6) {
+			return ntohs(addr_.v6.sin6_port);
+		}
+		throw cybozu::Exception("SocketAddr:getPort:bad family") << family_;
+	}
 	// compare addr without port
 	bool hasSameAddr(const SocketAddr& rhs) const
 	{
