@@ -7,10 +7,20 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <new>
+#include <utility>
 #ifdef _MSC_VER
 	#include <malloc.h>
 #else
 	#include <stdlib.h>
+#endif
+#include <cybozu/inttype.hpp>
+#ifdef CYBOZU_ARRAY_DEBUG_FILL
+	#include <memory.h>
+#endif
+
+#ifdef _MSC_VER
+	#pragma warning(push)
+	#pragma warning(disable : 4127) // constant condition
 #endif
 
 namespace cybozu {
@@ -63,13 +73,27 @@ public:
 /**
 	16byte aligment array
 	+16 to avoid overrunning by SSE4.2 string operation
+	@note buffer is not zero cleared if T = char and doClear is false
 */
-template<class T, size_t N = 16>
+template<class T, size_t N = 16, bool doClear = true>
 class AlignedArray {
 	T *p_;
 	size_t size_;
+	void shrink(size_t size)
+	{
+		const size_t n = size_ - size;
+		for (size_t i = 0; i < n; i++) {
+			p_[size_ - 1 - i].~T();
+		}
+		size_ = size;
+		if (size > 0) return;
+		AlignedFree(p_);
+		p_ = 0;
+	}
 	AlignedArray(const AlignedArray&);
+#if (CYBOZU_CPP_VERSION != CYBOZU_CPP_VERSION_CPP11)
 	void operator=(const AlignedArray&);
+#endif
 public:
 	explicit AlignedArray(size_t size = 0)
 		: p_(0)
@@ -77,46 +101,62 @@ public:
 	{
 		resize(size);
 	}
-	void resize(size_t size)
+#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
+	AlignedArray(AlignedArray&& rhs) throw()
+		: p_(rhs.p_)
+		, size_(rhs.size_)
+	{
+		rhs.p_ = 0;
+		rhs.size_ = 0;
+	}
+	AlignedArray& operator=(AlignedArray&& rhs)
 	{
 		clear();
-		p_ = static_cast<T*>(AlignedMalloc(size * sizeof(T) + N, N));
+		p_ = rhs.p_;
+		size_ = rhs.size_;
+		rhs.p_ = 0;
+		rhs.size_ = 0;
+		return *this;
+	}
+#endif
+	void resize(size_t size)
+	{
+		if (size == size_) return;
+		if (size < size_) {
+			shrink(size);
+			return;
+		}
+		clear();
+		p_ = static_cast<T*>(AlignedMalloc(size * sizeof(T) + 16, N));
 		if (p_ == 0) throw std::bad_alloc();
-		size_ = size;
-		bool init = true;
-		size_t initSize = 0;
+#ifdef CYBOZU_ARRAY_DEBUG_FILL
+		memset(p_, 'x', size * sizeof(T));
+#endif
 		try {
-			while (initSize < size_) {
-				if (new(&p_[initSize]) T() == 0) {
-					init = false;
-					break;
+			for (size_ = 0; size_ < size; size_++) {
+				if (doClear) {
+					new(&p_[size_]) T();
+				} else {
+					new(&p_[size_]) T; // don't clear if T = char
 				}
-				initSize++;
 			}
 		} catch (...) {
-			init = false;
-		}
-		if (!init) {
-			for (size_t i = 0; i < initSize; i++) {
-				p_[initSize - 1 - i].~T();
-			}
-			AlignedFree(p_);
+			shrink(0);
 			throw std::bad_alloc();
 		}
 	}
 	void clear()
 	{
-		if (p_ == 0) return;
-		for (size_t i = 0; i < size_; i++) {
-			p_[i].~T();
-		}
-		AlignedFree(p_);
-		p_ = 0;
-		size_ = 0;
+		shrink(0);
 	}
 	~AlignedArray()
 	{
 		clear();
+	}
+	void swap(AlignedArray& rhs) throw()
+	{
+		std::swap(p_, rhs.p_);
+		std::swap(size_, rhs.size_);
 	}
 	T& operator[](size_t idx) { return p_[idx]; }
 	const T& operator[](size_t idx) const { return p_[idx]; }
@@ -125,7 +165,14 @@ public:
 	T* end() { return p_ + size_; }
 	const T* begin() const { return p_; }
 	const T* end() const { return p_ + size_; }
+#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
+	const T* cbegin() const { return p_; }
+	const T* cend() const { return p_ + size_; }
+#endif
 };
 
 } // cybozu
 
+#ifdef _WIN32
+	#pragma warning(pop)
+#endif
