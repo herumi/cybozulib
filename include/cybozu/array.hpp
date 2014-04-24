@@ -18,11 +18,6 @@
 	#include <memory.h>
 #endif
 
-#ifdef _MSC_VER
-	#pragma warning(push)
-	#pragma warning(disable : 4127) // constant condition
-#endif
-
 namespace cybozu {
 
 inline void *AlignedMalloc(size_t size, size_t alignment)
@@ -73,9 +68,8 @@ public:
 /**
 	16byte aligment array
 	+16 to avoid overrunning by SSE4.2 string operation
-	@note buffer is not zero cleared if T = char and doClear is false
 */
-template<class T, size_t N = 16, bool doClear = true>
+template<class T, size_t N = 16>
 class AlignedArray {
 	T *p_;
 	size_t size_;
@@ -95,11 +89,14 @@ class AlignedArray {
 	void operator=(const AlignedArray&);
 #endif
 public:
-	explicit AlignedArray(size_t size = 0)
+	/*
+		don't clear buffer with zero if doClear is false and T = char/int, ...
+	*/
+	explicit AlignedArray(size_t size = 0, bool doClear = true)
 		: p_(0)
 		, size_(0)
 	{
-		resize(size);
+		resize(size, doClear);
 	}
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
 	AlignedArray(AlignedArray&& rhs) throw()
@@ -119,7 +116,10 @@ public:
 		return *this;
 	}
 #endif
-	void resize(size_t size)
+	/*
+		don't clear buffer with zero if doClear is false and T = char/int, ...
+	*/
+	void resize(size_t size, bool doClear = true)
 	{
 		if (size == size_) return;
 		if (size < size_) {
@@ -172,7 +172,3 @@ public:
 };
 
 } // cybozu
-
-#ifdef _WIN32
-	#pragma warning(pop)
-#endif

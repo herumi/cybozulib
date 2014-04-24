@@ -215,9 +215,9 @@ public:
 		if (family_ == AF_INET || family_ == AF_INET6) {
 			char buf[INET6_ADDRSTRLEN];
 			assert(INET_ADDRSTRLEN <= INET6_ADDRSTRLEN);
+			const void *pa = family_ == AF_INET ? (const void*)&addr_.v4.sin_addr : (const void*)&addr_.v6.sin6_addr;
 			// not "const void*" because of vc
-			void *pa = family_ == AF_INET ? (void*)&addr_.v4.sin_addr : (void*)&addr_.v6.sin6_addr;
-			const char *p = inet_ntop(family_, pa, buf, sizeof(buf));
+			const char *p = inet_ntop(family_, const_cast<void*>(pa), buf, sizeof(buf));
 			if (p) {
 				return p;
 			} else {

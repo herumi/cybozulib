@@ -74,7 +74,7 @@ CYBOZU_TEST_AUTO(aligned_array_char)
 
 CYBOZU_TEST_AUTO(aligned_array_char_nonclear)
 {
-	cybozu::AlignedArray<char, 16, false> a(51);
+	cybozu::AlignedArray<char> a(51, false);
 	for (size_t i = 0; i < a.size(); i++) {
 		CYBOZU_TEST_EQUAL(a[i], 'x');
 	}
