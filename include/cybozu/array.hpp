@@ -84,10 +84,6 @@ class AlignedArray {
 		AlignedFree(p_);
 		p_ = 0;
 	}
-	AlignedArray(const AlignedArray&);
-#if (CYBOZU_CPP_VERSION != CYBOZU_CPP_VERSION_CPP11)
-	void operator=(const AlignedArray&);
-#endif
 public:
 	/*
 		don't clear buffer with zero if doClear is false and T = char/int, ...
@@ -97,6 +93,21 @@ public:
 		, size_(0)
 	{
 		resize(size, doClear);
+	}
+	AlignedArray(const AlignedArray& rhs)
+		: p_(0)
+		, size_(0)
+	{
+		*this = rhs;
+	}
+	AlignedArray& operator=(const AlignedArray& rhs)
+	{
+		clear();
+		resize(rhs.size_, false);
+		for (size_t i = 0; i < size_; i++) {
+			p_[i] = rhs.p_[i];
+		}
+		return *this;
 	}
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
 	AlignedArray(AlignedArray&& rhs) throw()

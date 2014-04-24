@@ -131,6 +131,24 @@ CYBOZU_TEST_AUTO(AlignedArray_resize)
 	}
 }
 
+CYBOZU_TEST_AUTO(AlignedArray_copy)
+{
+	cybozu::AlignedArray<X> x, z, y;
+	x.resize(10);
+	y.resize(5);
+
+	y = x;
+	z = x;
+	cybozu::AlignedArray<X> w(x);
+	CYBOZU_TEST_EQUAL(x.size(), y.size());
+	CYBOZU_TEST_EQUAL(x.size(), z.size());
+	CYBOZU_TEST_EQUAL(x.size(), w.size());
+	for (size_t i = 0; i < x.size(); i++) {
+		CYBOZU_TEST_EQUAL(x[i].v, y[i].v);
+		CYBOZU_TEST_EQUAL(x[i].v, z[i].v);
+		CYBOZU_TEST_EQUAL(x[i].v, w[i].v);
+	}
+}
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
 CYBOZU_TEST_AUTO(AlignedArray_move)
 {
