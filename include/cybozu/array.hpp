@@ -63,6 +63,8 @@ public:
 	T* end() { return p_ + size_; }
 	const T* begin() const { return p_; }
 	const T* end() const { return p_ + size_; }
+    T* data() { return p_; }
+    const T* data() const { return p_; }
 };
 
 /**
@@ -176,6 +178,8 @@ public:
 	T* end() { return p_ + size_; }
 	const T* begin() const { return p_; }
 	const T* end() const { return p_ + size_; }
+    T* data() { return p_; }
+    const T* data() const { return p_; }
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
 	const T* cbegin() const { return p_; }
 	const T* cend() const { return p_ + size_; }

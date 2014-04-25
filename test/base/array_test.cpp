@@ -43,6 +43,7 @@ CYBOZU_TEST_AUTO(scoped_array)
 		CYBOZU_TEST_EQUAL(a_count, 10);
 		for (int i = 0; i < 10; i++) {
 			CYBOZU_TEST_EQUAL(a[i].n, i);
+			CYBOZU_TEST_EQUAL(a.data()[i].n, i);
 		}
 	}
 	CYBOZU_TEST_EQUAL(a_count, 0);
@@ -56,6 +57,7 @@ CYBOZU_TEST_AUTO(aligned_array)
 		CYBOZU_TEST_EQUAL((reinterpret_cast<uintptr_t>(&a[0])) & 15, static_cast<uintptr_t>(0));
 		for (int i = 0; i < 10; i++) {
 			CYBOZU_TEST_EQUAL(a[i].n, i);
+			CYBOZU_TEST_EQUAL(a.data()[i].n, i);
 		}
 	}
 	CYBOZU_TEST_EQUAL(a_count, 0);
@@ -169,6 +171,7 @@ CYBOZU_TEST_AUTO(AlignedArray_move)
 		cybozu::AlignedArray<X> z(std::move(x));
 		const X* pz = &z[0];
 		CYBOZU_TEST_EQUAL(pz, px);
+		CYBOZU_TEST_EQUAL(z.data(), x.data());
 		CYBOZU_TEST_EQUAL(z.size(), 10);
 		for (int i = 0; i < 10; i++) {
 			CYBOZU_TEST_EQUAL(z[i].v, i);
@@ -177,6 +180,7 @@ CYBOZU_TEST_AUTO(AlignedArray_move)
 
 		z = std::move(y);
 		CYBOZU_TEST_EQUAL(py, &z[0]);
+		CYBOZU_TEST_EQUAL(py, z.data());
 		CYBOZU_TEST_EQUAL(y.size(), 0);
 		CYBOZU_TEST_EQUAL(z.size(), 5);
 		for (int i = 0; i < 5; i++) {
