@@ -42,7 +42,7 @@
 	file2 is optional param    => appendParamOpt(&file2, "output-file");
 
 	How to use
-	opt.analyze(argc, argv);
+	opt.parse(argc, argv);
 
 	see sample/option_smpl.cpp
 */
