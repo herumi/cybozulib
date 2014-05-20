@@ -84,7 +84,6 @@ void InitRandomMatrix(Matrix& M)
 template<class Matrix>
 void InitUnitMatrix(Matrix& M)
 {
-	typedef typename Matrix::Scalar Double;
 	M.setZero();
 	const int row = M.rows();
 	const int col = M.cols();
@@ -95,6 +94,7 @@ void InitUnitMatrix(Matrix& M)
 		M(i, (i * col + adj) / row) = 1;
 	}
 #else
+	typedef typename Matrix::Scalar Double;
 	const int q0 = row / col;
 	const int r0 = row % col;
 	const double rcol = 1.0 / col;
