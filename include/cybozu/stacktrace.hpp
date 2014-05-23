@@ -183,7 +183,7 @@ public:
 					size_t q = str.find('+', p + 1);
 					if (q != std::string::npos) {
 						std::string sep1 = str.substr(0, p);
-						std::string sep2 = str.substr(p + 1, q - p - 2);
+						std::string sep2 = str.substr(p + 1, q - p - 1);
 						std::string sep3 = str.substr(q);
 						int status;
 						char *demangle = abi::__cxa_demangle(sep2.c_str(), 0, 0, &status);
