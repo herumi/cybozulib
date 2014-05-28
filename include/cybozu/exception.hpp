@@ -56,19 +56,32 @@ inline std::string ConvertErrorNoToString(int err)
 }
 
 class Exception : public std::exception {
-	std::string str_;
+	mutable std::string str_;
+#ifdef CYBOZU_USE_STACKTRACE
+	mutable cybozu::StackTrace stackTrace_;
+#endif
 public:
 	explicit Exception(const std::string& name = "")
 		: str_(name)
 	{
-#ifdef CYBOZU_USE_STACKTRACE
-		str_ += ';';
-		str_ += cybozu::StackTrace().toString();
-#endif
 	}
 	~Exception() throw() {}
-	const char *what() const throw() { return str_.c_str(); }
-	const std::string& toString() const throw() { return str_; }
+	const char *what() const throw() { return toString().c_str(); }
+	const std::string& toString() const throw()
+	{
+#ifdef CYBOZU_USE_STACKTRACE
+		try {
+			if (!stackTrace_.empty()) {
+				str_ += "\n<<<STACK TRACE\n";
+				str_ += stackTrace_.toString();
+				str_ += "\n>>>STACK TRACE";
+			}
+		} catch (...) {
+		}
+		stackTrace_.clear();
+#endif
+		return str_;
+	}
 	template<class T>
 	Exception& operator<<(const T& x)
 	{

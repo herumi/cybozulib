@@ -207,6 +207,8 @@ public:
 #endif
 		return out;
 	}
+	bool empty() const throw() { return data_.empty(); }
+	void clear() throw() { data_.clear(); }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const StackTrace& self)
