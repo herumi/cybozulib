@@ -1,6 +1,10 @@
+/*
+	sample how to use stacktrace
+	g++ -I ../include/ stacktrace_smpl.cpp -g -rdynamic && ./a.out
+*/
 #include <stdio.h>
-#include <vector>
 #include <iostream>
+#define CYBOZU_USE_STACKTRACE
 #include <cybozu/stacktrace.hpp>
 
 void putStackTrace()
@@ -9,16 +13,24 @@ void putStackTrace()
 	exit(1);
 }
 
+struct A {
+	void f() {
+		putStackTrace();
+	}
+};
+
+struct B {
+	A a;
+	void g() {
+		a.f();
+	}
+};
+
 void func()
 {
 	puts("func");
-	size_t size = 1024 * 1024;
-	std::vector<double> v;
-	for (int i = 0; i < 10240; i++) {
-		std::cout << "i=" << i << ", size=" << size << std::endl;
-		v.resize(size);
-		size *= 16;
-	}
+	B b;
+	b.g();
 }
 
 void g()
@@ -34,7 +46,6 @@ void h()
 int main()
 	try
 {
-	std::set_new_handler(putStackTrace);
 	h();
 } catch (std::exception& e) {
 	printf("e=%s\n", e.what());
