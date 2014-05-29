@@ -259,7 +259,6 @@ public:
 #endif
 #ifdef CYBOZU_STACKTRACE_RESOLVE_SYMBOL
 			if (symbol) {
-				bool demangled = false;
 				std::string str(symbol[i]);
 				str += '\0';
 				size_t p = str.find('(');
