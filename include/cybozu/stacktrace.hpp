@@ -22,11 +22,16 @@
 	#include <string.h>
 	#include <cxxabi.h>
 	#include <stdint.h>
+	// with -lbfd ; libbfd.a is in binutils-dev
+	#ifdef CYBOZU_STACKTRACE_WITH_BFD_GPL
+		#include <bfd.h>
+	#endif
 #endif
 
 #ifndef NDEBUG
 	#define CYBOZU_STACKTRACE_RESOLVE_SYMBOL
 #endif
+
 
 namespace cybozu {
 
@@ -62,6 +67,57 @@ struct DummyCall {
 	DummyCall() { InstanceIsHere<>::is_.getHandle(); }
 };
 
+#elif defined(CYBOZU_STACKTRACE_WITH_BFD_GPL)
+
+struct Bfd {
+	struct bfd *bfd;
+	asection *section;
+	std::vector<asymbol*> symTbl;
+	Bfd()
+		: bfd(0)
+		, section(0)
+	{
+		bfd = bfd_openr("/proc/self/exe", 0);
+		if (bfd == 0) {
+			perror("ERR:cybozu:StackTrace:InitSymbol:bfd_opener");
+			return;
+		}
+		bfd_check_format(bfd, bfd_object);
+		const int size = bfd_get_symtab_upper_bound(bfd);
+		if (size < 0) {
+			fprintf(stderr, "ERR:cybozu:StackTrace:InitSymbol:bfd_get_symtab_upper_bound\n");
+			return;
+		}
+		if (size == 0) return;
+		symTbl.resize((size / sizeof(symTbl[0])));
+		int num = bfd_canonicalize_symtab(bfd, &symTbl[0]);
+		if (num >= 0) {
+			symTbl.resize(num);
+		}
+		section = bfd_get_section_by_name(bfd, ".debug_info");
+	}
+	~Bfd()
+	{
+		if (bfd == 0) return;
+		if (!bfd_close(bfd)) {
+			fprintf(stderr, "ERR:cybozu:StackTrace:InitSymbol:bfd_close\n");
+		}
+	}
+	int getFileLine(std::string* pFile, std::string* pFunc, const void *addr)
+	{
+		if (bfd == 0 || section == 0 || symTbl.empty()) return -1;
+		const char *file;
+		const char *func;
+		unsigned int line;
+		if (!bfd_find_nearest_line(bfd, section, &symTbl[0], (bfd_vma)addr, &file, &func, &line)) {
+			return -1;
+		}
+		if (pFile) *pFile = file;
+		if (pFunc) *pFunc = func;
+		return line;
+	}
+} s_bfd;
+
 #endif
 
 class AutoFree {
@@ -81,6 +137,19 @@ public:
 
 class StackTrace {
 	std::vector<void*> data_;
+#ifdef __GNUC__
+	void demangle(std::string& out, const char *func) const
+	{
+		int status;
+		char *demangle = abi::__cxa_demangle(func, 0, 0, &status);
+		stacktrace_local::AutoFree afDemangle(demangle);
+		if (status == 0) {
+			out = demangle;
+		} else {
+			out = func;
+		}
+	}
+#endif
 public:
 	/**
 		set current stack trace
@@ -174,32 +243,51 @@ public:
 		stacktrace_local::AutoFree freeSymbol(symbol);
 #endif
 		for (size_t i = 0; i < traceNum; i++) {
+			std::string funcName;
+#ifdef CYBOZU_STACKTRACE_WITH_BFD_GPL
+			{
+				std::string fileName;
+				int line = stacktrace_local::s_bfd.getFileLine(&fileName, &funcName, data_[i]);
+				if (line > 0) {
+					demangle(funcName, funcName.c_str());
+					out += fileName;
+					out += ':';
+					out += cybozu::itoa(line);
+					out += ' ';
+				}
+			}
+#endif
 #ifdef CYBOZU_STACKTRACE_RESOLVE_SYMBOL
 			if (symbol) {
 				bool demangled = false;
 				std::string str(symbol[i]);
 				str += '\0';
 				size_t p = str.find('(');
+				const char *obj = 0, *addr = 0;
 				if (p != std::string::npos) {
 					size_t q = str.find('+', p + 1);
 					if (q != std::string::npos) {
-						const char *const objName = &str[0]; str[p] = '\0';
-						const char *const funcName = &str[p + 1]; str[q] = '\0';
-						const char *const addr = &str[q + 1];
-						int status;
-						char *demangle = abi::__cxa_demangle(funcName, 0, 0, &status);
-						stacktrace_local::AutoFree afDemangle(demangle);
-						if (status == 0) {
-							out += objName;
-							out += '(';
-							out += demangle;
-							out += '+';
-							out += addr;
-							demangled = true;
+						obj = &str[0]; str[p] = '\0';
+						const char *const func = &str[p + 1]; str[q] = '\0';
+						addr = &str[q + 1];
+						if (funcName.empty()) {
+							demangle(funcName, func);
 						}
 					}
 				}
-				if (!demangled) {
+				bool doPrint = false;
+				if (obj && addr) {
+					out += obj;
+					out += '(';
+					out += funcName;
+					out += '+';
+					out += addr;
+					doPrint = true;
+				} else if (!funcName.empty()) {
+					out += funcName;
+					doPrint = true;
+				}
+				if (!doPrint) {
 					out += symbol[i];
 				}
 			} else
