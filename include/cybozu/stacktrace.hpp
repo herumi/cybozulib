@@ -116,7 +116,11 @@ struct Bfd {
 		if (pFunc) *pFunc = func;
 		return line;
 	}
-} s_bfd;
+	static inline Bfd& getInstance() {
+		static Bfd bfd;
+		return bfd;
+	}
+};
 
 #endif
 
@@ -247,7 +251,7 @@ public:
 #ifdef CYBOZU_STACKTRACE_WITH_BFD_GPL
 			{
 				std::string fileName;
-				int line = stacktrace_local::s_bfd.getFileLine(&fileName, &funcName, data_[i]);
+				int line = stacktrace_local::Bfd::getInstance().getFileLine(&fileName, &funcName, data_[i]);
 				if (line > 0) {
 					demangle(funcName, funcName.c_str());
 					out += fileName;
