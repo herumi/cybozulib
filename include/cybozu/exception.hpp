@@ -15,7 +15,7 @@
 	#include <string.h> // for strerror_r
 #endif
 #include <cybozu/inttype.hpp>
-#ifdef CYBOZU_USE_STACKTRACE
+#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
 	#include <cybozu/stacktrace.hpp>
 #endif
 
@@ -57,7 +57,7 @@ inline std::string ConvertErrorNoToString(int err)
 
 class Exception : public std::exception {
 	mutable std::string str_;
-#ifdef CYBOZU_USE_STACKTRACE
+#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
 	mutable cybozu::StackTrace stackTrace_;
 #endif
 public:
@@ -69,7 +69,7 @@ public:
 	const char *what() const throw() { return toString().c_str(); }
 	const std::string& toString() const throw()
 	{
-#ifdef CYBOZU_USE_STACKTRACE
+#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
 		try {
 			if (!stackTrace_.empty()) {
 				str_ += "\n<<<STACK TRACE\n";

@@ -178,18 +178,23 @@ public:
 			if (symbol) {
 				bool demangled = false;
 				std::string str(symbol[i]);
+				str += '\0';
 				size_t p = str.find('(');
 				if (p != std::string::npos) {
 					size_t q = str.find('+', p + 1);
 					if (q != std::string::npos) {
-						std::string sep1 = str.substr(0, p);
-						std::string sep2 = str.substr(p + 1, q - p - 1);
-						std::string sep3 = str.substr(q);
+						const char *const objName = &str[0]; str[p] = '\0';
+						const char *const funcName = &str[p + 1]; str[q] = '\0';
+						const char *const addr = &str[q + 1];
 						int status;
-						char *demangle = abi::__cxa_demangle(sep2.c_str(), 0, 0, &status);
+						char *demangle = abi::__cxa_demangle(funcName, 0, 0, &status);
 						stacktrace_local::AutoFree afDemangle(demangle);
 						if (status == 0) {
-							out += sep1 + '(' + demangle + sep3;
+							out += objName;
+							out += '(';
+							out += demangle;
+							out += '+';
+							out += addr;
 							demangled = true;
 						}
 					}

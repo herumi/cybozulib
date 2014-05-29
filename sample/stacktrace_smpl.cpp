@@ -4,12 +4,11 @@
 */
 #include <stdio.h>
 #include <iostream>
-#define CYBOZU_USE_STACKTRACE
 #include <cybozu/stacktrace.hpp>
 
 void putStackTrace()
 {
-	std::cout << "no memory!!\n" << cybozu::StackTrace() << std::endl;
+	std::cout << "dump stack trace\n" << cybozu::StackTrace() << std::endl;
 	exit(1);
 }
 
