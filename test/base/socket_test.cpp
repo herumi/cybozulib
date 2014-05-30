@@ -35,7 +35,7 @@ CYBOZU_TEST_AUTO(open_move)
 CYBOZU_TEST_AUTO(timeout)
 {
 	cybozu::Socket s;
-	s.bind(10000);
+	s.bind(60000);
 	s.setSendTimeout(12000);
 	CYBOZU_TEST_EQUAL(s.getSendTimeout(), 12000);
 	s.setReceiveTimeout(54000);
