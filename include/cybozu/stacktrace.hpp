@@ -71,12 +71,13 @@ struct DummyCall {
 
 struct Bfd {
 	struct bfd *bfd;
-	asection *section;
 	std::vector<asymbol*> symTbl;
+	asection *section;
 	Bfd()
 		: bfd(0)
 		, section(0)
 	{
+		bfd_init();
 		bfd = bfd_openr("/proc/self/exe", 0);
 		if (bfd == 0) {
 			perror("ERR:cybozu:StackTrace:InitSymbol:bfd_opener");
@@ -89,11 +90,10 @@ struct Bfd {
 			return;
 		}
 		if (size == 0) return;
-		symTbl.resize((size / sizeof(symTbl[0])));
+		symTbl.resize(size / sizeof(symTbl[0]) + 1);
 		int num = bfd_canonicalize_symtab(bfd, &symTbl[0]);
-		if (num >= 0) {
-			symTbl.resize(num);
-		}
+		if (num < 0) return;
+		symTbl.resize(num);
 		section = bfd_get_section_by_name(bfd, ".debug_info");
 	}
 	~Bfd()
@@ -112,8 +112,8 @@ struct Bfd {
 		if (!bfd_find_nearest_line(bfd, section, &symTbl[0], (bfd_vma)addr, &file, &func, &line)) {
 			return -1;
 		}
-		if (pFile) *pFile = file;
-		if (pFunc) *pFunc = func;
+		if (pFile && file) *pFile = file;
+		if (pFunc && func) *pFunc = func;
 		return line;
 	}
 	static inline Bfd& getInstance() {
