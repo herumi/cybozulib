@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 			if (verbose) {
 				cybozu::SocketAddr addr;
 				server.accept(client, &addr);
-				printf("addr=%s\n", addr.toStr().c_str());
+				printf("addr=%s, port=%d\n", addr.toStr().c_str(), addr.getPort());
 			} else {
 				server.accept(client);
 			}

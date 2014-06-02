@@ -326,15 +326,25 @@ public:
 #endif
 		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::NetErrorNo();
 	}
-	void waitForClose(bool dontThrow = false)
+	/*
+		send FIN and wait for remote's close().
+		this function is used for the following situation.
+		sock.write()
+		sock.waitForClose()
+		sock.close()
+	*/
+	void waitForClose()
 	{
 		if (sd_ == INVALID_SOCKET) return;
-		if (::shutdown(sd_, 1) && !dontThrow) {
-			throw cybozu::Exception("Socket:waitForClosed:shutdown") << cybozu::NetErrorNo();
+		//	send FIN and this socket can't write any data.
+		if (::shutdown(sd_, 1)) {
+			throw cybozu::Exception("Socket:waitForClose:shutdown") << cybozu::NetErrorNo();
 		}
+		// wait for FIN from the peer.
 		char buf[1];
-		if (::read(sd_, buf, sizeof(buf)) < 0 && !dontThrow) {
-			throw cybozu::Exception("Socket:waitForClosed:read") << cybozu::NetErrorNo();
+		ssize_t readSize = readSome(buf, sizeof(buf));
+		if (readSize != 0) {
+			throw cybozu::Exception("Socket:waitForClose:readSome:bad size") << readSize;
 		}
 	}
 
