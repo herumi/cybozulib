@@ -326,13 +326,14 @@ public:
 #endif
 		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::NetErrorNo();
 	}
-	void waitForClosed()
+	void waitForClose(bool dontThrow = false)
 	{
-		if (::shutdown(sd_, 1)) {
+		if (sd_ == INVALID_SOCKET) return;
+		if (::shutdown(sd_, 1) && !dontThrow) {
 			throw cybozu::Exception("Socket:waitForClosed:shutdown") << cybozu::NetErrorNo();
 		}
 		char buf[1];
-		if (::read(sd_, buf, sizeof(buf)) < 0) {
+		if (::read(sd_, buf, sizeof(buf)) < 0 && !dontThrow) {
 			throw cybozu::Exception("Socket:waitForClosed:read") << cybozu::NetErrorNo();
 		}
 	}
