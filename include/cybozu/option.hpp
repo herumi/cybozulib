@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <iostream>
 #include <limits>
 #include <stdio.h>
 #include <stdlib.h>
@@ -278,9 +279,19 @@ class Option {
 			, help(help)
 		{
 		}
+		friend inline std::ostream& operator<<(std::ostream& os, const Info& self)
+		{
+			os << self.opt << '=' << self.var.toStr();
+			if (self.var.isSet()) {
+				os << " (set)";
+			} else {
+				os << " (default)";
+			}
+			return os;
+		}
 		void put() const
 		{
-			printf("%s=%s (%s)\n", opt.c_str(), var.toStr().c_str(), var.isSet() ? "set" : "default");
+			std::cout << *this;
 		}
 		void usage() const
 		{
@@ -616,18 +627,23 @@ public:
 			infoVec_[i].usage();
 		}
 	}
+	friend inline std::ostream& operator<<(std::ostream& os, const Option& self)
+	{
+		for (size_t i = 0; i < self.paramVec_.size(); i++) {
+			const Info& param = self.paramVec_[i];
+			os << param.opt << '=' << param.var.toStr() << std::endl;
+		}
+		if (self.paramMode_ == P_variable) {
+			os << "remains=" << self.remains_.var.toStr() << std::endl;
+		}
+		for (size_t i = 0; i < self.infoVec_.size(); i++) {
+			os << self.infoVec_[i] << std::endl;
+		}
+		return os;
+	}
 	void put() const
 	{
-		for (size_t i = 0; i < paramVec_.size(); i++) {
-			const Info& param = paramVec_[i];
-			printf("%s=%s\n", param.opt.c_str(), param.var.toStr().c_str());
-		}
-		if (paramMode_ == P_variable) {
-			printf("remains=%s\n", remains_.var.toStr().c_str());
-		}
-		for (size_t i = 0; i < infoVec_.size(); i++) {
-			infoVec_[i].put();
-		}
+		std::cout << *this;
 	}
 	/*
 		whether pvar is set or not
