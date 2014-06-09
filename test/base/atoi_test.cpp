@@ -753,8 +753,8 @@ CYBOZU_TEST_AUTO(hextoi)
 
     CYBOZU_TEST_EQUAL(static_cast<char>(cybozu::hextoi("7f")), 0x7f);
     CYBOZU_TEST_EQUAL(static_cast<short>(cybozu::hextoi("7fff")), 0x7fff);
-    CYBOZU_TEST_EXCEPTION(static_cast<uint8_t>(cybozu::hextoi("100")), cybozu::Exception);
-    CYBOZU_TEST_EXCEPTION(static_cast<int8_t>(cybozu::hextoi("80")), cybozu::Exception);
+    CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<uint8_t>(cybozu::hextoi("100"))), cybozu::Exception);
+    CYBOZU_TEST_EXCEPTION(cybozu::disable_warning_unused_variable(static_cast<int8_t>(cybozu::hextoi("80"))), cybozu::Exception);
 
     const struct {
         const char *str;
