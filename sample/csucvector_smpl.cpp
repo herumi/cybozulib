@@ -5,7 +5,7 @@
 void test(const std::string& inName)
 {
 	cybozu::Mmap m(inName);
-	const uint64_t *blk = (const uint64_t*)m.get();
+	const uint64_t *blk = reinterpret_cast<const uint64_t*>(m.get());
 	cybozu::CSucVector cv2(blk, m.size() * 8);
 	cybozu::CSucVector cv;
 	{
