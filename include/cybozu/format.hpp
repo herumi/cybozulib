@@ -11,6 +11,12 @@
 #include <stdlib.h>
 #include <cybozu/exception.hpp>
 
+#if defined(__clang__) || (defined(__GNUC_PREREQ) && __GNUC_PREREQ(4, 4))
+#define CYBOZU_FORMAT_DISABLE_WARNING
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+
 namespace cybozu {
 
 inline void vformat(std::string& str, const char *format, va_list args)
@@ -82,3 +88,7 @@ inline std::string format(CYBOZU_FORMAT_PRINTF const char *format, ...)
 }
 
 } // cybozu
+
+#ifdef CYBOZU_FORMAT_DISABLE_WARNING
+#pragma GCC diagnostic push
+#endif
