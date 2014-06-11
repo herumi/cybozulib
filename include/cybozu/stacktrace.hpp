@@ -71,54 +71,93 @@ struct DummyCall {
 
 struct Bfd {
 	struct bfd *bfd;
-	std::vector<asymbol*> symTbl;
-	asection *section;
-	Bfd()
+	explicit Bfd(const std::string& fileName = "")
 		: bfd(0)
-		, section(0)
 	{
 		bfd_init();
-		bfd = bfd_openr("/proc/self/exe", 0);
+
+		const char *file = fileName.c_str();
+#if 0
+		if (*file == '\0') {
+			file = "/proc/self/exe";
+		}
+#else
+		/*
+			/proc/self/exe does not point to self-binary on valgrind,
+			so use readlink to get correct self-binary
+		*/
+		std::string path;
+		if (*file == '\0') {
+			path.resize(4096);
+			int ret = readlink("/proc/self/exe", &path[0], path.size() - 2);
+			if (ret <= 0) {
+				perror("ERR:cybozu:StackTrace:Bfd:readlink");
+				return;
+			}
+			path.resize(ret);
+			file = path.c_str();
+		}
+#endif
+		bfd = bfd_openr(file, 0);
 		if (bfd == 0) {
-			perror("ERR:cybozu:StackTrace:InitSymbol:bfd_opener");
+			perror("ERR:cybozu:StackTrace:Bfd:bfd_opener");
 			return;
 		}
-		bfd_check_format(bfd, bfd_object);
-		const int size = bfd_get_symtab_upper_bound(bfd);
-		if (size < 0) {
-			fprintf(stderr, "ERR:cybozu:StackTrace:InitSymbol:bfd_get_symtab_upper_bound\n");
+		if (!bfd_check_format(bfd, bfd_object)) {
+			perror("ERR:cybozu:StackTrace:Bfd:bfd_check_format");
 			return;
 		}
-		if (size == 0) return;
-		symTbl.resize(size / sizeof(symTbl[0]) + 1);
-		int num = bfd_canonicalize_symtab(bfd, &symTbl[0]);
-		if (num < 0) return;
-		symTbl.resize(num);
-		section = bfd_get_section_by_name(bfd, ".debug_info");
 	}
 	~Bfd()
 	{
 		if (bfd == 0) return;
 		if (!bfd_close(bfd)) {
-			fprintf(stderr, "ERR:cybozu:StackTrace:InitSymbol:bfd_close\n");
+			fprintf(stderr, "ERR:cybozu:StackTrace:Bfd:bfd_close\n");
 		}
 	}
-	int getFileLine(std::string* pFile, std::string* pFunc, const void *addr)
+	bool getInfo(std::string* pFile, std::string* pFunc, int *pLine, const void *addr)
 	{
-		if (bfd == 0 || section == 0 || symTbl.empty()) return -1;
-		const char *file;
-		const char *func;
-		unsigned int line;
-		if (!bfd_find_nearest_line(bfd, section, &symTbl[0], (bfd_vma)addr, &file, &func, &line)) {
-			return -1;
-		}
-		if (pFile && file) *pFile = file;
-		if (pFunc && func) *pFunc = func;
-		return line;
+		if (bfd == 0) return false;
+		Data data(addr, pFile, pFunc);
+		bfd_map_over_sections(bfd, findAddress, &data);
+		*pLine = data.line;
+		return data.found;
 	}
 	static inline Bfd& getInstance() {
 		static Bfd bfd;
 		return bfd;
+	}
+private:
+	struct Data {
+		bfd_vma pc;
+		std::string *pFile;
+		std::string *pFunc;
+		unsigned int line;
+		bool found;
+		Data(const void *addr, std::string *pFile, std::string *pFunc)
+			: pc(bfd_vma(addr))
+			, pFile(pFile)
+			, pFunc(pFunc)
+			, line(0)
+			, found(false)
+		{
+		}
+	};
+	static inline void findAddress(struct bfd *bfd, asection *section, void *self)
+	{
+		Data *data = (Data*)self;
+		if (data->found) return;
+		if (section == 0) return;
+		bfd_vma vma = bfd_get_section_vma(bfd, section);
+		if (data->pc < vma) return;
+		bfd_size_type size = bfd_get_section_size(section);
+		if (data->pc >= vma + size) return;
+		const char *file;
+		const char *func;
+		data->found = bfd_find_nearest_line(bfd, section, NULL, data->pc - vma, &file, &func, &data->line);
+		if (!data->found) return;
+		if (file) *data->pFile = file;
+		if (func) *data->pFunc = func;
 	}
 };
 
@@ -251,8 +290,8 @@ public:
 #ifdef CYBOZU_STACKTRACE_WITH_BFD_GPL
 			{
 				std::string fileName;
-				int line = stacktrace_local::Bfd::getInstance().getFileLine(&fileName, &funcName, data_[i]);
-				if (line > 0) {
+				int line;
+				if (stacktrace_local::Bfd::getInstance().getInfo(&fileName, &funcName, &line, data_[i])) {
 					demangle(funcName, funcName.c_str());
 					out += fileName;
 					out += ':';
@@ -285,18 +324,20 @@ public:
 					out += funcName;
 					out += '+';
 					out += addr;
+					out += ' ';
 					doPrint = true;
 				} else if (!funcName.empty()) {
 					out += funcName;
-					doPrint = true;
+					out += ' ';
 				}
 				if (!doPrint) {
 					out += symbol[i];
+					out += ' ';
 				}
 			} else
 #endif
 			{
-				out += " (" + cybozu::itohex(reinterpret_cast<uintptr_t>(data_[i]), false) + ")";
+				out += "(" + cybozu::itohex(reinterpret_cast<uintptr_t>(data_[i]), false) + ")";
 			}
 			if (i < traceNum - 1) out += "\n";
 		}
