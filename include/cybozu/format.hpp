@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <cybozu/exception.hpp>
 
-#if defined(__clang__) || (defined(__GNUC_PREREQ) && __GNUC_PREREQ(4, 4))
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 4)
 #define CYBOZU_FORMAT_DISABLE_WARNING
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
