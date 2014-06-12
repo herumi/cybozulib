@@ -27,11 +27,13 @@ class Logger {
 	int priority_;
 	FILE *fp_;
 	bool doClose_;
+	bool useSyslog_;
 public:
 	Logger()
 		: priority_(cybozu::LogDebug)
-		, fp_(NULL)
-		, doClose_(true)
+		, fp_(stderr)
+		, doClose_(false)
+		, useSyslog_(true)
 	{
 	}
 	~Logger()
@@ -49,7 +51,8 @@ public:
 			if (fflush(fp_) < 0) {
 				fprintf(stderr, "ERR:cybozu:Logger:put:fflush:%s\n", str.c_str());
 			}
-		} else {
+		}
+		if (useSyslog_) {
 #ifdef __linux__
 			int pri = LOG_CRIT;
 			if (priority == LogDebug) {
@@ -78,6 +81,7 @@ public:
 	}
 	/*
 		@note : not thread safe
+		@param path [in] open path for log
 	*/
 	void openFile(const std::string& path)
 	{
@@ -88,21 +92,35 @@ public:
 		fp_ = fopen(path.c_str(), "a+b");
 #endif
 		if (fp_ == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
+		doClose_ = true;
+		useSyslog_ = false;
 	}
 	/*
 		set FILE pointer
+		@param fp [in] write log to fp if fp != NULL
 		@note Logger does not close the pointer
 	*/
 	void set(FILE *fp)
 	{
-		if (fp == 0) throw cybozu::Exception("cybozu:Logger:set") << fp;
 		closeFile();
 		fp_ = fp;
 		doClose_ = false;
+		useSyslog_ = false;
+	}
+	/*
+		use syslog if useSyslog is true
+	*/
+	void useSyslog(bool useSyslog)
+	{
+		useSyslog_ = useSyslog;
 	}
 	bool closeFile() throw()
 	{
 		if (!doClose_ || fp_ == 0) return true;
+		if (fp_ == stdout || fp_ == stderr) {
+			fp_ = NULL;
+			return true;
+		}
 		bool isOK = fclose(fp_) == 0;
 		fp_ = NULL;
 		return isOK;
@@ -117,6 +135,7 @@ public:
 
 /*
 	write log to path
+	@param path [in] open path for log
 	@note this function is not thread safe
 */
 inline void OpenLogFile(const std::string& path)
@@ -126,6 +145,7 @@ inline void OpenLogFile(const std::string& path)
 
 /*
 	set FILE pointer
+	@param fp [in] write log to fp if fp != NULL
 	@note Logger does not close the pointer
 	@note this function is not thread safe
 */
@@ -134,6 +154,13 @@ inline void SetLogFILE(FILE *fp)
 	return log_local::Logger::getInstance().set(fp);
 }
 
+/*
+	use syslog if useSyslog is true
+*/
+inline void useSyslog(bool useSyslog)
+{
+	log_local::Logger::getInstance().useSyslog(useSyslog);
+}
 /*
 	set priority(default cybozu::LogDebug)
 	does not show the message of which is less or equal to the priority
