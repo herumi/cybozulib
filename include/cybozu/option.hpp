@@ -68,11 +68,11 @@ struct OptionError : public cybozu::Exception {
 		, argPos(0)
 	{
 	}
-	cybozu::Exception& set(Type type, int argPos = 0)
+	cybozu::Exception& set(Type _type, int _argPos = 0)
 	{
-		this->type = type;
-		this->argPos = argPos;
-		switch (type) {
+		this->type = _type;
+		this->argPos = _argPos;
+		switch (_type) {
 		case BAD_OPT:
 			(*this) << "bad opt";
 			break;
@@ -510,16 +510,16 @@ public:
 				default:
 					{
 						pos++;
-						int i = 0;
+						int j = 0;
 						while (pos < argc && !isOpt(argv[pos])) {
 							if (!info.var.set(argv[pos])) {
-								err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for -" + info.opt) << i;
+								err.set(OptionError::BAD_VALUE, pos) << (std::string(argv[pos]) + " for -" + info.opt) << j;
 								goto ERR;
 							}
 							pos++;
-							i++;
+							j++;
 						}
-						if (i > 0) {
+						if (j > 0) {
 							pos--;
 						} else {
 							err.set(OptionError::NO_VALUE, pos) << (std::string("for -") + info.opt);

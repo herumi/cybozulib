@@ -47,10 +47,10 @@ CYBOZU_TEST_AUTO(endian_test)
 		CYBOZU_TEST_EQUAL(x, 0x1234);
 	}
 	{
-		char buf2[2];
-		cybozu::Set16bitAsLE(buf2, 0x3456);
-		CYBOZU_TEST_ASSERT(memcmp(buf2, "\x56\x34", 2) == 0);
-		cybozu::Set16bitAsBE(buf2, 0x3456);
-		CYBOZU_TEST_ASSERT(memcmp(buf2, "\x34\x56", 2) == 0);
+		char buf3[2];
+		cybozu::Set16bitAsLE(buf3, 0x3456);
+		CYBOZU_TEST_ASSERT(memcmp(buf3, "\x56\x34", 2) == 0);
+		cybozu::Set16bitAsBE(buf3, 0x3456);
+		CYBOZU_TEST_ASSERT(memcmp(buf3, "\x34\x56", 2) == 0);
 	}
 }

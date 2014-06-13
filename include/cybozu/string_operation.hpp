@@ -319,18 +319,17 @@ bool CaseEqualStartWith(const StringT& lhs, const char (&rhs)[N])
 template<class Out, class StringT>
 size_t Split(Out& out, const StringT& inStr, typename StringT::value_type splitChar = ',', size_t maxNum = 0x7fffffff, bool doClear = true)
 {
-	typedef StringT String;
 	size_t splitNum = 0;
 	size_t cur = 0;
 	if (doClear) out.clear();
 	for (;;) {
 		size_t pos = inStr.find_first_of(splitChar, cur);
-		if (pos == String::npos || splitNum == maxNum - 1) {
-			out.push_back(String(&inStr[cur], &inStr[0] + inStr.size()));
+		if (pos == StringT::npos || splitNum == maxNum - 1) {
+			out.push_back(StringT(&inStr[cur], &inStr[0] + inStr.size()));
 			splitNum++;
 			break;
 		}
-		out.push_back(String(&inStr[cur], &inStr[pos]));
+		out.push_back(StringT(&inStr[cur], &inStr[pos]));
 		cur = pos + 1;
 		splitNum++;
 	}

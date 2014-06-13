@@ -148,13 +148,14 @@ public:
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 		hints.ai_flags = AI_NUMERICSERV; // AI_PASSIVE;
-		int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
+		const int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
 		// s == EAI_AGAIN
 		if (s || forceIpV6) {
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_V4MAPPED;
-			int s = getaddrinfo(address.c_str(), portStr, &hints, &result);
-			if (s) goto ERR_EXIT;
+			if (getaddrinfo(address.c_str(), portStr, &hints, &result)) {
+				goto ERR_EXIT;
+			}
 		}
 		{
 			bool found = false;
