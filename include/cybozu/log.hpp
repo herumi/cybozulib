@@ -85,13 +85,15 @@ public:
 	*/
 	void openFile(const std::string& path)
 	{
-		closeFile();
+		FILE *fp = 0;
 #ifdef _MSC_VER
-		if (fopen_s(&fp_, path.c_str(), "a+b")) fp_ = 0;
+		if (fopen_s(&fp, path.c_str(), "a+b")) fp = 0;
 #else
-		fp_ = fopen(path.c_str(), "a+b");
+		fp = fopen(path.c_str(), "a+b");
 #endif
-		if (fp_ == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
+		if (fp == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
+		closeFile();
+		fp_ = fp;
 		doClose_ = true;
 		useSyslog_ = false;
 	}
