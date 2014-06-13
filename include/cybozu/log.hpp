@@ -136,7 +136,7 @@ public:
 } // cybozu::log_local
 
 /*
-	write log to path
+	write log to path(default is stderr, syslog)
 	@param path [in] open path for log
 	@note this function is not thread safe
 */
