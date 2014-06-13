@@ -58,11 +58,14 @@ inline std::string ConvertErrorNoToString(int err)
 class Exception : public std::exception {
 	mutable std::string str_;
 #ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
-	mutable cybozu::StackTrace stackTrace_;
+	mutable std::string stackTrace_;
 #endif
 public:
 	explicit Exception(const std::string& name = "")
 		: str_(name)
+#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
+		, stackTrace_(cybozu::StackTrace().toString())
+#endif
 	{
 	}
 	~Exception() throw() {}
@@ -73,7 +76,7 @@ public:
 		try {
 			if (!stackTrace_.empty()) {
 				str_ += "\n<<<STACK TRACE\n";
-				str_ += stackTrace_.toString();
+				str_ += stackTrace_;
 				str_ += "\n>>>STACK TRACE";
 			}
 		} catch (...) {
