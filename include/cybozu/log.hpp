@@ -36,7 +36,7 @@ public:
 		, useSyslog_(true)
 	{
 	}
-	~Logger()
+	~Logger() throw()
 	{
 		closeFile();
 	}
@@ -207,14 +207,15 @@ class Log {
 	void operator=(const Log&);
 public:
 	explicit Log(LogPriority priority = cybozu::LogInfo) : pri_(priority) { }
-	~Log()
-		try
+	~Log() throw()
 	{
-		log_local::Logger::getInstance().put(pri_, os_.str());
-	} catch (std::exception& e) {
-		fprintf(stderr, "faital error in cybozu::Log %s\n", e.what());
-	} catch (...) {
-		fprintf(stderr, "faital error in cybozu::Log\n");
+		try {
+			log_local::Logger::getInstance().put(pri_, os_.str());
+		} catch (std::exception& e) {
+			fprintf(stderr, "faital error in cybozu::Log %s\n", e.what());
+		} catch (...) {
+			fprintf(stderr, "faital error in cybozu::Log\n");
+		}
 	}
 	template<class T>
 	Log& operator<<(const T& t) { os_ << t; return *this; }
