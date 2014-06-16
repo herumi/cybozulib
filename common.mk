@@ -5,6 +5,8 @@ endif
 ifeq ($(shell uname -s),Linux)
   LDFLAGS += -lrt
 endif
+HAS_BOOST=$(shell echo "\#include <boost/version.hpp>" | (gcc -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
+HAS_MECAB=$(shell echo "\#include <mecab.hpp>" | (gcc -E - 2>/dev/null) | grep "mecab.hpp" >/dev/null && echo "1")
 CP = cp -f
 AR = ar r
 MKDIR=mkdir -p
@@ -13,7 +15,7 @@ CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
 CFLAGS = -g -D_FILE_OFFSET_BITS=64 -msse4.2
 CFLAGS+=$(CFLAGS_WARN)
-LDFLAGS += -lz -lpthread -lssl -lcrypto -lmecab -lboost_regex
+LDFLAGS += -lz -lpthread -lssl -lcrypto
 BIT=64
 
 DEBUG=1
@@ -29,6 +31,12 @@ else
 	LDFLAGS+=-rdynamic
 	OBJDIR=debug
 	OBJSUF=d
+endif
+ifeq ($(HAS_BOOST),1)
+	LDFLAGS += -lboost_regex
+endif
+ifeq ($(HAS_MECAB),1)
+	LDFLAGS += -lmecab
 endif
 
 TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/

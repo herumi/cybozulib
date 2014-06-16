@@ -5,6 +5,12 @@ TARGET=$(TEST_FILE)
 LIBS=
 
 SRC=$(wildcard *.cpp)
+ifneq ($(HAS_BOOST),1)
+	SRC:=$(filter-out regex_test.cpp,$(SRC))
+endif
+ifneq ($(HAS_MECAB),1)
+	SRC:=$(filter-out mecab_test.cpp,$(SRC))
+endif
 
 all: $(TARGET)
 

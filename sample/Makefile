@@ -1,10 +1,9 @@
 include ../common.mk
 
 TARGET=$(TEST_FILE)
-#LIBS=$(TOPDIR)lib/libcybozu_base$(OBJSUF).a $(TOPDIR)lib/libcybozu_net$(OBJSUF).a
 LIBS=
 
-SRC=$(wildcard *.cpp)
+SRC=$(wildcard *smpl.cpp)
 
 all: $(TARGET)
 
