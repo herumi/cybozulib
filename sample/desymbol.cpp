@@ -48,8 +48,8 @@ int main(int argc, char **argv)
 	std::string exeName;
 	std::string textName;
 	opt.appendBoolOpt(&doCheckAll, "a", ": check all text");
-	opt.appendOpt(&exeName, "", "e", ": target exe name");
-	opt.appendParamOpt(&textName, "-", "e", ": target exe name");
+	opt.appendOpt(&textName, "-", "f", ": text file");
+	opt.appendParam(&exeName, "exe", ": exec file");
 	opt.appendHelp("h", ": put this message");
 	if (!opt.parse(argc, argv)) {
 		opt.usage();
@@ -68,6 +68,7 @@ int main(int argc, char **argv)
 		ifs.open(textName.c_str(), std::ios::binary);
 		pis = &ifs;
 	}
+	fprintf(stderr, "textName=%s, exeName=%s\n", textName.c_str(), exeName.c_str());
 	while (std::getline(*pis, line)) {
 		cybozu::Strip(line);
 		bool doDecode = false;
