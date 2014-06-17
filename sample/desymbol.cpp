@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <cybozu/bfd.hpp>
 #include <cybozu/stacktrace.hpp>
 #include <cybozu/atoi.hpp>
@@ -44,20 +45,30 @@ int main(int argc, char **argv)
 {
 	cybozu::Option opt;
 	bool doCheckAll = false;
-	std::string fileName;
+	std::string exeName;
+	std::string textName;
 	opt.appendBoolOpt(&doCheckAll, "a", ": check all text");
+	opt.appendOpt(&exeName, "", "e", ": target exe name");
+	opt.appendParamOpt(&textName, "-", "e", ": target exe name");
 	opt.appendHelp("h", ": put this message");
-	opt.appendParam(&fileName, "target file name");
 	if (!opt.parse(argc, argv)) {
 		opt.usage();
 		return 1;
 	}
-	const std::string beginStackTrace = "<<<STACKTRACE";
-	const std::string endStackTrace = ">>>STACKTRACE";
+	const std::string beginStackTrace = "<<<STACK TRACE";
+	const std::string endStackTrace = ">>>STACK TRACE";
 	bool inStackTrace = false;
-	cybozu::Bfd bfd(fileName);
+	cybozu::Bfd bfd(exeName);
 	std::string line;
-	while (std::getline(std::cin, line)) {
+	std::istream *pis = 0;
+	std::ifstream ifs;
+	if (textName == "-") {
+		pis = &std::cin;
+	} else {
+		ifs.open(textName.c_str(), std::ios::binary);
+		pis = &ifs;
+	}
+	while (std::getline(*pis, line)) {
 		cybozu::Strip(line);
 		bool doDecode = false;
 		if (doCheckAll) {
