@@ -82,21 +82,24 @@ public:
 
 } // stacktrace_local
 
+#ifdef __GNUC__
+inline bool Demangle(std::string& out, const std::string& func)
+{
+	int status;
+	char *demangled = abi::__cxa_demangle(func.c_str(), 0, 0, &status);
+	stacktrace_local::AutoFree afDemangle(demangled);
+	if (status == 0) {
+		out = demangled;
+		return true;
+	} else {
+		out = func;
+		return false;
+	}
+}
+#endif
+
 class StackTrace {
 	std::vector<void*> data_;
-#ifdef __GNUC__
-	void demangle(std::string& out, const char *func) const
-	{
-		int status;
-		char *demangle = abi::__cxa_demangle(func, 0, 0, &status);
-		stacktrace_local::AutoFree afDemangle(demangle);
-		if (status == 0) {
-			out = demangle;
-		} else {
-			out = func;
-		}
-	}
-#endif
 #ifdef CYBOZU_STACKTRACE_WITH_BFD_GPL
 	static inline cybozu::Bfd& getBfd()
 	{
@@ -203,7 +206,7 @@ public:
 				std::string fileName;
 				int line;
 				if (getBfd().getInfo(&fileName, &funcName, &line, data_[i])) {
-					demangle(funcName, funcName.c_str());
+					Demangle(funcName, funcName);
 					out += fileName;
 					out += ':';
 					out += cybozu::itoa(line);
@@ -224,7 +227,7 @@ public:
 						const char *const func = &str[p + 1]; str[q] = '\0';
 						addr = &str[q + 1];
 						if (funcName.empty()) {
-							demangle(funcName, func);
+							Demangle(funcName, func);
 						}
 					}
 				}
