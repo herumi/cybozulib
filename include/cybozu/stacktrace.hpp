@@ -80,6 +80,13 @@ public:
 	}
 };
 
+inline std::string addrToHex(const void *addr)
+{
+	char buf[32];
+	CYBOZU_SNPRINTF(buf, sizeof(buf), "[0x%llx]", (long long)addr);
+	return buf;
+}
+
 } // stacktrace_local
 
 #ifdef __GNUC__
@@ -190,7 +197,7 @@ public:
 				out += ' ';
 			}
 #endif
-			out += "(" + cybozu::itohex(ptr, false) + ")";
+			out += stacktrace_local::addrToHex((const void*)ptr);
 			if (i < traceNum - 1) out += "\n";
 		}
 #else
@@ -251,7 +258,7 @@ public:
 			} else
 #endif
 			{
-				out += "(" + cybozu::itohex(reinterpret_cast<uintptr_t>(data_[i]), false) + ")";
+				out += stacktrace_local::addrToHex(data_[i]);
 			}
 			if (i < traceNum - 1) out += "\n";
 		}
