@@ -8,9 +8,9 @@
 #ifdef _MSC_VER
 	#error "not supported"
 #endif
+#include <unistd.h>
 #include <bfd.h>
 #include <string>
-#include <stdio.h>
 
 namespace cybozu {
 
