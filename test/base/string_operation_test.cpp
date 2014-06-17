@@ -316,3 +316,25 @@ CYBOZU_TEST_AUTO(split)
 		}
 	}
 }
+
+CYBOZU_TEST_AUTO(Strip)
+{
+	const struct {
+		const char *in;
+		const char *out;
+	} tbl[] = {
+		{ "", "" },
+		{ "abc", "abc" },
+		{ "abc\n", "abc" },
+		{ "abc\ndef\n\r\n\r", "abc\ndef" },
+		{ "\r\n\r\n", "" },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		std::string s1(tbl[i].in);
+		cybozu::Strip(s1);
+		CYBOZU_TEST_EQUAL(s1, tbl[i].out);
+		cybozu::String s2(tbl[i].in);
+		cybozu::Strip(s2);
+		CYBOZU_TEST_EQUAL(s2, tbl[i].out);
+	}
+}

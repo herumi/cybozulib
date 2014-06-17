@@ -192,6 +192,20 @@ void ToUpper(StringT& str)
 	ToUpper(str, str);
 }
 
+template<class StringT>
+void Strip(StringT& str)
+{
+	size_t size = str.size();
+	while (size > 0) {
+		const typename StringT::value_type c = str[size - 1];
+		if (c == '\n' || c == '\r') {
+			size--;
+		} else {
+			break;
+		}
+	}
+	str.resize(size);
+}
 /**
 	case insensitive compare function
 	not depend on locale, not depend on compiler
