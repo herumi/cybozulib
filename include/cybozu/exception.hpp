@@ -75,9 +75,14 @@ public:
 #ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
 		try {
 			if (!stackTrace_.empty()) {
-				str_ += "\n<<<STACK TRACE\n";
+#ifdef CYBOZU_STACKTRACE_ONELINE
+				str_ += "\n<<<STACKTRACE>>> ";
 				str_ += stackTrace_;
-				str_ += "\n>>>STACK TRACE";
+#else
+				str_ += "\n<<<STACKTRACE\n";
+				str_ += stackTrace_;
+				str_ += "\n>>>STACKTRACE";
+#endif
 			}
 		} catch (...) {
 		}

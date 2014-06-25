@@ -40,6 +40,31 @@ void decode(std::string& str, cybozu::Bfd& bfd)
 	str = file + ':' + cybozu::itoa(line) + ' ' + func + ' ' + str;
 }
 
+bool tryDecodeOnelineAndPut(const std::string& str, cybozu::Bfd& bfd)
+{
+	const std::string oneline = "<<<STACKTRACE>>> ";
+	if (str.find(oneline) != 0) return false;
+	printf("<<<STACKTRACE\n");
+	std::istringstream iss(str.substr(oneline.size()));
+	std::string addrStr;
+	while (iss >> addrStr) {
+		if (addrStr.find("0x") != 0) break;
+		bool b;
+		size_t addr = cybozu::hextoi(&b, &addrStr[2], addrStr.size() - 2);
+		if (!b) break;
+		std::string file;
+		std::string func;
+		int line;
+		if (bfd.getInfo(&file, &func, &line, (const void*)addr)) {
+			cybozu::Demangle(func, func);
+			printf("%s:%d %s ", file.c_str(), line, func.c_str());
+		}
+		printf("%s\n", addrStr.c_str());
+	}
+	printf(">>>STACKTRACE\n");
+	return true;
+}
+
 int main(int argc, char **argv)
 	try
 {
@@ -55,8 +80,8 @@ int main(int argc, char **argv)
 		opt.usage();
 		return 1;
 	}
-	const std::string beginStackTrace = "<<<STACK TRACE";
-	const std::string endStackTrace = ">>>STACK TRACE";
+	const std::string beginStackTrace = "<<<STACKTRACE";
+	const std::string endStackTrace = ">>>STACKTRACE";
 	bool inStackTrace = false;
 	cybozu::Bfd bfd(exeName);
 	std::string line;
@@ -71,6 +96,9 @@ int main(int argc, char **argv)
 	fprintf(stderr, "textName=%s, exeName=%s\n", textName.c_str(), exeName.c_str());
 	while (std::getline(*pis, line)) {
 		cybozu::Strip(line);
+		if (tryDecodeOnelineAndPut(line, bfd)) {
+			continue;
+		}
 		bool doDecode = false;
 		if (doCheckAll) {
 			doDecode = true;

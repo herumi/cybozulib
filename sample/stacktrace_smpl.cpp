@@ -4,12 +4,12 @@
 */
 #include <stdio.h>
 #include <iostream>
-#include <cybozu/stacktrace.hpp>
+#define CYBOZU_EXCEPTION_WITH_STACKTRACE
+#include <cybozu/exception.hpp>
 
 void putStackTrace()
 {
-	std::cout << "dump stack trace\n" << cybozu::StackTrace() << std::endl;
-	exit(1);
+	throw cybozu::Exception("throw test");
 }
 
 struct A {

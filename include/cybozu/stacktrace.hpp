@@ -80,10 +80,21 @@ public:
 	}
 };
 
+#if defined(CYBOZU_STACKTRACE_WITH_BFD_GPL) || defined(CYBOZU_STACKTRACE_RESOLVE_SYMBOL)
+	const char delim = '\n';
+#else
+	#define CYBOZU_STACKTRACE_ONELINE
+	const char delim = ' ';
+#endif
+
 inline std::string addrToHex(const void *addr)
 {
 	char buf[32];
+#ifdef CYBOZU_STACKTRACE_ONELINE
+	CYBOZU_SNPRINTF(buf, sizeof(buf), "0x%llx", (long long)addr);
+#else
 	CYBOZU_SNPRINTF(buf, sizeof(buf), "[0x%llx]", (long long)addr);
+#endif
 	return buf;
 }
 
@@ -198,7 +209,7 @@ public:
 			}
 #endif
 			out += stacktrace_local::addrToHex((const void*)ptr);
-			if (i < traceNum - 1) out += "\n";
+			if (i < traceNum - 1) out += stacktrace_local::delim;
 		}
 #else
 
@@ -260,7 +271,7 @@ public:
 			{
 				out += stacktrace_local::addrToHex(data_[i]);
 			}
-			if (i < traceNum - 1) out += "\n";
+			if (i < traceNum - 1) out += stacktrace_local::delim;
 		}
 #endif
 		return out;
