@@ -396,3 +396,24 @@ CYBOZU_TEST_AUTO(isSet)
 		CYBOZU_TEST_EXCEPTION(opt.isSet(&y), cybozu::Exception);
 	}
 }
+
+CYBOZU_TEST_AUTO(delimiter)
+{
+	cybozu::Option opt;
+	int x;
+	opt.appendOpt(&x, 3, "x");
+	typedef std::vector<std::string> StrVec;
+	StrVec remain;
+	opt.appendParamVec(&remain, "remain str");
+	opt.setDelimiter("---");
+
+	const char *argv[] = { progName, "-x", "123", "abc", "ccc", "---", "xyz", "XXX" };
+
+	CYBOZU_TEST_ASSERT(opt.parse((int)CYBOZU_NUM_OF_ARRAY(argv), argv));
+	CYBOZU_TEST_ASSERT(opt.isSet(&x));
+	CYBOZU_TEST_EQUAL(x, 123);
+	CYBOZU_TEST_EQUAL(remain.size(), 2);
+	CYBOZU_TEST_EQUAL(remain[0], "abc");
+	CYBOZU_TEST_EQUAL(remain[1], "ccc");
+	CYBOZU_TEST_EQUAL(opt.getNextDelimiter(), 6);
+}

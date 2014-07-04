@@ -318,6 +318,8 @@ class Option {
 	std::string helpOpt_;
 	std::string help_;
 	std::string usage_;
+	std::string delimiter_;
+	int nextDelimiter_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const std::string& help)
 	{
@@ -365,6 +367,7 @@ public:
 	Option()
 		: showOptUsage_(true)
 		, paramMode_(P_exact)
+		, nextDelimiter_(-1)
 	{
 	}
 	virtual ~Option() {}
@@ -465,6 +468,18 @@ public:
 		help_ = help;
 	}
 	/*
+		stop parsing after delimiter is found
+	*/
+	void setDelimiter(const std::string& delimiter)
+	{
+		delimiter_ = delimiter;
+	}
+	/*
+		return the next position of delimiter
+		@note return argc if delimiter is not set nor found
+	*/
+	int getNextDelimiter() const { return nextDelimiter_; }
+	/*
 		parse (argc, argv)
 		@param argc [in] argc of main
 		@param argv [in] argv of main
@@ -473,8 +488,13 @@ public:
 	bool parse(int argc, const char *const argv[], bool doThrow = false)
 	{
 		progName_ = getBaseName(argv[0]);
+		nextDelimiter_ = argc;
 		OptionError err;
 		for (int pos = 1; pos < argc; pos++) {
+			if (!delimiter_.empty() && delimiter_ == argv[pos]) {
+				nextDelimiter_ = pos + 1;
+				return true;
+			}
 			if (isOpt(argv[pos])) {
 				const std::string str = argv[pos] + 1;
 				if (helpOpt_ == str) {
