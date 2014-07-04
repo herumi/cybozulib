@@ -58,7 +58,8 @@ struct OptionError : public cybozu::Exception {
 		NO_VALUE,
 		OPT_IS_NECESSARY,
 		PARAM_IS_NECESSARY,
-		REDUNDANT_VAL
+		REDUNDANT_VAL,
+		BAD_ARGC
 	};
 	Type type;
 	int argPos;
@@ -91,6 +92,8 @@ struct OptionError : public cybozu::Exception {
 		case REDUNDANT_VAL:
 			(*this) << "redundant argVal";
 			break;
+		case BAD_ARGC:
+			(*this) << "bad argc";
 		default:
 			break;
 		}
@@ -487,6 +490,13 @@ public:
 	*/
 	bool parse(int argc, const char *const argv[], bool doThrow = false)
 	{
+		if (argc < 1) {
+			if (!doThrow) return false;
+			OptionError err;
+			err.set(OptionError::BAD_ARGC, 0);
+			err << argc;
+			throw err;
+		}
 		progName_ = getBaseName(argv[0]);
 		nextDelimiter_ = argc;
 		OptionError err;
