@@ -322,6 +322,7 @@ class Option {
 	std::string help_;
 	std::string usage_;
 	std::string delimiter_;
+	StrVec *remainsAfterDelimiter_;
 	int nextDelimiter_;
 	template<class T>
 	void appendSub(T *pvar, Mode mode, bool isMust, const char *opt, const std::string& help)
@@ -370,6 +371,7 @@ public:
 	Option()
 		: showOptUsage_(true)
 		, paramMode_(P_exact)
+		, remainsAfterDelimiter_(0)
 		, nextDelimiter_(-1)
 	{
 	}
@@ -472,13 +474,16 @@ public:
 	}
 	/*
 		stop parsing after delimiter is found
+		@param delimiter [in] string to stop
+		@param remain [out] set remaining strings if remain
 	*/
-	void setDelimiter(const std::string& delimiter)
+	void setDelimiter(const std::string& delimiter, std::vector<std::string> *remain = 0)
 	{
 		delimiter_ = delimiter;
+		remainsAfterDelimiter_ = remain;
 	}
 	/*
-		return the next position of delimiter
+		return the next position of delimiter between [0, argc]
 		@note return argc if delimiter is not set nor found
 	*/
 	int getNextDelimiter() const { return nextDelimiter_; }
@@ -503,6 +508,11 @@ public:
 		for (int pos = 1; pos < argc; pos++) {
 			if (!delimiter_.empty() && delimiter_ == argv[pos]) {
 				nextDelimiter_ = pos + 1;
+				if (remainsAfterDelimiter_) {
+					for (int i = nextDelimiter_; i < argc; i++) {
+						remainsAfterDelimiter_->push_back(argv[i]);
+					}
+				}
 				return true;
 			}
 			if (isOpt(argv[pos])) {

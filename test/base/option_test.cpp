@@ -404,8 +404,9 @@ CYBOZU_TEST_AUTO(delimiter)
 	opt.appendOpt(&x, 3, "x");
 	typedef std::vector<std::string> StrVec;
 	StrVec remain;
+	StrVec remainAfterDelim;
 	opt.appendParamVec(&remain, "remain str");
-	opt.setDelimiter("---");
+	opt.setDelimiter("---", &remainAfterDelim);
 
 	const char *argv[] = { progName, "-x", "123", "abc", "ccc", "---", "xyz", "XXX" };
 
@@ -416,4 +417,7 @@ CYBOZU_TEST_AUTO(delimiter)
 	CYBOZU_TEST_EQUAL(remain[0], "abc");
 	CYBOZU_TEST_EQUAL(remain[1], "ccc");
 	CYBOZU_TEST_EQUAL(opt.getNextDelimiter(), 6);
+	CYBOZU_TEST_EQUAL(remainAfterDelim.size(), 2);
+	CYBOZU_TEST_EQUAL(remainAfterDelim[0], "xyz");
+	CYBOZU_TEST_EQUAL(remainAfterDelim[1], "XXX");
 }
