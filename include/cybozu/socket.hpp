@@ -33,6 +33,7 @@
 #include <cybozu/atomic.hpp>
 #include <cybozu/exception.hpp>
 #include <cybozu/stream_fwd.hpp>
+#include <cybozu/itoa.hpp>
 #include <string>
 
 namespace cybozu {
@@ -216,14 +217,13 @@ public:
 		if (family_ == AF_INET || family_ == AF_INET6) {
 			char buf[INET6_ADDRSTRLEN];
 			assert(INET_ADDRSTRLEN <= INET6_ADDRSTRLEN);
-			const void *pa = family_ == AF_INET ? (const void*)&addr_.v4.sin_addr : (const void*)&addr_.v6.sin6_addr;
+			const bool isIPv4 = family_ == AF_INET;
+			const void *pa = isIPv4 ? (const void*)&addr_.v4.sin_addr : (const void*)&addr_.v6.sin6_addr;
 			// not "const void*" because of vc
 			const char *p = inet_ntop(family_, const_cast<void*>(pa), buf, sizeof(buf));
-			if (p) {
-				return p;
-			} else {
-				throw cybozu::Exception("cybozu:SocketAddr:toStr") << cybozu::NetErrorNo();
-			}
+			if (!p) throw cybozu::Exception("cybozu:SocketAddr:toStr") << cybozu::NetErrorNo();
+			if (isIPv4) return std::string(p) + ':' + cybozu::itoa(getPort());
+			return std::string("[") + p + "]:" + cybozu::itoa(getPort());
 		}
 		throw cybozu::Exception("cybozu:SocketAddr:toStr:bad family_") << family_;
 	}
