@@ -314,10 +314,10 @@ public:
 		close(cybozu::DontThrow);
 	}
 
-	void close(bool dontThrow = false)
+	bool close(bool dontThrow = false)
 	{
 		cybozu::socket_local::SocketHandle sd = cybozu::AtomicExchange(&sd_, INVALID_SOCKET);
-		if (sd == INVALID_SOCKET) return;
+		if (sd == INVALID_SOCKET) return true;
 #ifdef _WIN32
 		// ::shutdown(sd, SD_SEND);
 		// shutdown is called in closesocket
@@ -326,6 +326,18 @@ public:
 		bool isOK = ::close(sd) == 0;
 #endif
 		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:close") << cybozu::NetErrorNo();
+		return isOK;
+	}
+	/*
+		how 0 : SHUTRD ; disallow read
+		    1 : SHUT_WR ; disallow write
+		    2 : SHUT_RDWR ; disallow read/write
+	*/
+	bool shutdown(int how, bool dontThrow = false)
+	{
+		bool isOK = ::shutdown(sd_, how) == 0;
+		if (!dontThrow && !isOK) throw cybozu::Exception("Socket:waitForClose:shutdown") << cybozu::NetErrorNo();
+		return isOK;
 	}
 	/*
 		send FIN and wait for remote's close().
@@ -338,9 +350,7 @@ public:
 	{
 		if (sd_ == INVALID_SOCKET) return;
 		//	send FIN and this socket can't write any data.
-		if (::shutdown(sd_, 1)) {
-			throw cybozu::Exception("Socket:waitForClose:shutdown") << cybozu::NetErrorNo();
-		}
+		shutdown(1);
 		// wait for FIN from the peer.
 		char buf[1];
 		ssize_t readSize = readSome(buf, sizeof(buf));
