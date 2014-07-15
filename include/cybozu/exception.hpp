@@ -61,12 +61,14 @@ class Exception : public std::exception {
 	mutable std::string stackTrace_;
 #endif
 public:
-	explicit Exception(const std::string& name = "")
+	explicit Exception(const std::string& name = "", bool enableStackTrace = true)
 		: str_(name)
-#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
-		, stackTrace_(cybozu::StackTrace().toString())
-#endif
 	{
+#ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
+		if (enableStackTrace) stackTrace_ = cybozu::StackTrace().toString();
+#else
+		cybozu::disable_warning_unused_variable(enableStackTrace);
+#endif
 	}
 	~Exception() throw() {}
 	const char *what() const throw() { return toString().c_str(); }

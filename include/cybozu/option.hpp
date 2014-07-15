@@ -64,7 +64,7 @@ struct OptionError : public cybozu::Exception {
 	Type type;
 	int argPos;
 	OptionError()
-		: cybozu::Exception("OptionError")
+		: cybozu::Exception("OptionError", false)
 		, type(NoError)
 		, argPos(0)
 	{
