@@ -30,7 +30,7 @@ class Logger {
 	bool useSyslog_;
 public:
 	Logger()
-		: priority_(cybozu::LogDebug)
+		: priority_(cybozu::LogInfo)
 		, fp_(stderr)
 		, doClose_(false)
 		, useSyslog_(true)
@@ -164,7 +164,7 @@ inline void useSyslog(bool useSyslog)
 	log_local::Logger::getInstance().useSyslog(useSyslog);
 }
 /*
-	set priority(default cybozu::LogDebug)
+	set priority(default cybozu::LogInfo)
 	does not show the message of which is less or equal to the priority
 */
 inline void SetLogPriority(LogPriority priority)
