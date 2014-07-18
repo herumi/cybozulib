@@ -430,6 +430,7 @@ public:
 	*/
 	void connect(const cybozu::SocketAddr& addr, int timeoutMsec = 0)
 	{
+		if (isValid()) throw cybozu::Exception("Socket:connect:already connect");
 		sd_ = ::socket(addr.getFamily(), SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
