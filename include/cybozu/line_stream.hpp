@@ -30,7 +30,7 @@ const char CRLF[] = CYBOZU_STREAM_CRLF;
 
 	Remark:next() may return the last data without CRLF
 
-	Reader must have size_t read(char *buf, size_t size); method
+	Reader must have size_t readSome(char *buf, size_t size); method
 
 	How to use this
 
@@ -43,10 +43,11 @@ const char CRLF[] = CYBOZU_STREAM_CRLF;
 		}
 	}
 */
-template<class Reader, size_t maxLineSize = 1024 * 2>
+template<class Reader>
 class LineStreamT {
 	Reader& reader_;
-	char buf_[maxLineSize * 2];
+	size_t maxLineSize_;
+	std::string buf_;
 	size_t bufSize_;
 	const char *next_;
 	bool eof_;
@@ -54,10 +55,12 @@ class LineStreamT {
 	LineStreamT(const LineStreamT&);
 	void operator=(const LineStreamT&);
 public:
-	LineStreamT(Reader& reader)
+	explicit LineStreamT(Reader& reader, size_t maxLineSize = 1024 * 2)
 		: reader_(reader)
+		, maxLineSize_(maxLineSize)
+		, buf_(maxLineSize * 2, 0)
 		, bufSize_(0)
-		, next_(buf_)
+		, next_(buf_.data())
 		, eof_(false)
 	{
 	}
@@ -83,7 +86,7 @@ public:
 					}
 					*begin = next_;
 					next_ = endl + 1;
-					if (static_cast<uintptr_t>(*end - *begin) > maxLineSize) {
+					if (static_cast<uintptr_t>(*end - *begin) > maxLineSize_) {
 						throw cybozu::Exception("LineStreamT:next:line is too long") << cybozu::exception::makeString(*begin, 10);
 					}
 					return true;
@@ -92,21 +95,20 @@ public:
 				for (size_t i = 0; i < remainSize; i++) {
 					buf_[i] = next_[i];
 				}
-				next_ = buf_;
 				bufSize_ = remainSize;
 			} else {
 				bufSize_ = 0;
-				next_ = buf_;
 			}
-			ssize_t readSize = reader_.read(&buf_[bufSize_], sizeof(buf_) - bufSize_);
-			if (readSize <= 0) {
+			next_ = buf_.data();
+			size_t readSize = reader_.read(&buf_[bufSize_], buf_.size() - bufSize_);
+			if (readSize == 0) {
 				eof_ = true;
 				if (bufSize_ == 0) return false;
-				if (bufSize_ > maxLineSize) {
+				if (bufSize_ > maxLineSize_) {
 					throw cybozu::Exception("LineStreamT:next:no CRLF");
 				}
 				// take all remain buffer
-				*begin= buf_;
+				*begin= buf_.data();
 				*end = &buf_[bufSize_];
 				return true;
 			}
