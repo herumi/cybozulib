@@ -63,6 +63,10 @@ public:
 			CryptReleaseContext(prov_, 0);
 		}
 	}
+	/*
+		fill buf[0..bufNum-1] with random data
+		@note bufNum is not byte size
+	*/
 	template<class T>
 	void read(T *buf, size_t bufNum)
 	{
@@ -93,6 +97,10 @@ private:
 	{
 		if (fp_) ::fclose(fp_);
 	}
+	/*
+		fill buf[0..bufNum-1] with random data
+		@note bufNum is not byte size
+	*/
 	template<class T>
 	void read(T *buf, size_t bufNum)
 	{
