@@ -31,13 +31,13 @@ public:
 	uint32_t get32()
 	{
 		uint32_t ret;
-		read(&ret, sizeof(ret));
+		read(&ret, 1);
 		return ret;
 	}
 	uint64_t get64()
 	{
 		uint64_t ret;
-		read(&ret, sizeof(ret));
+		read(&ret, 1);
 		return ret;
 	}
 #ifdef _WIN32
@@ -97,7 +97,7 @@ private:
 	void read(T *buf, size_t bufNum)
 	{
 		const size_t byteSize = sizeof(T) * bufNum;
-		if (::fread(buf, 1, byteSize, fp_) != byteSize) {
+		if (::fread(buf, 1, (int)byteSize, fp_) != byteSize) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
 	}
