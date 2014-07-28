@@ -63,8 +63,10 @@ public:
 			CryptReleaseContext(prov_, 0);
 		}
 	}
-	void read(void *buf, size_t byteSize)
+	template<class T>
+	void read(T *buf, size_t bufNum)
 	{
+		const size_t byteSize = sizeof(T) * bufNum;
 		if (byteSize > bufSize) {
 			read_inner(buf, byteSize);
 		} else {
@@ -91,8 +93,10 @@ private:
 	{
 		if (fp_) ::fclose(fp_);
 	}
-	void read(void *buf, size_t byteSize)
+	template<class T>
+	void read(T *buf, size_t bufNum)
 	{
+		const size_t byteSize = sizeof(T) * bufNum;
 		if (::fread(buf, 1, byteSize, fp_) != byteSize) {
 			throw cybozu::Exception("randomgenerator:read") << byteSize;
 		}
