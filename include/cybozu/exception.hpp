@@ -41,18 +41,26 @@ inline std::string makeString(const char *str, size_t size)
 inline std::string ConvertErrorNoToString(int err)
 {
 	char errBuf[256];
+	std::string ret;
 #ifdef _WIN32
-	strerror_s(errBuf, sizeof(errBuf), err);
-	return errBuf;
+	if (strerror_s(errBuf, sizeof(errBuf), err) == 0) {
+		ret = errBuf;
+	} else {
+		ret = "err";
+	}
 #elif defined(_GNU_SOURCE)
-	return ::strerror_r(err, errBuf, sizeof(errBuf));
+	ret = ::strerror_r(err, errBuf, sizeof(errBuf));
 #else
 	if (strerror_r(err, errBuf, sizeof(errBuf)) == 0) {
-		return errBuf;
+		ret = errBuf;
 	} else {
-		return "strerror_r error";
+		ret = "err";
 	}
 #endif
+	char buf2[64];
+	CYBOZU_SNPRINTF(buf2, sizeof(buf2), "(%d)", err);
+	ret += buf2;
+	return ret;
 }
 
 class Exception : public std::exception {
@@ -158,6 +166,9 @@ public:
 		for (int i = 0; i < size; i++) {
 			ret[i] = (char)msg[i];
 		}
+		char buf2[64];
+		CYBOZU_SNPRINTF(buf2, sizeof(buf2), "(%d)", err_);
+		ret += buf2;
 		return ret;
 #else
 		return ConvertErrorNoToString(err_);
