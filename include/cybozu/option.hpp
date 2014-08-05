@@ -321,7 +321,7 @@ class Option {
 	std::string helpOpt_;
 	std::string help_;
 	std::string usage_;
-	std::string delimiter_;
+	StrVec delimiters_;
 	StrVec *remainsAfterDelimiter_;
 	int nextDelimiter_;
 	template<class T>
@@ -366,6 +366,10 @@ class Option {
 		size_t pos = name.find_last_of("/\\");
 		if (pos == std::string::npos) return name;
 		return name.substr(pos + 1);
+	}
+	bool inDelimiters(const std::string& str) const
+	{
+		return std::find(delimiters_.begin(), delimiters_.end(), str) != delimiters_.end();
 	}
 public:
 	Option()
@@ -479,9 +483,21 @@ public:
 	*/
 	void setDelimiter(const std::string& delimiter, std::vector<std::string> *remain = 0)
 	{
-		delimiter_ = delimiter;
+		delimiters_.push_back(delimiter);
 		remainsAfterDelimiter_ = remain;
 	}
+	/*
+		stop parsing after delimiter is found
+		@param delimiter [in] string to stop to append list of delimiters
+	*/
+	void appendDelimiter(const std::string& delimiter)
+	{
+		delimiters_.push_back(delimiter);
+	}
+	/*
+		clear list of delimiters
+	*/
+	void clearDelimiterList() { delimiters_.clear(); }
 	/*
 		return the next position of delimiter between [0, argc]
 		@note return argc if delimiter is not set nor found
@@ -491,16 +507,17 @@ public:
 		parse (argc, argv)
 		@param argc [in] argc of main
 		@param argv [in] argv of main
-		@param doThrow [in] whether throw exception or return false
+		@param startPos [in] start position of argc
+		@param progName [in] used instead of argv[0]
 	*/
-	bool parse(int argc, const char *const argv[])
+	bool parse(int argc, const char *const argv[], int startPos = 1, const char *progName = 0)
 	{
 		if (argc < 1) return false;
-		progName_ = getBaseName(argv[0]);
+		progName_ = getBaseName(progName ? progName : argv[0]);
 		nextDelimiter_ = argc;
 		OptionError err;
-		for (int pos = 1; pos < argc; pos++) {
-			if (!delimiter_.empty() && delimiter_ == argv[pos]) {
+		for (int pos = startPos; pos < argc; pos++) {
+			if (inDelimiters(argv[pos])) {
 				nextDelimiter_ = pos + 1;
 				if (remainsAfterDelimiter_) {
 					for (int i = nextDelimiter_; i < argc; i++) {
