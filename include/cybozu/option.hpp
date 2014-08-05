@@ -493,15 +493,9 @@ public:
 		@param argv [in] argv of main
 		@param doThrow [in] whether throw exception or return false
 	*/
-	bool parse(int argc, const char *const argv[], bool doThrow = false)
+	bool parse(int argc, const char *const argv[])
 	{
-		if (argc < 1) {
-			if (!doThrow) return false;
-			OptionError err;
-			err.set(OptionError::BAD_ARGC, 0);
-			err << argc;
-			throw err;
-		}
+		if (argc < 1) return false;
 		progName_ = getBaseName(argv[0]);
 		nextDelimiter_ = argc;
 		OptionError err;
@@ -615,7 +609,6 @@ public:
 		return true;
 	ERR:
 		assert(err.type);
-		if (doThrow) throw err;
 		printf("%s\n", err.what());
 		return false;
 	}
