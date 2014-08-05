@@ -623,14 +623,14 @@ public:
 		setTimeout(SO_RCVTIMEO, msec);
 	}
 	/**
-		get send timeout
+		get send timeout(msec)
 	*/
 	int getSendTimeout() const
 	{
 		return getTimeout(SO_SNDTIMEO);
 	}
 	/**
-		get receive timeout
+		get receive timeout(msec)
 	*/
 	int getReceiveTimeout() const
 	{
