@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 			{
 				char buf[128];
 				size_t readSize = client.readSome(buf, sizeof(buf));
-				printf("rec=%s\n", std::string(buf, readSize).c_str());
+				printf("rec=%s(%d)\n", std::string(buf, readSize).c_str(), (int)readSize);
 			}
 		}
 	} else {
