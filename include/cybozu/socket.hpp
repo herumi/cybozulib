@@ -389,6 +389,7 @@ public:
 		char *p = (char *)buf;
 		while (bufSize > 0) {
 			size_t readSize = readSome(p, bufSize);
+			if (readSize == 0) throw cybozu::Exception("Socket:read:readSize is zero");
 			p += readSize;
 			bufSize -= readSize;
 		}
