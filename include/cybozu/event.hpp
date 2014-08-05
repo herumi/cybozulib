@@ -7,6 +7,7 @@
 */
 
 #ifdef _WIN32
+	#include <winsock2.h>
 	#include <windows.h>
 #else
 	#include <unistd.h>
@@ -26,6 +27,8 @@ struct EventException : cybozu::Exception {
 #ifdef _WIN32
 class Event {
 	HANDLE event_;
+	Event(const Event&);
+	void operator=(const Event&);
 public:
 	Event()
 	{
@@ -61,6 +64,8 @@ class Event {
 	bool isSignaled_;
 	std::mutex m_;
 	std::condition_variable cv_;
+	Event(const Event&) = delete;
+	void operator=(const Event&) = delete;
 public:
 	Event() : isSignaled_(false) {}
 	void wakeup()
@@ -80,6 +85,8 @@ public:
 #else
 class Event {
 	int pipefd_[2];
+	Event(const Event&);
+	void operator=(const Event&);
 public:
 	Event()
 	{
