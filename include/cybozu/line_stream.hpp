@@ -2,8 +2,6 @@
 /**
 	@file
 	@brief line stream class
-
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 */
 #include <string>
 #include <memory.h>
@@ -36,11 +34,8 @@ const char CRLF[] = CYBOZU_STREAM_CRLF;
 
 	LinstStreamT<Reader> lineStream(reader);
 	for (;;) {
-		const std::string *line = lineStream.next();
-		if (line == 0) {
-		  // no data
-		  break;
-		}
+		std::string line;
+		if (!lineStream.next(line)) break;
 	}
 */
 template<class Reader>
@@ -51,9 +46,14 @@ class LineStreamT {
 	size_t bufSize_;
 	const char *next_;
 	bool eof_;
-	std::string line_;
 	LineStreamT(const LineStreamT&);
 	void operator=(const LineStreamT&);
+	void verifySize(const char *begin, const char *end) const
+	{
+		if (static_cast<uintptr_t>(end - begin) > maxLineSize_) {
+			throw cybozu::Exception("LineStreamT:next:line is too long") << cybozu::exception::makeString(begin, 10);
+		}
+	}
 public:
 	explicit LineStreamT(Reader& reader, size_t maxLineSize = 1024 * 2)
 		: reader_(reader)
@@ -85,10 +85,8 @@ public:
 						*end = endl;
 					}
 					*begin = next_;
+					verifySize(*begin, *end);
 					next_ = endl + 1;
-					if (static_cast<uintptr_t>(*end - *begin) > maxLineSize_) {
-						throw cybozu::Exception("LineStreamT:next:line is too long") << cybozu::exception::makeString(*begin, 10);
-					}
 					return true;
 				}
 				// move next_ to top of buf_
@@ -100,7 +98,7 @@ public:
 				bufSize_ = 0;
 			}
 			next_ = buf_.data();
-			size_t readSize = reader_.read(&buf_[bufSize_], buf_.size() - bufSize_);
+			size_t readSize = reader_.readSome(&buf_[bufSize_], buf_.size() - bufSize_);
 			if (readSize == 0) {
 				eof_ = true;
 				if (bufSize_ == 0) return false;
@@ -110,6 +108,7 @@ public:
 				// take all remain buffer
 				*begin= buf_.data();
 				*end = &buf_[bufSize_];
+				verifySize(*begin, *end);
 				return true;
 			}
 			bufSize_ += readSize;
@@ -117,18 +116,33 @@ public:
 	}
 	/**
 		get line
-		@remark return value will be destroyed by calling next()
-		you may modify returned string if not NULL
 	*/
-	std::string *next()
+	bool next(std::string& line)
 	{
 		const char *begin;
 		const char *end;
 		if (next(&begin, &end)) {
-			line_.assign(begin, end);
-			return &line_;
+			line.assign(begin, end);
+			return true;
 		}
-		return 0;
+		return false;
+	}
+	/*
+		get remaining raw data
+	*/
+	void getRemain(std::string& remain) const
+	{
+		if (eof_) {
+			remain.clear();
+		} else {
+			remain.assign(next_, &buf_[bufSize_]);
+		}
+	}
+	std::string getRemain() const
+	{
+		std::string remain;
+		getRemain(remain);
+		return remain;
 	}
 };
 
