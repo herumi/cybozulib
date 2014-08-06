@@ -25,7 +25,7 @@ struct Opt {
 		opt1.appendDelimiter("run");
 		opt1.appendDelimiter("status");
 		opt1.appendHelp("h");
-		opt1.setUsage("option2 (-x val) (init|run|status)", true);
+		opt1.setUsage("option2 [opt] (init|run|status)", true);
 
 		if (!opt1.parse(argc, argv)) return false;
 		const int pos = opt1.getNextPositionOfDelimiter();
