@@ -502,7 +502,7 @@ public:
 		return the next position of delimiter between [0, argc]
 		@note return argc if delimiter is not set nor found
 	*/
-	int getNextDelimiter() const { return nextDelimiter_; }
+	int getNextPositionOfDelimiter() const { return nextDelimiter_; }
 	/*
 		parse (argc, argv)
 		@param argc [in] argc of main
@@ -512,8 +512,8 @@ public:
 	*/
 	bool parse(int argc, const char *const argv[], int startPos = 1, const char *progName = 0)
 	{
-		if (argc < 1) return false;
-		progName_ = getBaseName(progName ? progName : argv[0]);
+		if (argc < 1 || startPos > argc) return false;
+		progName_ = getBaseName(progName ? progName : argv[startPos - 1]);
 		nextDelimiter_ = argc;
 		OptionError err;
 		for (int pos = startPos; pos < argc; pos++) {

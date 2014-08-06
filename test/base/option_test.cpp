@@ -416,7 +416,7 @@ CYBOZU_TEST_AUTO(delimiter)
 	CYBOZU_TEST_EQUAL(remain.size(), 2);
 	CYBOZU_TEST_EQUAL(remain[0], "abc");
 	CYBOZU_TEST_EQUAL(remain[1], "ccc");
-	CYBOZU_TEST_EQUAL(opt.getNextDelimiter(), 6);
+	CYBOZU_TEST_EQUAL(opt.getNextPositionOfDelimiter(), 6);
 	CYBOZU_TEST_EQUAL(remainAfterDelim.size(), 2);
 	CYBOZU_TEST_EQUAL(remainAfterDelim[0], "xyz");
 	CYBOZU_TEST_EQUAL(remainAfterDelim[1], "XXX");
