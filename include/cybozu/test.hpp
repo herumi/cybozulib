@@ -226,6 +226,23 @@ int main(int argc, char *argv[])
 		std::cout << "ctest:  rhs=" << static_cast<const void*>(y) << std::endl; \
 	} \
 }
+/**
+	alert if x[] != y[]
+	@param x [in]
+	@param y [in]
+	@param n [in]
+*/
+#define CYBOZU_TEST_EQUAL_ARRAY(x, y, n) { \
+	for (size_t i = 0, ie = (size_t)(n); i < ie; i++) { \
+		bool eq = cybozu::test::isEqual(x, y); \
+		cybozu::test::test(eq, "CYBOZU_TEST_EQUAL_ARRAY", #x ", " #y, __FILE__, __LINE__); \
+		if (!eq) { \
+			std::cout << "ctest:  i=" << i << std::endl; \
+			std::cout << "ctest:  lhs=" << (x) << std::endl; \
+			std::cout << "ctest:  rhs=" << (y) << std::endl; \
+		} \
+	} \
+}
 
 /**
 	always alert
