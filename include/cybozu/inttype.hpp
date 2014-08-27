@@ -46,19 +46,11 @@
 		#define CYBOZU_ALLOCA_(x) __builtin_alloca(x)
 	#endif
 #endif
-#ifndef CYBOZU_FOREACH
-	// std::vector<int> v; CYBOZU_FOREACH(auto x, v) {...}
-	#if defined(_MSC_VER) && (_MSC_VER >= 1400)
-		#define CYBOZU_FOREACH(type_x, xs) for each (type_x in xs)
-	#elif defined(__GNUC__)
-		#define CYBOZU_FOREACH(type_x, xs) for (type_x : xs)
-	#endif
-#endif
 #ifndef CYBOZU_NUM_OF_ARRAY
 	#define CYBOZU_NUM_OF_ARRAY(x) (sizeof(x) / sizeof(*x))
 #endif
 #ifndef CYBOZU_SNPRINTF
-	#ifdef _MSC_VER
+	#if defined(_MSC_VER) && (_MSC_VER < 1900)
 		#define CYBOZU_SNPRINTF(x, len, ...) (void)_snprintf_s(x, len, len - 1, __VA_ARGS__)
 	#else
 		#define CYBOZU_SNPRINTF(x, len, ...) (void)snprintf(x, len, __VA_ARGS__)
