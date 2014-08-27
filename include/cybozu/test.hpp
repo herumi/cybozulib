@@ -234,12 +234,12 @@ int main(int argc, char *argv[])
 */
 #define CYBOZU_TEST_EQUAL_ARRAY(x, y, n) { \
 	for (size_t i = 0, ie = (size_t)(n); i < ie; i++) { \
-		bool eq = cybozu::test::isEqual(x, y); \
-		cybozu::test::test(eq, "CYBOZU_TEST_EQUAL_ARRAY", #x ", " #y, __FILE__, __LINE__); \
+		bool eq = cybozu::test::isEqual((x)[i], (y)[i]); \
+		cybozu::test::test(eq, "CYBOZU_TEST_EQUAL_ARRAY", #x ", " #y ", " #n, __FILE__, __LINE__); \
 		if (!eq) { \
 			std::cout << "ctest:  i=" << i << std::endl; \
-			std::cout << "ctest:  lhs=" << (x) << std::endl; \
-			std::cout << "ctest:  rhs=" << (y) << std::endl; \
+			std::cout << "ctest:  lhs=" << (x)[i] << std::endl; \
+			std::cout << "ctest:  rhs=" << (y)[i] << std::endl; \
 		} \
 	} \
 }
