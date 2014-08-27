@@ -171,7 +171,8 @@ CYBOZU_TEST_AUTO(AlignedArray_move)
 		cybozu::AlignedArray<X> z(std::move(x));
 		const X* pz = &z[0];
 		CYBOZU_TEST_EQUAL(pz, px);
-		CYBOZU_TEST_EQUAL(z.data(), x.data());
+		CYBOZU_TEST_EQUAL(x.data(), (X*)0);
+		CYBOZU_TEST_EQUAL(z.data(), px);
 		CYBOZU_TEST_EQUAL(z.size(), 10);
 		for (int i = 0; i < 10; i++) {
 			CYBOZU_TEST_EQUAL(z[i].v, i);
