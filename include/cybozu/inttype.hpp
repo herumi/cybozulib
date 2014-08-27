@@ -5,7 +5,8 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 
-#if defined(_MSC_VER) && (MSC_VER <= 1500)
+#if defined(_MSC_VER) && (MSC_VER <= 1500) && !defined(CYBOZU_DEFINED_INTXX)
+	#define CYBOZU_DEFINED_INTXX
 	typedef __int64 int64_t;
 	typedef unsigned __int64 uint64_t;
 	typedef unsigned int uint32_t;
@@ -36,6 +37,13 @@
 		#define CYBOZU_ALIGN(x) __declspec(align(x))
 	#else
 		#define CYBOZU_ALIGN(x) __attribute__((aligned(x)))
+	#endif
+#endif
+#ifndef CYBOZU_FORCE_INLINE
+	#ifdef _MSC_VER
+		#define CYBOZU_FORCE_INLINE __forceinline
+	#else
+		#define CYBOZU_FORCE_INLINE __attribute__((always_inline))
 	#endif
 #endif
 #ifndef CYBOZU_ALLOCA
