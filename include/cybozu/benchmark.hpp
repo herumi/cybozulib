@@ -139,16 +139,16 @@ static int CYBOZU_UNUSED g_loopNum;
 */
 #define CYBOZU_BENCH(msg, func, ...) \
 { \
-	const uint64_t maxClk = cybozu::CpuClock::maxClk; \
-	cybozu::CpuClock clk; \
-	for (int i = 0; i < cybozu::CpuClock::loopN2; i++) { \
-		clk.begin(); \
-		for (int j = 0; j < cybozu::CpuClock::loopN1; j++) { func(__VA_ARGS__); } \
-		clk.end(); \
-		if (clk.getClock() > maxClk) break; \
+	const uint64_t _cybozu_maxClk = cybozu::CpuClock::maxClk; \
+	cybozu::CpuClock _cybozu_clk; \
+	for (int _cybozu_i = 0; _cybozu_i < cybozu::CpuClock::loopN2; _cybozu_i++) { \
+		_cybozu_clk.begin(); \
+		for (int _cybozu_j = 0; _cybozu_j < cybozu::CpuClock::loopN1; _cybozu_j++) { func(__VA_ARGS__); } \
+		_cybozu_clk.end(); \
+		if (_cybozu_clk.getClock() > _cybozu_maxClk) break; \
 	} \
-	if (msg && *msg) clk.put(msg, cybozu::CpuClock::loopN1); \
-	cybozu::bench::g_clk = clk; cybozu::bench::g_loopNum = cybozu::CpuClock::loopN1; \
+	if (msg && *msg) _cybozu_clk.put(msg, cybozu::CpuClock::loopN1); \
+	cybozu::bench::g_clk = _cybozu_clk; cybozu::bench::g_loopNum = cybozu::CpuClock::loopN1; \
 }
 
 /*
@@ -158,12 +158,12 @@ static int CYBOZU_UNUSED g_loopNum;
 */
 #define CYBOZU_BENCH_C(msg, _N, func, ...) \
 { \
-	cybozu::CpuClock clk; \
-	clk.begin(); \
-	for (int j = 0; j < _N; j++) { func(__VA_ARGS__); } \
-	clk.end(); \
-	if (msg && *msg) clk.put(msg, _N); \
-	cybozu::bench::g_clk = clk; cybozu::bench::g_loopNum = _N; \
+	cybozu::CpuClock _cybozu_clk; \
+	_cybozu_clk.begin(); \
+	for (int _cybozu_j = 0; _cybozu_j < _N; _cybozu_j++) { func(__VA_ARGS__); } \
+	_cybozu_clk.end(); \
+	if (msg && *msg) _cybozu_clk.put(msg, _N); \
+	cybozu::bench::g_clk = _cybozu_clk; cybozu::bench::g_loopNum = _N; \
 }
 
 } // cybozu
