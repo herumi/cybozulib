@@ -12,16 +12,18 @@
 
 namespace cybozu {
 
-class BitVector {
+template<class T>
+class BitVectorT {
+	static const size_t unitSize = sizeof(T) * 8;
 	size_t bitSize_;
-	std::vector<uint64_t> v_;
+	std::vector<T> v_;
 public:
-	BitVector() : bitSize_(0) {}
-	BitVector(const uint64_t *buf, size_t bitSize)
+	BitVectorT() : bitSize_(0) {}
+	BitVectorT(const T *buf, size_t bitSize)
 	{
 		init(buf, bitSize);
 	}
-	void init(const uint64_t *buf, size_t bitSize)
+	void init(const T *buf, size_t bitSize)
 	{
 		resize(bitSize);
 		std::copy(buf, buf + v_.size(), &v_[0]);
@@ -29,14 +31,14 @@ public:
 	void resize(size_t bitSize)
 	{
 		bitSize_ = bitSize;
-		v_.resize((bitSize + 63) / 64);
+		v_.resize((bitSize + unitSize - 1) / unitSize);
 	}
 	bool get(size_t idx) const
 	{
-		size_t q = idx / 64;
-		size_t r = idx % 64;
-		if (q >= v_.size()) throw cybozu::Exception("BitVector:get bad idx") << idx;
-		return (v_[q] & (uint64_t(1) << r)) != 0;
+		if (idx >= bitSize_) throw cybozu::Exception("BitVectorT:get:bad idx") << idx;
+		size_t q = idx / unitSize;
+		size_t r = idx % unitSize;
+		return (v_[q] & (T(1) << r)) != 0;
 	}
 	void clear()
 	{
@@ -54,23 +56,25 @@ public:
 	// set(idx, true);
 	void set(size_t idx)
 	{
-		size_t q = idx / 64;
-		size_t r = idx % 64;
-		if (q >= v_.size()) throw cybozu::Exception("BitVector:set bad idx") << idx;
-		v_[q] |= uint64_t(1) << r;
+		if (idx >= bitSize_) throw cybozu::Exception("BitVectorT:set:bad idx") << idx;
+		size_t q = idx / unitSize;
+		size_t r = idx % unitSize;
+		v_[q] |= T(1) << r;
 	}
 	// set(idx, false);
 	void reset(size_t idx)
 	{
-		size_t q = idx / 64;
-		size_t r = idx % 64;
-		if (q >= v_.size()) throw cybozu::Exception("BitVector:reset bad idx") << idx;
-		v_[q] &= ~(uint64_t(1) << r);
+		if (idx >= bitSize_) throw cybozu::Exception("BitVectorT:reset:bad idx") << idx;
+		size_t q = idx / unitSize;
+		size_t r = idx % unitSize;
+		v_[q] &= ~(T(1) << r);
 	}
 	size_t size() const { return bitSize_; }
-	const uint64_t *getBlock() const { return &v_[0]; }
-	uint64_t *getBlock() { return &v_[0]; }
+	const T *getBlock() const { return &v_[0]; }
+	T *getBlock() { return &v_[0]; }
 	size_t getBlockSize() const { return v_.size(); }
 };
+
+typedef BitVectorT<size_t> BitVector;
 
 } // cybozu
