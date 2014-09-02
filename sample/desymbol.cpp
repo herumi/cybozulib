@@ -2,6 +2,8 @@
 	convert <addr> to <file:line addr>
 	input stdin
 	output stdout
+	sudo apt-get install libbfd-dev
+	build this with -lbfd
 */
 #include <stdio.h>
 #include <stdlib.h>
