@@ -95,8 +95,8 @@ CYBOZU_TEST_AUTO(ShiftRightBit)
 
 CYBOZU_TEST_AUTO(append)
 {
-	const uint16_t src1[] = { 0x3210, 0x7654, 0xba98, 0xfedc };
-	const uint16_t src2[] = { 0xabcd, 0xfebd, 0xffff, 0x5224 };
+	const uint16_t src1[] = { 0x3210, 0x7654, 0xba98 };
+	const uint16_t src2[] = { 0xabcd, 0xfebd, 0xffff };
 	typedef cybozu::BitVectorT<uint16_t> Vec;
 	{
 		Vec v1;
@@ -116,6 +116,23 @@ CYBOZU_TEST_AUTO(append)
 			v1.append(src2, j);
 			v2.append(src2, j);
 			verifyVec(v1, v2);
+		}
+	}
+}
+
+CYBOZU_TEST_AUTO(extract)
+{
+	const uint16_t src1[] = { 0x3210, 0x7654, 0xba98, 0xabcd, 0x98db };
+	typedef cybozu::BitVectorT<uint16_t> Vec;
+	Vec v;
+	v.append(src1, sizeof(src1) * 8);
+	for (size_t pos = 0; pos <= 33; pos++) {
+		for (size_t bitLen = 0; bitLen <= 33; bitLen++) {
+			uint16_t dst[3];
+			v.extract(dst, pos, bitLen);
+			for (size_t i = 0; i < bitLen; i++) {
+				CYBOZU_TEST_EQUAL(v.get(pos + i), cybozu::GetBlockBit(dst, i));
+			}
 		}
 	}
 }

@@ -222,6 +222,23 @@ public:
 			v_[v_.size() - 1] = over;
 		}
 	}
+	/*
+		dst[0, bitLen) = vec[pos, pos + bitLen)
+	*/
+	void extract(T* dst, size_t pos, size_t bitLen) const
+	{
+		if (bitLen == 0) return;
+		if (pos + bitLen >= bitLen_) {
+			throw cybozu::Exception("BitVectorT:bad range") << bitLen << pos << bitLen_;
+		}
+		const size_t q = pos / unitSize;
+		const size_t r = pos % unitSize;
+		if (r == 0) {
+			CopyBit<T>(dst, &v_[q], bitLen);
+			return;
+		}
+		ShiftRightBit<T>(dst, &v_[q], bitLen + r, r);
+	}
 };
 
 typedef BitVectorT<size_t> BitVector;
