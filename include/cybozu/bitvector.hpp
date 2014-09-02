@@ -219,17 +219,39 @@ public:
 	void append(const T* src, size_t bitLen)
 	{
 		if (bitLen == 0) return;
-		const size_t sq = bitLen_ / unitSize;
-		const size_t sr = bitLen_ % unitSize;
+		const size_t q = bitLen_ / unitSize;
+		const size_t r = bitLen_ % unitSize;
 		resize(bitLen_ + bitLen);
-		if (sr == 0) {
-			CopyBit<T>(&v_[sq], src, bitLen);
+		if (r == 0) {
+			CopyBit<T>(&v_[q], src, bitLen);
 			return;
 		}
-		T over = ShiftLeftBit<T>(&v_[sq], src, bitLen, sr, v_[sq] & GetMaskBit<T>(sr));
-		if (RoundupBit<T>(bitLen + sr) > RoundupBit<T>(bitLen)) {
+		T over = ShiftLeftBit<T>(&v_[q], src, bitLen, r, v_[q] & GetMaskBit<T>(r));
+		if (RoundupBit<T>(bitLen + r) > RoundupBit<T>(bitLen)) {
 			v_[v_.size() - 1] = over;
 		}
+	}
+	/*
+		append src & mask(bitLen)
+	*/
+	void append(uint64_t src, size_t bitLen)
+	{
+		if (bitLen == 0) return;
+		if (bitLen > unitSize) {
+			throw cybozu::Exception("BitVectorT:append:bad bitLen") << bitLen;
+		}
+		if (bitLen < unitSize) {
+			src &= GetMaskBit<T>(bitLen);
+		}
+		const size_t q = bitLen_ / unitSize;
+		const size_t r = bitLen_ % unitSize;
+		resize(bitLen_ + bitLen);
+		if (r == 0) {
+			v_[q] = T(src);
+			return;
+		}
+		v_[q] |= T(src << r);
+		v_[q + 1] = T(src >> (unitSize - r));
 	}
 	/*
 		append bitVector

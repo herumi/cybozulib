@@ -120,7 +120,7 @@ CYBOZU_TEST_AUTO(append)
 		v2.append(src1, 2);
 		v1.append(src2, 16);
 		v2.append(src2, 16);
-		verifyVec(v1, v2);
+		CYBOZU_TEST_ASSERT(v1 == v2);
 		Vec v3, v4;
 		v3.append(src1, 2);
 		v4.append(src2, 16);
@@ -135,12 +135,23 @@ CYBOZU_TEST_AUTO(append)
 			v2.append(src1, i);
 			v1.append(src2, j);
 			v2.append(src2, j);
-			verifyVec(v1, v2);
+			CYBOZU_TEST_ASSERT(v1 == v2);
 			Vec v3, v4;
 			v3.append(src1, i);
 			v4.append(src2, j);
 			v3.append(v4);
 			CYBOZU_TEST_ASSERT(v1 == v3);
+		}
+	}
+	for (size_t i = 0; i < 16; i++) {
+		for (size_t j = 0; j < 16; j++) {
+			Vec v1;
+			StdVec v2;
+			v1.append(src1[0], i);
+			v2.append(src1[0], i);
+			v1.append(src2[0], j);
+			v2.append(src2[0], j);
+			CYBOZU_TEST_ASSERT(v1 == v2);
 		}
 	}
 }
