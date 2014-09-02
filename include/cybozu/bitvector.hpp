@@ -239,6 +239,29 @@ public:
 		}
 		ShiftRightBit<T>(dst, &v_[q], bitLen + r, r);
 	}
+	/*
+		return vec[pos, pos + bitLen)
+	*/
+	T extract(size_t pos, size_t bitLen) const
+	{
+		if (bitLen == 0) return 0;
+		if (bitLen > unitSize || pos + bitLen >= bitLen_) {
+			throw cybozu::Exception("BitVectorT:bad range") << bitLen << pos << bitLen_;
+		}
+		const size_t q = pos / unitSize;
+		const size_t r = pos % unitSize;
+		T v;
+		if (r == 0) {
+			v = v_[q];
+		} else {
+			v = (v_[q] >> r) | v_[q + 1] << (unitSize - r);
+		}
+		if (bitLen == unitSize) {
+			return v;
+		} else {
+			return v & GetMaskBit<T>(bitLen);
+		}
+	}
 };
 
 typedef BitVectorT<size_t> BitVector;
