@@ -244,8 +244,8 @@ public:
 	void extract(T* dst, size_t pos, size_t bitLen) const
 	{
 		if (bitLen == 0) return;
-		if (pos + bitLen >= bitLen_) {
-			throw cybozu::Exception("BitVectorT:bad range") << bitLen << pos << bitLen_;
+		if (pos + bitLen > bitLen_) {
+			throw cybozu::Exception("BitVectorT:extract:bad range") << bitLen << pos << bitLen_;
 		}
 		const size_t q = pos / unitSize;
 		const size_t r = pos % unitSize;
@@ -269,8 +269,8 @@ public:
 	T extract(size_t pos, size_t bitLen) const
 	{
 		if (bitLen == 0) return 0;
-		if (bitLen > unitSize || pos + bitLen >= bitLen_) {
-			throw cybozu::Exception("BitVectorT:bad range") << bitLen << pos << bitLen_;
+		if (bitLen > unitSize || pos + bitLen > bitLen_) {
+			throw cybozu::Exception("BitVectorT:extract:bad range") << bitLen << pos << bitLen_;
 		}
 		const size_t q = pos / unitSize;
 		const size_t r = pos % unitSize;
