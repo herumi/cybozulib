@@ -134,6 +134,13 @@ CYBOZU_TEST_AUTO(extract)
 				CYBOZU_TEST_EQUAL(v.get(pos + i), cybozu::GetBlockBit(dst, i));
 			}
 		}
+		for (size_t bitLen = 0; bitLen <= 33; bitLen++) {
+			Vec v2;
+			v.extract(v2, pos, bitLen);
+			for (size_t i = 0; i < bitLen; i++) {
+				CYBOZU_TEST_EQUAL(v.get(pos + i), v2.get(i));
+			}
+		}
 		for (size_t bitLen = 0; bitLen <= 16; bitLen++) {
 			uint16_t r = v.extract(pos, bitLen);
 			for (size_t i = 0; i < bitLen; i++) {

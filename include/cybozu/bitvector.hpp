@@ -240,6 +240,14 @@ public:
 		ShiftRightBit<T>(dst, &v_[q], bitLen + r, r);
 	}
 	/*
+		dst = vec[pos, pos + bitLen)
+	*/
+	void extract(cybozu::BitVectorT<T>& dst, size_t pos, size_t bitLen) const
+	{
+		dst.resize(bitLen);
+		extract(dst.getBlock(), pos, bitLen);
+	}
+	/*
 		return vec[pos, pos + bitLen)
 	*/
 	T extract(size_t pos, size_t bitLen) const
