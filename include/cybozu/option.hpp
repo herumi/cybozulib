@@ -256,7 +256,7 @@ public:
 
 class Option {
 	enum Mode { // for opt
-		N_is0 = 0,
+		N_is0 = 0, // for bool by appendBoolOpt()
 		N_is1 = 1,
 		N_any = 2
 	};
@@ -352,11 +352,6 @@ class Option {
 		if ('0' <= c && c <= '9') return false;
 		return true;
 	}
-	void append(bool *pvar, const bool& defaultVal, bool isMust, const char *opt, const std::string& help = "")
-	{
-		*pvar = defaultVal;
-		appendSub(pvar, N_is0, isMust, opt, help);
-	}
 	void verifyParamMode()
 	{
 		if (paramMode_ != P_exact) throw cybozu::Exception("Option:appendParamVec:appendParam is forbidden after appendParamOpt/appendParamVec");
@@ -399,9 +394,13 @@ public:
 	{
 		append(pvar, defaultVal, false, opt, help);
 	}
+	/*
+		default value of *pvar is false
+	*/
 	void appendBoolOpt(bool *pvar, const char *opt, const std::string& help = "")
 	{
-		append(pvar, false, false, opt, help);
+		*pvar = false;
+		appendSub(pvar, N_is0, false, opt, help);
 	}
 	/*
 		append necessary option
@@ -540,10 +539,13 @@ public:
 
 				Info& info = infoVec_[i->second];
 				switch (info.mode) {
-				case N_is0:
-					if (!info.var.set("1")) {
-						err.set(OptionError::BAD_VALUE, pos);
-						goto ERR;
+				case N_is0: // toggle bool
+					{
+						bool curr = *(const bool*)info.var.get();
+						if (!info.var.set(curr ? "0" : "1")) {
+							err.set(OptionError::BAD_VALUE, pos);
+							goto ERR;
+						}
 					}
 					break;
 				case N_is1:

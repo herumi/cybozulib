@@ -239,6 +239,60 @@ CYBOZU_TEST_AUTO(appendOpt)
 	}
 }
 
+CYBOZU_TEST_AUTO(appendOpt_bool)
+{
+	bool b = true;
+	cybozu::Option opt;
+	opt.appendOpt(&b, false, "b");
+	CYBOZU_TEST_ASSERT(!b);
+	{
+		const char *argv[] = { progName };
+		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_ASSERT(!opt.isSet(&b));
+	}
+	{
+		const char *argv[] = { progName, "-b", "0" };
+		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_ASSERT(opt.isSet(&b));
+	}
+	{
+		const char *argv[] = { progName, "-b", "1" };
+		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
+		CYBOZU_TEST_ASSERT(b);
+		CYBOZU_TEST_ASSERT(opt.isSet(&b));
+	}
+}
+
+CYBOZU_TEST_AUTO(appendBoolOpt)
+{
+	cybozu::Option opt;
+	bool b = true;
+	opt.appendBoolOpt(&b, "b");
+	CYBOZU_TEST_ASSERT(!b);
+	{
+		const char *argv[] = { progName };
+		CYBOZU_TEST_ASSERT(opt.parse(1, argv));
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_ASSERT(!opt.isSet(&b));
+	}
+	{
+		b = false;
+		const char *argv[] = { progName, "-b" };
+		CYBOZU_TEST_ASSERT(opt.parse(2, argv));
+		CYBOZU_TEST_ASSERT(b);
+		CYBOZU_TEST_ASSERT(opt.isSet(&b));
+	}
+	{
+		b = false;
+		const char *argv[] = { progName, "-b", "-b" };
+		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
+		CYBOZU_TEST_ASSERT(!b); // toggle
+		CYBOZU_TEST_ASSERT(opt.isSet(&b));
+	}
+}
+
 CYBOZU_TEST_AUTO(appendMust)
 {
 	cybozu::Option opt;
