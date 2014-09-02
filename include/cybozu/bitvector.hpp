@@ -223,6 +223,13 @@ public:
 		}
 	}
 	/*
+		append bitVector
+	*/
+	void append(const BitVectorT<T>& v)
+	{
+		append(v.getBlock(), v.size());
+	}
+	/*
 		dst[0, bitLen) = vec[pos, pos + bitLen)
 	*/
 	void extract(T* dst, size_t pos, size_t bitLen) const
@@ -242,7 +249,7 @@ public:
 	/*
 		dst = vec[pos, pos + bitLen)
 	*/
-	void extract(cybozu::BitVectorT<T>& dst, size_t pos, size_t bitLen) const
+	void extract(BitVectorT<T>& dst, size_t pos, size_t bitLen) const
 	{
 		dst.resize(bitLen);
 		extract(dst.getBlock(), pos, bitLen);
@@ -270,6 +277,8 @@ public:
 			return v & GetMaskBit<T>(bitLen);
 		}
 	}
+	bool operator==(const BitVectorT<T>& rhs) const { return v_ == rhs.v_; }
+	bool operator!=(const BitVectorT<T>& rhs) const { return v_ != rhs.v_; }
 };
 
 typedef BitVectorT<size_t> BitVector;
