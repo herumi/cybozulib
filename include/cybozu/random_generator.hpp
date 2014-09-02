@@ -114,4 +114,21 @@ private:
 	FILE *fp_;
 };
 
+template<class T, class RG>
+void shuffle(T* v, size_t n, RG& rg)
+{
+	if (n <= 1) return;
+	for (size_t i = 0; i < n - 1; i++) {
+		size_t r = i + size_t(rg.get64() % (n - i));
+		using namespace std;
+		swap(v[i], v[r]);
+	}
+}
+
+template<class V, class RG>
+void shuffle(V& v, RG& rg)
+{
+	shuffle(v.data(), v.size(), rg);
+}
+
 } // cybozu
