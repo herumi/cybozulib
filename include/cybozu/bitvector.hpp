@@ -164,7 +164,16 @@ public:
 	void resize(size_t bitLen)
 	{
 		bitLen_ = bitLen;
-		v_.resize(RoundupBit<T>(bitLen));
+		const size_t q = bitLen / unitSize;
+		const size_t r = bitLen % unitSize;
+		if (r == 0) {
+			v_.resize(q);
+		} else {
+			// ensure zero out of [0, bitLen)
+			v_.resize(q + 1);
+			T mask = GetMaskBit<T>(r);
+			v_[q] &= mask;
+		}
 	}
 	void reserve(size_t bitLen)
 	{

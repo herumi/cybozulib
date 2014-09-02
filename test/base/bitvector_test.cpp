@@ -22,6 +22,21 @@ CYBOZU_TEST_AUTO(set)
 	}
 }
 
+CYBOZU_TEST_AUTO(resize)
+{
+	uint16_t x[] = { 0x1234, 0x5678, 0x9abc };
+	cybozu::BitVectorT<uint16_t> v;
+	v.append(x, 48);
+	CYBOZU_TEST_EQUAL(v.size(), 48);
+	CYBOZU_TEST_EQUAL(v.getBlock()[2], x[2]);
+	uint16_t val = x[2];
+	for (size_t i = 47; i >= 33; i--) {
+		v.resize(i);
+		CYBOZU_TEST_EQUAL(v.size(), i);
+		CYBOZU_TEST_EQUAL(v.getBlock()[2], val & cybozu::GetMaskBit<uint16_t>(i - 32));
+	}
+}
+
 struct StdVec : std::vector<bool> {
 	template<class T>
 	void append(const T*src, size_t bitLen)
