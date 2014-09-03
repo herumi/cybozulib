@@ -46,15 +46,24 @@ struct StdVec : std::vector<bool> {
 			push_back(b);
 		}
 	}
+	void append(size_t src, size_t bitLen)
+	{
+		for (size_t i = 0; i < bitLen; i++) {
+			bool b = (src & (size_t(1) << i)) != 0;
+			push_back(b);
+		}
+	}
 };
 
 template<class T>
 void verifyVec(const T& v1, const StdVec& v2)
 {
 	CYBOZU_TEST_EQUAL(v1.size(), v2.size());
+	int sum = 0;
 	for (size_t i = 0; i < v1.size(); i++) {
-		CYBOZU_TEST_EQUAL(v1.get(i), v2[i]);
+		sum += v1.get(i) ^ v2[i];
 	}
+	CYBOZU_TEST_EQUAL(sum, 0);
 }
 
 CYBOZU_TEST_AUTO(ShiftLeftBit)
@@ -77,7 +86,7 @@ CYBOZU_TEST_AUTO(ShiftLeftBit)
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		uint32_t z[4];
 		uint32_t ret = cybozu::ShiftLeftBit(z, tbl[i].x, tbl[i].bitLen, tbl[i].shift, tbl[i].y);
-		const uint32_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
+		const size_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
 		CYBOZU_TEST_EQUAL_ARRAY(z, tbl[i].z, n);
 		CYBOZU_TEST_EQUAL(ret, tbl[i].ret);
 	}
@@ -103,7 +112,7 @@ CYBOZU_TEST_AUTO(ShiftRightBit)
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		uint32_t z[4];
 		cybozu::ShiftRightBit(z, tbl[i].x, tbl[i].bitLen, tbl[i].shift);
-		const uint32_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
+		const size_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
 		CYBOZU_TEST_EQUAL_ARRAY(z, tbl[i].z, n);
 	}
 }
@@ -120,7 +129,7 @@ CYBOZU_TEST_AUTO(append)
 		v2.append(src1, 2);
 		v1.append(src2, 16);
 		v2.append(src2, 16);
-		CYBOZU_TEST_ASSERT(v1 == v2);
+		verifyVec(v1, v2);
 		Vec v3, v4;
 		v3.append(src1, 2);
 		v4.append(src2, 16);
@@ -135,7 +144,7 @@ CYBOZU_TEST_AUTO(append)
 			v2.append(src1, i);
 			v1.append(src2, j);
 			v2.append(src2, j);
-			CYBOZU_TEST_ASSERT(v1 == v2);
+			verifyVec(v1, v2);
 			Vec v3, v4;
 			v3.append(src1, i);
 			v4.append(src2, j);
@@ -151,7 +160,7 @@ CYBOZU_TEST_AUTO(append)
 			v2.append(src1[0], i);
 			v1.append(src2[0], j);
 			v2.append(src2[0], j);
-			CYBOZU_TEST_ASSERT(v1 == v2);
+			verifyVec(v1, v2);
 		}
 	}
 }
@@ -163,25 +172,31 @@ CYBOZU_TEST_AUTO(extract)
 	Vec v;
 	v.append(src1, sizeof(src1) * 8);
 	for (size_t pos = 0; pos <= 33; pos++) {
+		int sum = 0;
 		for (size_t bitLen = 0; bitLen <= 33; bitLen++) {
 			uint16_t dst[3];
 			v.extract(dst, pos, bitLen);
 			for (size_t i = 0; i < bitLen; i++) {
-				CYBOZU_TEST_EQUAL(v.get(pos + i), cybozu::GetBlockBit(dst, i));
+				sum += v.get(pos + i) ^ cybozu::GetBlockBit(dst, i);
 			}
 		}
+		CYBOZU_TEST_EQUAL(sum, 0);
+		sum = 0;
 		for (size_t bitLen = 0; bitLen <= 33; bitLen++) {
 			Vec v2;
 			v.extract(v2, pos, bitLen);
 			for (size_t i = 0; i < bitLen; i++) {
-				CYBOZU_TEST_EQUAL(v.get(pos + i), v2.get(i));
+				sum += v.get(pos + i) ^ v2.get(i);
 			}
 		}
+		CYBOZU_TEST_EQUAL(sum, 0);
+		sum = 0;
 		for (size_t bitLen = 0; bitLen <= 16; bitLen++) {
 			uint16_t r = v.extract(pos, bitLen);
 			for (size_t i = 0; i < bitLen; i++) {
-				CYBOZU_TEST_EQUAL(v.get(pos + i), cybozu::GetBlockBit(&r, i));
+				sum += v.get(pos + i) ^ cybozu::GetBlockBit(&r, i);
 			}
 		}
+		CYBOZU_TEST_EQUAL(sum, 0);
 	}
 }
