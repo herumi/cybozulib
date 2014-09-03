@@ -171,8 +171,10 @@ public:
 		} else {
 			// ensure zero out of [0, bitLen)
 			v_.resize(q + 1);
-			T mask = GetMaskBit<T>(r);
-			v_[q] &= mask;
+			T v = v_[q];
+			if (v > 0) {
+				v_[q] = v & GetMaskBit<T>(r);
+			}
 		}
 	}
 	void reserve(size_t bitLen)
