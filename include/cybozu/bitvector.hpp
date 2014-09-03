@@ -301,6 +301,8 @@ public:
 		T v;
 		if (r == 0) {
 			v = v_[q];
+		} else if (q == v_.size() - 1) {
+			v = v_[q] >> r;
 		} else {
 			v = (v_[q] >> r) | v_[q + 1] << (unitSize - r);
 		}
