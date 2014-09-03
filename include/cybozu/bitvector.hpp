@@ -106,12 +106,50 @@ T ShiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift, T ext = 0)
 }
 
 namespace bitvector_local {
+
+/*
+	dst[] = src[] << shift
+	dst[0..shift) does not change
+
+	@param dst [out] dst[shift..bitLen + shift)
+	@param src [in] src[0..bitLen)
+	@param bitLen [in] read bit size
+	@param shift [in] 0 <= shift < unitSize
+*/
+template<class T>
+void shiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift)
+{
+	const size_t unitSize = sizeof(T) * 8;
+
+	assert(bitLen);
+	assert(0 < shift && shift < unitSize);
+
+	const size_t dstN = RoundupBit<T>(bitLen + shift);
+	const size_t srcN = RoundupBit<T>(bitLen);
+	const size_t r = bitLen % unitSize;
+	const T mask = r ? GetMaskBit<T>(r) : T(-1);
+	const size_t revShift = unitSize - shift;
+
+	T prev = src[srcN - 1] & mask;
+	if (dstN > srcN) {
+		dst[dstN - 1] = prev >> revShift;
+	}
+	for (size_t i = srcN - 1; i > 0; i--) {
+		T v = src[i - 1];
+		dst[i] = (prev << shift) | (v >> revShift);
+		prev = v;
+	}
+	T ext = dst[0] & GetMaskBit<T>(shift);
+	dst[0] = (prev << shift) | ext;
+}
+
 /*
 	dst[] = src[] >> shift
+
 	@param dst [out] dst[0..bitLen)
 	@param src [in] src[shift..bitLen + shift)
 	@param bitLen [in] write bit size
-	@param shift [in] 0 <= shift < (sizeof(T) * 8)
+	@param shift [in] 0 <= shift < unitSize
 	@note src[bitLen + shift - 1] is accessable
 */
 template<class T>
@@ -140,7 +178,9 @@ void shiftRightBit(T* dst, const T* src, size_t bitLen, size_t shift)
 	// i = srcN - 1
 	T v = src[srcN - 1] & mask;
 	dst[srcN - 2] = (prev >> shift) | (v << revShift);
-	if (srcN == dstN) dst[srcN - 1] = v >> shift;
+	if (srcN == dstN) {
+		dst[srcN - 1] = v >> shift;
+	}
 }
 
 } // cybozu::bitvector_local
@@ -222,10 +262,7 @@ public:
 			CopyBit<T>(&v_[q], src, bitLen);
 			return;
 		}
-		T over = ShiftLeftBit<T>(&v_[q], src, bitLen, r, v_[q] & GetMaskBit<T>(r));
-		if (RoundupBit<T>(bitLen + r) > RoundupBit<T>(bitLen)) {
-			v_[v_.size() - 1] = over;
-		}
+		bitvector_local::shiftLeftBit<T>(&v_[q], src, bitLen, r);
 	}
 	/*
 		append src & mask(bitLen)
@@ -302,11 +339,10 @@ public:
 		} else {
 			v = (v_[q] >> r) | v_[q + 1] << (unitSize - r);
 		}
-		if (bitLen == unitSize) {
-			return v;
-		} else {
-			return v & GetMaskBit<T>(bitLen);
+		if (bitLen < unitSize) {
+			v &= GetMaskBit<T>(bitLen);
 		}
+		return v;
 	}
 	bool operator==(const BitVectorT<T>& rhs) const { return v_ == rhs.v_; }
 	bool operator!=(const BitVectorT<T>& rhs) const { return v_ != rhs.v_; }

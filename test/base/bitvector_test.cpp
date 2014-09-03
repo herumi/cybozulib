@@ -66,29 +66,30 @@ void verifyVec(const T& v1, const StdVec& v2)
 	CYBOZU_TEST_EQUAL(sum, 0);
 }
 
-CYBOZU_TEST_AUTO(ShiftLeftBit)
+CYBOZU_TEST_AUTO(shiftLeftBit)
 {
 	const struct {
 		uint32_t x[4];
 		size_t bitLen;
 		size_t shift;
-		uint32_t y;
-		uint32_t z[4];
-		uint32_t ret;
+		uint32_t z0;
+		uint32_t z[5];
 	} tbl[] = {
-		{ { 0x12345678, 0, 0, 0 }, 128, 0, 0, { 0x12345678, 0, 0, 0 }, 0 },
-		{ { 0x12345678, 0, 0, 0 }, 32, 1, 0, { 0x2468acf0, 0, 0, 0 }, 0 },
-		{ { 0xf2345678, 0, 0, 0 }, 32, 1, 5, { 0xe468acf5, 0, 0, 0 }, 1 },
-		{ { 0xffff5678, 0, 0, 0 }, 16, 1, 0, { 0xacf0, 0, 0, 0 }, 0 },
-		{ { 0xffff5678, 0, 0, 0 }, 17, 1, 0, { 0x2acf0, 0, 0, 0 }, 0 },
-		{ { 0x12345678, 0x9abcdef0, 0x11112222, 0xffccaaee }, 128, 19, 0x1234, { 0xb3c01234, 0xf78091a2, 0x1114d5e6, 0x57708889 }, 0x7fe65 },
+		{ { 1, 0, 0, 0 }, 1, 1, 0xfffffff, { 3, 0, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 16, 16, 0xabcd1234, { 0x56781234, 0, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 16, 17, 0xabcd1234, { 0xacf11234, 0x0, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 16, 18, 0xabcd1234, { 0x59e11234, 0x1, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 32, 31, 0xabcd1234, { 0x2bcd1234, 0x91a2b3c, 0, 0 } },
+		{ { 0x12345678, 0x9abcdef0, 0x11112222, 0xffccaaee }, 128, 19, 0x983a4ba, { 0xb3c3a4ba, 0xf78091a2, 0x1114d5e6, 0x57708889, 0x7fe65 } },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const size_t bitLen = tbl[i].bitLen;
+		const size_t shift = tbl[i].shift;
 		uint32_t z[4];
-		uint32_t ret = cybozu::ShiftLeftBit(z, tbl[i].x, tbl[i].bitLen, tbl[i].shift, tbl[i].y);
-		const size_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
+		z[0] = tbl[i].z0;
+		cybozu::bitvector_local::shiftLeftBit(z, tbl[i].x, bitLen, shift);
+		const size_t n = cybozu::RoundupBit<uint32_t>(bitLen + shift);
 		CYBOZU_TEST_EQUAL_ARRAY(z, tbl[i].z, n);
-		CYBOZU_TEST_EQUAL(ret, tbl[i].ret);
 	}
 }
 
