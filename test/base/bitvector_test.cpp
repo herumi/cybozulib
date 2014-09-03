@@ -92,26 +92,27 @@ CYBOZU_TEST_AUTO(ShiftLeftBit)
 	}
 }
 
-CYBOZU_TEST_AUTO(ShiftRightBit)
+CYBOZU_TEST_AUTO(shiftRightBit)
 {
 	const struct {
-		uint32_t x[4];
+		uint32_t x[5];
 		size_t bitLen;
 		size_t shift;
 		uint32_t z[4];
 	} tbl[] = {
-		{ { 0x12345678, 0, 0, 0 }, 128, 0, { 0x12345678, 0, 0, 0 } },
-		{ { 0x12345678, 0, 0, 0 }, 1, 0, { 0, 0, 0, 0 } },
-		{ { 0x12345678, 0, 0, 0 }, 10, 0, { 0x278, 0, 0, 0 } },
 		{ { 0x12345678, 0, 0, 0 }, 1, 1, { 0, 0, 0, 0 } },
-		{ { 0x12345678, 0, 0, 0 }, 13, 5, { 0xb3, 0, 0, 0 } },
-		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874 }, 128, 1, { 0x891a2b3c, 0x55555ddd, 0x7ff75de6, 0x7f5d4c3a } },
-		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874 }, 128, 18, { 0xaeeec48d, 0xaef32aaa, 0xa61d3ffb, 0x3fae } },
-		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874 }, 97, 18, { 0xaeeec48d, 0xaef32aaa, 0x3ffb, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 1, 3, { 1, 0, 0, 0 } },
+		{ { 0x12345678, 0xaaaabbbb, 0, 0 }, 10, 31, { 0x376, 0, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 1, 1, { 0, 0, 0, 0 } },
+		{ { 0x12345678, 0, 0, 0 }, 13, 5, { 0x2b3, 0, 0, 0 } },
+		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874, 1 }, 128, 1, { 0x891a2b3c, 0x55555ddd, 0x7ff75de6, 0xff5d4c3a } },
+		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874, 0 }, 128, 1, { 0x891a2b3c, 0x55555ddd, 0x7ff75de6, 0x7f5d4c3a } },
+		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874, 0 }, 128, 18, { 0xaeeec48d, 0xaef32aaa, 0xa61d3ffb, 0x3fae } },
+		{ { 0x12345678, 0xaaaabbbb, 0xffeebbcc, 0xfeba9874, 0 }, 96, 18, { 0xaeeec48d, 0xaef32aaa, 0xa61d3ffb, 0 } },
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		uint32_t z[4];
-		cybozu::ShiftRightBit(z, tbl[i].x, tbl[i].bitLen, tbl[i].shift);
+		cybozu::bitvector_local::shiftRightBit(z, tbl[i].x, tbl[i].bitLen, tbl[i].shift);
 		const size_t n = cybozu::RoundupBit<uint32_t>(tbl[i].bitLen);
 		CYBOZU_TEST_EQUAL_ARRAY(z, tbl[i].z, n);
 	}
