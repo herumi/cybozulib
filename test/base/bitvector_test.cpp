@@ -85,7 +85,7 @@ CYBOZU_TEST_AUTO(shiftLeftBit)
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		const size_t bitLen = tbl[i].bitLen;
 		const size_t shift = tbl[i].shift;
-		uint32_t z[4];
+		uint32_t z[5];
 		z[0] = tbl[i].z0;
 		cybozu::bitvector_local::shiftLeftBit(z, tbl[i].x, bitLen, shift);
 		const size_t n = cybozu::RoundupBit<uint32_t>(bitLen + shift);
