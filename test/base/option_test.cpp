@@ -268,7 +268,7 @@ CYBOZU_TEST_AUTO(appendOpt_bool)
 CYBOZU_TEST_AUTO(appendBoolOpt)
 {
 	cybozu::Option opt;
-	bool b = true;
+	bool b;
 	opt.appendBoolOpt(&b, "b");
 	CYBOZU_TEST_ASSERT(!b);
 	{
@@ -278,17 +278,9 @@ CYBOZU_TEST_AUTO(appendBoolOpt)
 		CYBOZU_TEST_ASSERT(!opt.isSet(&b));
 	}
 	{
-		b = false;
 		const char *argv[] = { progName, "-b" };
 		CYBOZU_TEST_ASSERT(opt.parse(2, argv));
 		CYBOZU_TEST_ASSERT(b);
-		CYBOZU_TEST_ASSERT(opt.isSet(&b));
-	}
-	{
-		b = false;
-		const char *argv[] = { progName, "-b", "-b" };
-		CYBOZU_TEST_ASSERT(opt.parse(3, argv));
-		CYBOZU_TEST_ASSERT(!b); // toggle
 		CYBOZU_TEST_ASSERT(opt.isSet(&b));
 	}
 }

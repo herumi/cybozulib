@@ -539,13 +539,10 @@ public:
 
 				Info& info = infoVec_[i->second];
 				switch (info.mode) {
-				case N_is0: // toggle bool
-					{
-						bool curr = *(const bool*)info.var.get();
-						if (!info.var.set(curr ? "0" : "1")) {
-							err.set(OptionError::BAD_VALUE, pos);
-							goto ERR;
-						}
+				case N_is0:
+					if (!info.var.set("1")) {
+						err.set(OptionError::BAD_VALUE, pos);
+						goto ERR;
 					}
 					break;
 				case N_is1:
