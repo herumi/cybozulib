@@ -14,9 +14,6 @@
 	#include <stdlib.h>
 #endif
 #include <cybozu/inttype.hpp>
-#ifdef CYBOZU_ARRAY_DEBUG_FILL
-	#include <memory.h>
-#endif
 
 namespace cybozu {
 
@@ -56,35 +53,43 @@ public:
 	{
 		delete[] p_;
 	}
-	T& operator[](size_t idx) { return p_[idx]; }
-	const T& operator[](size_t idx) const { return p_[idx]; }
-	size_t size() const { return size_; }
-	T* begin() { return p_; }
-	T* end() { return p_ + size_; }
-	const T* begin() const { return p_; }
-	const T* end() const { return p_ + size_; }
-    T* data() { return p_; }
-    const T* data() const { return p_; }
+	T& operator[](size_t idx) throw() { return p_[idx]; }
+	const T& operator[](size_t idx) const throw() { return p_[idx]; }
+	size_t size() const throw() { return size_; }
+	bool empty() const throw() { return size_ == 0; }
+	T* begin() throw() { return p_; }
+	T* end() throw() { return p_ + size_; }
+	const T* begin() const throw() { return p_; }
+	const T* end() const throw() { return p_ + size_; }
+    T* data() throw() { return p_; }
+    const T* data() const throw() { return p_; }
 };
 
 /**
+	T must be POD type
 	16byte aligment array
-	+16 to avoid overrunning by SSE4.2 string operation
 */
 template<class T, size_t N = 16>
 class AlignedArray {
 	T *p_;
 	size_t size_;
-	void shrink(size_t size)
+	T *alloc(size_t size, bool doClear) const
 	{
-		const size_t n = size_ - size;
-		for (size_t i = 0; i < n; i++) {
-			p_[size_ - 1 - i].~T();
+		// +16 to avoid overrunning by SSE4.2 string operation
+		T *p = static_cast<T*>(AlignedMalloc(size * sizeof(T) + 16, N));
+		if (p == 0) throw std::bad_alloc();
+		if (doClear) {
+			for (size_t i = 0; i < size; i++) {
+				p[i] = 0;
+			}
 		}
-		size_ = size;
-		if (size > 0) return;
-		AlignedFree(p_);
-		p_ = 0;
+		return p;
+	}
+	void copy(T *dst, const T *src) const
+	{
+		for (size_t i = 0; i < size_; i++) {
+			dst[i] = src[i];
+		}
 	}
 public:
 	/*
@@ -105,10 +110,9 @@ public:
 	AlignedArray& operator=(const AlignedArray& rhs)
 	{
 		clear();
-		resize(rhs.size_, false);
-		for (size_t i = 0; i < size_; i++) {
-			p_[i] = rhs.p_[i];
-		}
+		p_ = alloc(rhs.size_, false);
+		size_ = rhs.size_;
+		copy(p_, rhs.p_);
 		return *this;
 	}
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
@@ -119,7 +123,7 @@ public:
 		rhs.p_ = 0;
 		rhs.size_ = 0;
 	}
-	AlignedArray& operator=(AlignedArray&& rhs)
+	AlignedArray& operator=(AlignedArray&& rhs) throw()
 	{
 		clear();
 		p_ = rhs.p_;
@@ -130,37 +134,30 @@ public:
 	}
 #endif
 	/*
-		don't clear buffer with zero if doClear is false and T = char/int, ...
+		don't clear buffer with zero if doClear is false
 	*/
 	void resize(size_t size, bool doClear = true)
 	{
 		if (size == size_) return;
+		// shrink
 		if (size < size_) {
-			shrink(size);
+			size_ = size;
+			if (size == 0) {
+				AlignedFree(p_);
+				p_ = 0;
+			}
 			return;
 		}
-		clear();
-		p_ = static_cast<T*>(AlignedMalloc(size * sizeof(T) + 16, N));
-		if (p_ == 0) throw std::bad_alloc();
-#ifdef CYBOZU_ARRAY_DEBUG_FILL
-		memset(p_, 'x', size * sizeof(T));
-#endif
-		try {
-			for (size_ = 0; size_ < size; size_++) {
-				if (doClear) {
-					new(&p_[size_]) T();
-				} else {
-					new(&p_[size_]) T; // don't clear if T = char
-				}
-			}
-		} catch (...) {
-			shrink(0);
-			throw std::bad_alloc();
-		}
+		// extend
+		T *p = alloc(size, doClear);
+		copy(p, p_);
+		AlignedFree(p_);
+		p_ = p;
+		size_ = size;
 	}
 	void clear()
 	{
-		shrink(0);
+		resize(0, false);
 	}
 	~AlignedArray()
 	{
@@ -171,18 +168,19 @@ public:
 		std::swap(p_, rhs.p_);
 		std::swap(size_, rhs.size_);
 	}
-	T& operator[](size_t idx) { return p_[idx]; }
-	const T& operator[](size_t idx) const { return p_[idx]; }
-	size_t size() const { return size_; }
-	T* begin() { return p_; }
-	T* end() { return p_ + size_; }
-	const T* begin() const { return p_; }
-	const T* end() const { return p_ + size_; }
-    T* data() { return p_; }
-    const T* data() const { return p_; }
+	T& operator[](size_t idx) throw() { return p_[idx]; }
+	const T& operator[](size_t idx) const throw() { return p_[idx]; }
+	size_t size() const throw() { return size_; }
+	bool empty() const throw() { return size_ == 0; }
+	T* begin() throw() { return p_; }
+	T* end() throw() { return p_ + size_; }
+	const T* begin() const throw() { return p_; }
+	const T* end() const throw() { return p_ + size_; }
+    T* data() throw() { return p_; }
+    const T* data() const throw() { return p_; }
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
-	const T* cbegin() const { return p_; }
-	const T* cend() const { return p_ + size_; }
+	const T* cbegin() const throw() { return p_; }
+	const T* cend() const throw() { return p_ + size_; }
 #endif
 };
 
