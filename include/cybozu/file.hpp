@@ -455,14 +455,20 @@ struct FileInfo {
 	std::string name;
 	uint32_t attr; // dwFileAttributes for Windows, d_type for Linux
 #ifdef _WIN32
-	bool isDirectory() const { return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0; }
-	bool isFile() const { return !isDirectory(); }
+	bool isUnknown() const { return attr == 0; }
+	bool isDirectory() const { verify(); return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0; }
+	bool isFile() const { verify(); return !isDirectory(); }
 #else
-	bool isDirectory() const { return attr == DT_DIR; }
-	bool isFile() const { return attr == DT_REG; }
+	bool isUnknown() const { return attr == DT_UNKNOWN; }
+	bool isDirectory() const { verify(); return attr == DT_DIR; }
+	bool isFile() const { verify(); return attr == DT_REG; }
 #endif
 	FileInfo() : attr(0) {}
 	FileInfo(const std::string& name, uint32_t attr) : name(name), attr(attr) {}
+	void verify() const
+	{
+		if (isUnknown()) throw cybozu::Exception("FileInfo:unknown attr") << name;
+	}
 };
 
 typedef std::vector<FileInfo> FileList;
