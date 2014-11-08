@@ -193,7 +193,9 @@ class Cipher {
 public:
 	enum Name {
 		N_AES128_CBC,
-		N_AES256_CBC
+		N_AES256_CBC,
+		N_AES128_ECB, // be carefull to use
+		N_AES256_ECB, // be carefull to use
 	};
 	enum Mode {
 		Decoding,
@@ -206,6 +208,8 @@ public:
 		switch (name) {
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
 		case N_AES256_CBC: cipher_ = EVP_aes_256_cbc(); break;
+		case N_AES128_ECB: cipher_ = EVP_aes_128_ecb(); break;
+		case N_AES256_ECB: cipher_ = EVP_aes_256_ecb(); break;
 		default:
 			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
 		}
