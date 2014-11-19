@@ -500,13 +500,10 @@ public:
 	}
 
 	/**
-		return true if acceptable, otherwise false
-		return false if one second passed
-		while (!server.queryAccept()) {
-		}
-		client.accept(server);
+		return fdNum if zero or positive
+        return -errno if negative
 	*/
-	void queryAcceptNothrow(int& fdNum, int& err, int msec = 1000, bool checkWrite = true)
+	int queryAcceptNothrow(int msec = 1000, bool checkWrite = true)
 	{
 		struct timeval timeout;
 		timeout.tv_sec = msec / 1000;
@@ -514,19 +511,27 @@ public:
 		fd_set fds;
 		FD_ZERO(&fds);
 		FD_SET((unsigned)sd_, &fds);
+        int fdNum;
 		if (checkWrite) {
 			fdNum = ::select((int)sd_ + 1, &fds, 0, 0, &timeout);
 		} else {
 			fdNum = ::select((int)sd_ + 1, 0, &fds, 0, &timeout);
 		}
-		err = errno;
+        if (fdNum < 0) return -errno;
+        return fdNum;
 	}
+	/**
+		return true if acceptable, otherwise false
+		return false if one second passed
+		while (!server.queryAccept()) {
+		}
+		client.accept(server);
+	*/
 	bool queryAccept(int msec = 1000, bool checkWrite = true)
 	{
-		int fdNum, err;
-		queryAcceptNothrow(fdNum, err, msec, checkWrite);
-		if (fdNum < 0) throw cybozu::Exception("Socket:queryAccept") << cybozu::NetErrorNo(err);
-		return fdNum > 0;
+		int ret = queryAcceptNothrow(msec, checkWrite);
+		if (ret < 0) throw cybozu::Exception("Socket:queryAccept") << cybozu::NetErrorNo(-ret);
+		return ret > 0;
 	}
 
 	/**
