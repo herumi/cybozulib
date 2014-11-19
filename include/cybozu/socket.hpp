@@ -500,8 +500,9 @@ public:
 	}
 
 	/**
-		return fdNum if zero or positive
-        return -errno if negative
+		return positive if accepted
+		return zero if timeout
+		return negative(-errno) if error
 	*/
 	int queryAcceptNothrow(int msec = 1000, bool checkWrite = true)
 	{
