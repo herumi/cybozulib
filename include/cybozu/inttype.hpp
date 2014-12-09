@@ -46,6 +46,13 @@
 		#define CYBOZU_FORCE_INLINE __attribute__((always_inline))
 	#endif
 #endif
+#ifndef CYBOZU_UNUSED
+	#ifdef __GNUC__
+		#define CYBOZU_UNUSED __attribute__((unused))
+	#else
+		#define CYBOZU_UNUSED
+	#endif
+#endif
 #ifndef CYBOZU_ALLOCA
 	#ifdef _MSC_VER
 		#include <malloc.h>

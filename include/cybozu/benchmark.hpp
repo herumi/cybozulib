@@ -15,12 +15,20 @@
 	#define CYBOZU_BENCH_USE_RDTSC
 #endif
 #ifdef CYBOZU_BENCH_USE_RDTSC
-#ifdef _MSC_VER
-	#include <intrin.h>
-#endif
+	#ifdef _MSC_VER
+		#include <intrin.h>
+	#endif
 #else
 	#include <time.h>
 	#include <assert.h>
+#endif
+
+#ifndef CYBOZU_UNUSED
+	#ifdef __GNUC__
+		#define CYBOZU_UNUSED __attribute__((unused))
+	#else
+		#define CYBOZU_UNUSED
+	#endif
 #endif
 
 namespace cybozu {
@@ -84,7 +92,7 @@ class CpuClock {
 	uint64_t getTimeNsec() const
 	{
 		struct timespec tp;
-		int ret = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
+		int ret CYBOZU_UNUSED = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
 		assert(ret == 0);
 		return tp.tv_sec * 1000000000 + tp.tv_nsec;
 	}
@@ -130,11 +138,6 @@ public:
 namespace bench {
 
 static CpuClock g_clk;
-#ifdef __GNUC__
-	#define CYBOZU_UNUSED __attribute__((unused))
-#else
-	#define CYBOZU_UNUSED
-#endif
 static int CYBOZU_UNUSED g_loopNum;
 
 } // cybozu::bench
