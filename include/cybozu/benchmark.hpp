@@ -19,7 +19,8 @@
 	#include <intrin.h>
 #endif
 #else
-	#include <cybozu/time.hpp>
+	#include <time.h>
+	#include <assert.h>
 #endif
 
 namespace cybozu {
@@ -77,47 +78,52 @@ private:
 };
 #else
 class CpuClock {
-	cybozu::Time t_;
+	uint64_t startNsec_;
 	uint64_t clock_;
 	int count_;
+	uint64_t getTimeNsec() const
+	{
+		struct timespec tp;
+		int ret __attribute__((unused)) = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
+		assert(ret == 0);
+		return tp.tv_sec * 1000000000 + tp.tv_nsec;
+	}
 public:
-	CpuClock() : clock_(0), count_(0) { t_.setTime(0, 0); }
+	CpuClock() : startNsec_(0), clock_(0), count_(0) { }
 	void begin()
 	{
-		if (count_ == 0) t_.setCurrentTime(); // start
+		startNsec_ = getTimeNsec();
 	}
 	/*
 		@note QQQ ; this is not same api as rdtsc version
 	*/
 	void end()
 	{
-		cybozu::Time cur(true);
-		int diffSec = (int)(cur.getTime() - t_.getTime());
-		int diffMsec = cur.getMsec() - t_.getMsec();
-		const int diff = diffSec * 1000 + diffMsec;
-		clock_ = diff;
+		uint64_t cur = getTimeNsec();
+		clock_ += cur - startNsec_;
+		startNsec_ = cur;
 		count_++;
 	}
 	int getCount() const { return count_; }
 	uint64_t getClock() const { return clock_; }
-	void clear() { t_.setTime(0, 0); clock_ = 0; count_ = 0; }
+	void clear() { startNsec_ = 0; clock_ = 0; count_ = 0; }
 	void put(const char *msg = 0, int N = 1) const
 	{
 		double t = getClock() / double(getCount()) / N;
 		if (msg && *msg) printf("%s ", msg);
-		if (t > 1) {
-			printf("%6.2fmsec", t);
-		} else if (t > 1e-3) {
-			printf("%6.2fusec", t * 1e3);
+		if (t > 1e6) {
+			printf("%7.3fmsec", t * 1e-6);
+		} else if (t > 1e3) {
+			printf("%7.3fusec", t * 1e-3);
 		} else {
-			printf("%6.2fnsec", t * 1e6);
+			printf("%6.2fnsec", t);
 		}
 		if (msg && *msg) printf("\n");
 	}
 	// adhoc constatns for CYBOZU_BENCH
-	static const int loopN1 = 1000000;
-	static const int loopN2 = 1000;
-	static const uint64_t maxClk = (uint64_t)500;
+	static const int loopN1 = 1000;
+	static const int loopN2 = 1000000;
+	static const uint64_t maxClk = (uint64_t)3e8;
 };
 #endif
 
