@@ -1,21 +1,28 @@
 GCC_VER=$(shell $(PRE)$(CC) -dumpversion)
-ifeq ($(shell expr $(GCC_VER) \> 4.2.1),1)
-  CFLAGS_OPT +=-march=native
+UNAME_S=$(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  OS=Linux
 endif
-ifeq ($(shell uname -s),Linux)
+ifneq ($(UNAME_S),Darwin)
   LDFLAGS += -lrt
 endif
-HAS_BOOST=$(shell echo "\#include <boost/version.hpp>" | (gcc -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
-HAS_MECAB=$(shell echo "\#include <mecab.hpp>" | (gcc -E - 2>/dev/null) | grep "mecab.hpp" >/dev/null && echo "1")
 CP = cp -f
 AR = ar r
 MKDIR=mkdir -p
 RM=rm -fr
-CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
-CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
+CFLAGS_OPT+=-fomit-frame-pointer -DNDEBUG
+ifeq ($(CXX),clang++)
+  CFLAGS_OPT+=-O3
+else
+  ifeq ($(shell expr $(GCC_VER) \> 4.6.0),1)
+    CFLAGS_OPT+=-Ofast
+  else
+    CFLAGS_OPT+=-O3
+  endif
+endif
+CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith
 CFLAGS+= -g -D_FILE_OFFSET_BITS=64
 CFLAGS+=$(CFLAGS_WARN)
-LDFLAGS += -lz -lpthread -lssl -lcrypto
 BIT?=64
 ifeq ($(BIT),0)
 	BIT_OPT=
@@ -23,7 +30,9 @@ else
 	BIT_OPT=-m$(BIT)
 endif
 ifeq ($(MARCH),)
+ifeq ($(shell expr $(GCC_VER) \> 4.2.1),1)
 	CFLAGS+=-march=native
+endif
 else
 	CFLAGS+=$(MARCH)
 endif
@@ -34,20 +43,30 @@ ifeq ($(RELEASE),1)
 endif
 
 ifeq ($(DEBUG),0)
-	CFLAGS+=$(CFLAGS_OPT)
-	OBJDIR=release
-	OBJSUF=
+  CFLAGS+=$(CFLAGS_OPT)
+  OBJDIR=release
+  OBJSUF=
 else
-	LDFLAGS+=-rdynamic
-	OBJDIR=debug
-	OBJSUF=d
+  ifeq ($(OS),Linux)
+    LDFLAGS+=-rdynamic
+  endif
+  OBJDIR=debug
+  OBJSUF=d
 endif
+
+####################################################
+
+LDFLAGS += -lz -lpthread -lssl -lcrypto
+HAS_BOOST=$(shell echo "\#include <boost/version.hpp>" | (gcc -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
+HAS_MECAB=$(shell echo "\#include <mecab.h>" | (gcc -E - 2>/dev/null) | grep "mecab.h" >/dev/null && echo "1")
 ifeq ($(HAS_BOOST),1)
-	LDFLAGS += -lboost_regex
+  LDFLAGS += -lboost_regex
 endif
 ifeq ($(HAS_MECAB),1)
-	LDFLAGS += -lmecab
+  LDFLAGS += -lmecab
 endif
+
+####################################################
 
 TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
 EXTDIR:=$(TOPDIR)../cybozulib_ext/
