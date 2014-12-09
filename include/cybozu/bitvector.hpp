@@ -16,8 +16,8 @@ namespace cybozu {
 template<class T>
 size_t RoundupBit(size_t bitLen)
 {
-	const size_t unitSize = sizeof(T) * 8;
-	return (bitLen + unitSize - 1) / unitSize;
+	const size_t unitBitSize = sizeof(T) * 8;
+	return (bitLen + unitBitSize - 1) / unitBitSize;
 }
 
 template<class T>
@@ -30,34 +30,34 @@ T GetMaskBit(size_t bitLen)
 template<class T>
 void SetBlockBit(T *buf, size_t bitLen)
 {
-	const size_t unitSize = sizeof(T) * 8;
-	const size_t q = bitLen / unitSize;
-	const size_t r = bitLen % unitSize;
+	const size_t unitBitSize = sizeof(T) * 8;
+	const size_t q = bitLen / unitBitSize;
+	const size_t r = bitLen % unitBitSize;
 	buf[q] |= T(1) << r;
 }
 template<class T>
 void ResetBlockBit(T *buf, size_t bitLen)
 {
-	const size_t unitSize = sizeof(T) * 8;
-	const size_t q = bitLen / unitSize;
-	const size_t r = bitLen % unitSize;
+	const size_t unitBitSize = sizeof(T) * 8;
+	const size_t q = bitLen / unitBitSize;
+	const size_t r = bitLen % unitBitSize;
 	buf[q] &= ~(T(1) << r);
 }
 template<class T>
 bool GetBlockBit(const T *buf, size_t bitLen)
 {
-	const size_t unitSize = sizeof(T) * 8;
-	const size_t q = bitLen / unitSize;
-	const size_t r = bitLen % unitSize;
+	const size_t unitBitSize = sizeof(T) * 8;
+	const size_t q = bitLen / unitBitSize;
+	const size_t r = bitLen % unitBitSize;
 	return (buf[q] & (T(1) << r)) != 0;
 }
 
 template<class T>
 void CopyBit(T* dst, const T* src, size_t bitLen)
 {
-	const size_t unitSize = sizeof(T) * 8;
-	const size_t q = bitLen / unitSize;
-	const size_t r = bitLen % unitSize;
+	const size_t unitBitSize = sizeof(T) * 8;
+	const size_t q = bitLen / unitBitSize;
+	const size_t r = bitLen % unitBitSize;
 	for (size_t i = 0; i < q; i++) dst[i] = src[i];
 	if (r == 0) return;
 	dst[q] = src[q] & GetMaskBit<T>(r);
@@ -67,19 +67,19 @@ void CopyBit(T* dst, const T* src, size_t bitLen)
 	@param dst [out] dst[0..bitLen)
 	@param src [in] src[0..bitLen)
 	@param bitLen [in] length of src, dst
-	@param shift [in] 0 <= shift < unitSize
+	@param shift [in] 0 <= shift < unitBitSize
 	@param ext [in] or bit
 */
 template<class T>
 T ShiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift, T ext = 0)
 {
 	if (bitLen == 0) return 0;
-	const size_t unitSize = sizeof(T) * 8;
-	if (shift >= unitSize) {
+	const size_t unitBitSize = sizeof(T) * 8;
+	if (shift >= unitBitSize) {
 		throw cybozu::Exception("ShiftLeftBit:large shift") << shift;
 	}
 	const size_t n = RoundupBit<T>(bitLen); // n >= 1 because bitLen > 0
-	const size_t r = bitLen % unitSize;
+	const size_t r = bitLen % unitBitSize;
 	const T mask = r > 0 ? GetMaskBit<T>(r) : T(-1);
 	if (shift == 0) {
 		if (n == 1) {
@@ -93,7 +93,7 @@ T ShiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift, T ext = 0)
 		}
 		return 0;
 	}
-	const size_t revShift = unitSize - shift;
+	const size_t revShift = unitBitSize - shift;
 	T prev = src[n - 1] & mask;
 	const T ret = prev >> revShift;
 	for (size_t i = n - 1; i > 0; i--) {
@@ -114,21 +114,21 @@ namespace bitvector_local {
 	@param dst [out] dst[shift..bitLen + shift)
 	@param src [in] src[0..bitLen)
 	@param bitLen [in] read bit size
-	@param shift [in] 0 <= shift < unitSize
+	@param shift [in] 0 <= shift < unitBitSize
 */
 template<class T>
 void shiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift)
 {
-	const size_t unitSize = sizeof(T) * 8;
+	const size_t unitBitSize = sizeof(T) * 8;
 
 	assert(bitLen);
-	assert(0 < shift && shift < unitSize);
+	assert(0 < shift && shift < unitBitSize);
 
 	const size_t dstN = RoundupBit<T>(bitLen + shift);
 	const size_t srcN = RoundupBit<T>(bitLen);
-	const size_t r = bitLen % unitSize;
+	const size_t r = bitLen % unitBitSize;
 	const T mask = r ? GetMaskBit<T>(r) : T(-1);
-	const size_t revShift = unitSize - shift;
+	const size_t revShift = unitBitSize - shift;
 
 	T prev = src[srcN - 1] & mask;
 	if (dstN > srcN) {
@@ -149,26 +149,26 @@ void shiftLeftBit(T* dst, const T* src, size_t bitLen, size_t shift)
 	@param dst [out] dst[0..bitLen)
 	@param src [in] src[shift..bitLen + shift)
 	@param bitLen [in] write bit size
-	@param shift [in] 0 <= shift < unitSize
+	@param shift [in] 0 <= shift < unitBitSize
 	@note src[bitLen + shift - 1] is accessable
 */
 template<class T>
 void shiftRightBit(T* dst, const T* src, size_t bitLen, size_t shift)
 {
-	const size_t unitSize = sizeof(T) * 8;
+	const size_t unitBitSize = sizeof(T) * 8;
 
 	assert(bitLen);
-	assert(0 < shift && shift < unitSize);
+	assert(0 < shift && shift < unitBitSize);
 
 	const size_t dstN = RoundupBit<T>(bitLen);
 	const size_t srcN = RoundupBit<T>(bitLen + shift);// srcN = dstN, dstN + 1
-	const size_t r = (bitLen + shift) % unitSize;
+	const size_t r = (bitLen + shift) % unitBitSize;
 	const T mask = r ? GetMaskBit<T>(r) : T(-1);
 	if (srcN == 1) {
 		dst[0] = (src[0] & mask) >> shift;
 		return;
 	}
-	const size_t revShift = unitSize - shift;
+	const size_t revShift = unitBitSize - shift;
 	T prev = src[0];
 	for (size_t i = 0; i < srcN - 2; i++) {
 		T v = src[i + 1];
@@ -187,10 +187,11 @@ void shiftRightBit(T* dst, const T* src, size_t bitLen, size_t shift)
 
 template<class T>
 class BitVectorT {
-	static const size_t unitSize = sizeof(T) * 8;
+	static const size_t unitBitSize = sizeof(T) * 8;
 	size_t bitLen_;
 	std::vector<T> v_;
 public:
+	typedef T value_type;
 	BitVectorT() : bitLen_(0) {}
 	BitVectorT(const T *buf, size_t bitLen)
 	{
@@ -205,7 +206,7 @@ public:
 	{
 		bitLen_ = bitLen;
 		const size_t n = RoundupBit<T>(bitLen);
-		const size_t r = bitLen % unitSize;
+		const size_t r = bitLen % unitBitSize;
 		v_.resize(n);
 		if (r) {
 			v_[n - 1] &= GetMaskBit<T>(r);
@@ -255,8 +256,8 @@ public:
 	void append(const T* src, size_t bitLen)
 	{
 		if (bitLen == 0) return;
-		const size_t q = bitLen_ / unitSize;
-		const size_t r = bitLen_ % unitSize;
+		const size_t q = bitLen_ / unitBitSize;
+		const size_t r = bitLen_ % unitBitSize;
 		resize(bitLen_ + bitLen);
 		if (r == 0) {
 			CopyBit<T>(&v_[q], src, bitLen);
@@ -270,22 +271,22 @@ public:
 	void append(uint64_t src, size_t bitLen)
 	{
 		if (bitLen == 0) return;
-		if (bitLen > unitSize) {
+		if (bitLen > unitBitSize) {
 			throw cybozu::Exception("BitVectorT:append:bad bitLen") << bitLen;
 		}
-		if (bitLen < unitSize) {
+		if (bitLen < unitBitSize) {
 			src &= GetMaskBit<T>(bitLen);
 		}
-		const size_t q = bitLen_ / unitSize;
-		const size_t r = bitLen_ % unitSize;
+		const size_t q = bitLen_ / unitBitSize;
+		const size_t r = bitLen_ % unitBitSize;
 		resize(bitLen_ + bitLen);
 		if (r == 0) {
 			v_[q] = T(src);
 			return;
 		}
 		v_[q] |= T(src << r);
-		if (r + bitLen > unitSize) {
-			v_[q + 1] = T(src >> (unitSize - r));
+		if (r + bitLen > unitBitSize) {
+			v_[q + 1] = T(src >> (unitBitSize - r));
 		}
 	}
 	/*
@@ -304,8 +305,8 @@ public:
 		if (pos + bitLen > bitLen_) {
 			throw cybozu::Exception("BitVectorT:extract:bad range") << bitLen << pos << bitLen_;
 		}
-		const size_t q = pos / unitSize;
-		const size_t r = pos % unitSize;
+		const size_t q = pos / unitBitSize;
+		const size_t r = pos % unitBitSize;
 		if (r == 0) {
 			CopyBit<T>(dst, &v_[q], bitLen);
 			return;
@@ -326,20 +327,20 @@ public:
 	T extract(size_t pos, size_t bitLen) const
 	{
 		if (bitLen == 0) return 0;
-		if (bitLen > unitSize || pos + bitLen > bitLen_) {
+		if (bitLen > unitBitSize || pos + bitLen > bitLen_) {
 			throw cybozu::Exception("BitVectorT:extract:bad range") << bitLen << pos << bitLen_;
 		}
-		const size_t q = pos / unitSize;
-		const size_t r = pos % unitSize;
+		const size_t q = pos / unitBitSize;
+		const size_t r = pos % unitBitSize;
 		T v;
 		if (r == 0) {
 			v = v_[q];
 		} else if (q == v_.size() - 1) {
 			v = v_[q] >> r;
 		} else {
-			v = (v_[q] >> r) | v_[q + 1] << (unitSize - r);
+			v = (v_[q] >> r) | v_[q + 1] << (unitBitSize - r);
 		}
-		if (bitLen < unitSize) {
+		if (bitLen < unitBitSize) {
 			v &= GetMaskBit<T>(bitLen);
 		}
 		return v;
