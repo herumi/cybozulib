@@ -1,4 +1,4 @@
-GCC_VER=$(shell gcc -dumpversion)
+GCC_VER=$(shell $(PRE)$(CC) -dumpversion)
 ifeq ($(shell expr $(GCC_VER) \> 4.2.1),1)
   CFLAGS_OPT +=-march=native
 endif
@@ -13,10 +13,20 @@ MKDIR=mkdir -p
 RM=rm -fr
 CFLAGS_OPT += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith #-Wswitch-enum -Wstrict-aliasing=2
-CFLAGS = -g -D_FILE_OFFSET_BITS=64 -msse4.2
+CFLAGS+= -g -D_FILE_OFFSET_BITS=64
 CFLAGS+=$(CFLAGS_WARN)
 LDFLAGS += -lz -lpthread -lssl -lcrypto
-BIT=64
+BIT?=64
+ifeq ($(BIT),0)
+	BIT_OPT=
+else
+	BIT_OPT=-m$(BIT)
+endif
+ifeq ($(MARCH),)
+	CFLAGS+=-march=native
+else
+	CFLAGS+=$(MARCH)
+endif
 
 DEBUG=1
 ifeq ($(RELEASE),1)
@@ -41,10 +51,10 @@ endif
 
 TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
 EXTDIR:=$(TOPDIR)../cybozulib_ext/
-CFLAGS+= -I$(TOPDIR)include -m$(BIT)
-LDFLAGS+= -L$(TOPDIR)lib -m$(BIT) -Wl,-rpath,'$$ORIGIN/../lib'
+CFLAGS+= -I$(TOPDIR)include $(BIT_OPT)
+LDFLAGS+= -L$(TOPDIR)lib $(BIT_OPT) -Wl,-rpath,'$$ORIGIN/../lib'
 
-MKDEP = sh -ec '$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@; touch $@'
+MKDEP = sh -ec '$(PRE)$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@; touch $@'
 
 CLEAN=$(RM) $(TARGET) $(OBJDIR)
 
@@ -60,13 +70,13 @@ endef
 .SUFFIXES: .cpp .d .exe
 
 $(OBJDIR)/%.o: %.cpp
-	$(CXX) -c $< -o $@ $(CFLAGS)
+	$(PRE)$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(OBJDIR)/%.d: %.cpp $(OBJDIR)
 	@$(MKDEP)
 
 $(TOPDIR)bin/%$(OBJSUF).exe: $(OBJDIR)/%.o $(LIBS)
-	$(CXX) $< -o $@ $(LIBS) $(LDFLAGS)
+	$(PRE)$(CXX) $< -o $@ $(LIBS) $(LDFLAGS)
 
 OBJS=$(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
 

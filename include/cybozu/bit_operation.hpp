@@ -6,12 +6,14 @@
 #include <assert.h>
 #include <cybozu/inttype.hpp>
 
-#if defined(_WIN32)
-	#include <intrin.h>
-#elif defined(__linux__) || defined(__CYGWIN__)
-	#include <x86intrin.h>
-#elif defined(__GNUC__)
-	#include <emmintrin.h>
+#if (CYBOZU_HOST == CYBOZU_HOST_INTEL)
+	#if defined(_WIN32)
+		#include <intrin.h>
+	#elif defined(__linux__) || defined(__CYGWIN__)
+		#include <x86intrin.h>
+	#elif defined(__GNUC__)
+		#include <emmintrin.h>
+	#endif
 #endif
 
 namespace cybozu {

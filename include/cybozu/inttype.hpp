@@ -99,12 +99,26 @@
 	#endif
 #endif
 
+#ifndef CYBOZU_HOST
+	#define CYBOZU_HOST_UNKNOWN 0
+	#define CYBOZU_HOST_INTEL 1
+	#define CYBOZU_HOST_ARM 2
+	#if defined(_M_IX86) || defined(_M_AMD64) || defined(__x86_64__) || defined(__i386__)
+		#define CYBOZU_HOST CYBOZU_HOST_INTEL
+	#elif defined(__arm__)
+		#define CYBOZU_HOST CYBOZU_HOST_ARM
+	#else
+		#define CYBOZU_HOST CYBOZU_HOST_UNKNOWN
+	#endif
+#endif
 
 #ifndef CYBOZU_ENDIAN
 	#define CYBOZU_ENDIAN_UNKNOWN 0
 	#define CYBOZU_ENDIAN_LITTLE 1
 	#define CYBOZU_ENDIAN_BIG 2
-	#if defined(_M_IX86) || defined(_M_AMD64) || defined(__x86_64__) || defined(__i386__)
+	#if (CYBOZU_HOST == CYBOZU_HOST_INTEL)
+		#define CYBOZU_ENDIAN CYBOZU_ENDIAN_LITTLE
+	#elif (CYBOZU_HOST == CYBOZU_HOST_ARM) && defined(__ARM_EABI__)
 		#define CYBOZU_ENDIAN CYBOZU_ENDIAN_LITTLE
 	#else
 		#define CYBOZU_ENDIAN CYBOZU_ENDIAN_UNKNOWN
