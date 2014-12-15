@@ -349,6 +349,10 @@ public:
 	bool operator!=(const BitVectorT<T>& rhs) const { return v_ != rhs.v_; }
 };
 
-typedef BitVectorT<size_t> BitVector;
+#if (CYBOZU_OS_BIT == 32)
+typedef BitVectorT<uint32_t> BitVector;
+#else
+typedef BitVectorT<uint64_t> BitVector;
+#endif
 
 } // cybozu
