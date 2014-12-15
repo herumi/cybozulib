@@ -3,7 +3,9 @@ UNAME_S=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
   OS=Linux
 endif
-ifneq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S),Darwin)
+  CFLAGS+=-std=c++11 # clang
+else
   LDFLAGS += -lrt
 endif
 CP = cp -f
