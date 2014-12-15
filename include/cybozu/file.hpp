@@ -29,6 +29,9 @@
 	#include <fcntl.h>
 	#include <dirent.h>
 #endif
+#ifdef __APPLE__
+	#include <mach-o/dyld.h>
+#endif
 
 namespace cybozu {
 
@@ -344,37 +347,44 @@ inline std::string GetExePath(std::string *baseName = 0)
 	std::string path;
 	path.resize(4096);
 #ifdef _WIN32
-	if (GetModuleFileNameA(NULL, &path[0], static_cast<int>(path.size()) - 2)) {
-		PathRemoveExtensionA(&path[0]);
-		if (baseName) {
-			*baseName = PathFindFileNameA(&path[0]);
-		}
-		if (::PathRemoveFileSpecA(&path[0])) {
-			::PathAddBackslashA(&path[0]);
-			path[0] = static_cast<char>(tolower(path[0]));
-			path.resize(strlen(&path[0]));
-			ReplaceBackSlash(path);
-		}
+	if (!GetModuleFileNameA(NULL, &path[0], static_cast<int>(path.size()) - 2)) {
+		return "";
+	}
+	PathRemoveExtensionA(&path[0]);
+	if (baseName) {
+		*baseName = PathFindFileNameA(&path[0]);
+	}
+	if (::PathRemoveFileSpecA(&path[0])) {
+		::PathAddBackslashA(&path[0]);
+		path[0] = static_cast<char>(tolower(path[0]));
+		path.resize(strlen(&path[0]));
+		ReplaceBackSlash(path);
 	}
 #else
+#if defined(__APPLE__)
+	uint32_t size = (uint32_t)path.size();
+	if (_NSGetExecutablePath(&path[0], &size) != 0) {
+		return "";
+	}
+	path.resize(size);
+#else
 	int ret = readlink("/proc/self/exe", &path[0], path.size() - 2);
-
-	if (ret != -1) {
-		path.resize(ret);
-		size_t pos = path.find_last_of('/');
-		if (pos != std::string::npos) {
-			if (baseName) {
-				const std::string name = path.substr(pos + 1);
-				std::string suffix;
-				std::string base = GetBaseName(name, &suffix);
-				if (suffix == "exe") {
-					*baseName = base;
-				} else {
-					*baseName = name;
-				}
+	if (ret < 0) return "";
+	path.resize(ret);
+#endif
+	size_t pos = path.find_last_of('/');
+	if (pos != std::string::npos) {
+		if (baseName) {
+			const std::string name = path.substr(pos + 1);
+			std::string suffix;
+			std::string base = GetBaseName(name, &suffix);
+			if (suffix == "exe") {
+				*baseName = base;
+			} else {
+				*baseName = name;
 			}
-			path.resize(pos + 1);
 		}
+		path.resize(pos + 1);
 	}
 #endif
 	return path;
