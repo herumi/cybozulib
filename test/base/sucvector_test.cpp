@@ -5,7 +5,7 @@
 #include <sstream>
 #include <time.h>
 
-uint64_t select64n(uint64_t v, size_t n)
+uint64_t select64n(uint64_t v, uint64_t n)
 {
 	size_t count = 0;
 	for (int i = 0; i < 64; i++) {
