@@ -9,7 +9,7 @@
 #if (CYBOZU_HOST == CYBOZU_HOST_INTEL)
 	#if defined(_WIN32)
 		#include <intrin.h>
-	#elif defined(__linux__) || defined(__CYGWIN__)
+	#elif defined(__linux__) || defined(__CYGWIN__) || defined(__clang__)
 		#include <x86intrin.h>
 	#elif defined(__GNUC__)
 		#include <emmintrin.h>
@@ -111,26 +111,29 @@ uint64_t makeBitMask64(T x)
 	return (uint64_t(1) << x) - 1;
 }
 
-#if defined(_MSC_VER) || defined(__POPCNT__)
 template<class T>
 uint32_t popcnt(T x);
 
 template<>
 inline uint32_t popcnt<uint32_t>(uint32_t x)
 {
+#if defined(_MSC_VER)
 	return static_cast<uint32_t>(_mm_popcnt_u32(x));
+#else
+	return static_cast<uint32_t>(__builtin_popcount(x));
+#endif
 }
 
 template<>
 inline uint32_t popcnt<uint64_t>(uint64_t x)
 {
-#if defined(_WIN64) || defined(__x86_64__)
+#if defined(_WIN64)
 	return static_cast<uint32_t>(_mm_popcnt_u64(x));
+#elif defined(__x86_64__)
+	return static_cast<uint32_t>(__builtin_popcountl(x));
 #else
 	return popcnt<uint32_t>(static_cast<uint32_t>(x)) + popcnt<uint32_t>(static_cast<uint32_t>(x >> 32));
 #endif
 }
-
-#endif
 
 } // cybozu

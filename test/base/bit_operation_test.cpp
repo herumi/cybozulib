@@ -88,3 +88,47 @@ CYBOZU_TEST_AUTO(bsr64)
 		CYBOZU_TEST_EQUAL(cybozu::bsr(tbl[i].x), tbl[i].val);
 	}
 }
+
+CYBOZU_TEST_AUTO(popcnt)
+{
+	const struct {
+		uint32_t x;
+		uint32_t val;
+	} tbl[] = {
+		{ 0, 0 },
+		{ 1, 1 },
+		{ 2, 1 },
+		{ 3, 2 },
+		{ 4, 1 },
+		{ 5, 2 },
+		{ 0xfff, 12 },
+		{ 0xf0000000, 4 },
+		{ 0xffffffff, 32 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::popcnt(tbl[i].x), tbl[i].val);
+	}
+}
+
+CYBOZU_TEST_AUTO(popcnt64)
+{
+	const struct {
+		uint64_t x;
+		uint32_t val;
+	} tbl[] = {
+		{ 0, 0 },
+		{ 1, 1 },
+		{ 2, 1 },
+		{ 3, 2 },
+		{ 4, 1 },
+		{ 5, 2 },
+		{ 0xfff, 12 },
+		{ 0xffffffff, 32 },
+		{ 0xfffffffffull, 36 },
+		{ 0xf000000000000000ull, 4 },
+		{ 0xffffffffffffffffull, 64 },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::popcnt(tbl[i].x), tbl[i].val);
+	}
+}
