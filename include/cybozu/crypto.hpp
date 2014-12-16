@@ -6,9 +6,24 @@
 */
 
 #include <cybozu/exception.hpp>
+#ifdef __APPLE__
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#if 0 //#ifdef __APPLE__
+	#define COMMON_DIGEST_FOR_OPENSSL
+	#include <CommonCrypto/CommonDigest.h>
+	#include <CommonCrypto/CommonHMAC.h>
+	#define SHA1 CC_SHA1
+	#define SHA224 CC_SHA224
+	#define SHA256 CC_SHA256
+	#define SHA384 CC_SHA384
+	#define SHA512 CC_SHA512
+#else
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#endif
 #ifdef _MSC_VER
 	#pragma comment(lib, "libeay32.lib")
 #endif
@@ -264,3 +279,7 @@ public:
 };
 
 } }	// cybozu::crypto
+
+#ifdef __APPLE__
+	#pragma GCC diagnostic pop
+#endif
