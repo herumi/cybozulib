@@ -366,7 +366,7 @@ inline std::string GetExePath(std::string *baseName = 0)
 	if (_NSGetExecutablePath(&path[0], &size) != 0) {
 		return "";
 	}
-	path.resize(size);
+	path.resize(strlen(&path[0]));
 #else
 	int ret = readlink("/proc/self/exe", &path[0], path.size() - 2);
 	if (ret < 0) return "";
