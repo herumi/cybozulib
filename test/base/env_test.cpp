@@ -9,6 +9,9 @@ CYBOZU_TEST_AUTO(env)
 #ifdef _WIN32
 	const char *key = "SystemDrive";
 	const char *assumeVal = "C:";
+#elif defined(__APPLE__)
+	const char *key = "OSTYPE";
+	const char *assumeVal = "darwin";
 #else
 	const char *key = "OSTYPE";
 	const char *assumeVal = "linux";
