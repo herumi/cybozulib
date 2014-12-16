@@ -31,6 +31,8 @@ ifeq ($(BIT),0)
 else
 	BIT_OPT=-m$(BIT)
 endif
+CFLAGS+= $(BIT_OPT)
+LDFLAGS+= $(BIT_OPT)
 ifeq ($(MARCH),)
 ifeq ($(shell expr $(GCC_VER) \> 4.2.1),1)
 	CFLAGS+=-march=native
@@ -56,8 +58,12 @@ else
   OBJSUF=d
 endif
 
+TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
+EXTDIR:=$(TOPDIR)../cybozulib_ext/
+
 ####################################################
 
+CFLAGS+= -I$(TOPDIR)include
 LDFLAGS += -lz -lpthread -lssl -lcrypto
 HAS_BOOST=$(shell echo "\#include <boost/version.hpp>" | ($(CXX) -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
 HAS_MECAB=$(shell echo "\#include <mecab.h>" | ($(CXX) -E - 2>/dev/null) | grep "mecab.h" >/dev/null && echo "1")
@@ -70,11 +76,6 @@ ifeq ($(HAS_MECAB),1)
 endif
 
 ####################################################
-
-TOPDIR:=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
-EXTDIR:=$(TOPDIR)../cybozulib_ext/
-CFLAGS+= -I$(TOPDIR)include $(BIT_OPT)
-LDFLAGS+= -L$(TOPDIR)lib $(BIT_OPT) -Wl,-rpath,'$$ORIGIN/../lib'
 
 MKDEP = sh -ec '$(PRE)$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\1.o $@ : @g" > $@; [ -s $@ ] || rm -f $@; touch $@'
 

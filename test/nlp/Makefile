@@ -5,7 +5,7 @@ TARGET=$(TEST_FILE)
 LIBS=
 
 SRC=$(wildcard *.cpp)
-ifneq ($(HAS_MECAB),1)
+ifneq ($(HAS_EIGEN),1)
 	SRC:=$(filter-out svd_test.cpp,$(SRC))
 endif
 
