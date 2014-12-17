@@ -506,6 +506,8 @@ public:
 	*/
 	int queryAcceptNothrow(int msec = 1000, bool checkWrite = true)
 	{
+		if (!isValid()) return -EBADF;
+		if (sd_ >= FD_SETSIZE) return -EMFILE;
 		struct timeval timeout;
 		timeout.tv_sec = msec / 1000;
 		timeout.tv_usec = (msec % 1000) * 1000;
