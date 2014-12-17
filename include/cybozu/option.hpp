@@ -523,7 +523,7 @@ public:
 						remainsAfterDelimiter_->push_back(argv[i]);
 					}
 				}
-				return true;
+                break;
 			}
 			if (isOpt(argv[pos])) {
 				const std::string str = argv[pos] + 1;
