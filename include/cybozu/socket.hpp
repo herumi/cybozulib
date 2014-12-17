@@ -514,14 +514,14 @@ public:
 		fd_set fds;
 		FD_ZERO(&fds);
 		FD_SET((unsigned)sd_, &fds);
-        int fdNum;
+		int fdNum;
 		if (checkWrite) {
 			fdNum = ::select((int)sd_ + 1, &fds, 0, 0, &timeout);
 		} else {
 			fdNum = ::select((int)sd_ + 1, 0, &fds, 0, &timeout);
 		}
-        if (fdNum < 0) return -errno;
-        return fdNum;
+		if (fdNum < 0) return -errno;
+		return fdNum;
 	}
 	/**
 		return true if acceptable, otherwise false
