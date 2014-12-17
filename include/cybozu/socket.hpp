@@ -36,6 +36,11 @@
 #include <cybozu/itoa.hpp>
 #include <string>
 
+#ifdef __linux__
+	#define CYBOZU_USE_EPOLL
+	#include <sys/epoll.h>
+#endif
+
 namespace cybozu {
 
 #ifdef _MSC_VER
@@ -51,6 +56,98 @@ struct NetErrorNo : public cybozu::ErrorNo {
 };
 #else
 typedef cybozu::ErrorNo NetErrorNo;
+#endif
+
+#ifdef CYBOZU_USE_EPOLL
+
+namespace experimental {
+
+struct EpollEvent {
+	struct epoll_event ev_;
+	EpollEvent()
+	{
+		memset(&ev_, 0, sizeof(ev_));
+	}
+	void set(int fd, uint32_t events = EPOLLIN)
+	{
+		ev_.events = events;
+		ev_.data.fd = fd;
+	}
+	int getFd() const { return ev_.data.fd; }
+};
+
+class Epoll {
+	int efd_;
+	bool verify(const char *msg, int ret, int *err) const {
+		if (ret >= 0) return true;
+		if (err == 0) throw cybozu::Exception(msg) << cybozu::NetErrorNo();
+		*err = errno;
+		return false;
+	}
+public:
+	Epoll() : efd_(-1) {}
+	bool init(int *err = 0)
+	{
+		efd_ = ::epoll_create1(0);
+		return verify("Epoll:init", efd_, err);
+	}
+	~Epoll()
+	{
+		if (efd_ >= 0) ::close(efd_);
+	}
+	/*
+		throw if err == NULL
+	*/
+	bool ctrl(int op, int fd, EpollEvent *ev, int *err = 0) {
+		int ret = ::epoll_ctl(efd_, op, fd, &ev->ev_);
+		return verify("Epoll:ctrl", ret, err);
+	}
+	bool add(int fd, uint32_t events = EPOLLIN, int *err = 0) {
+		EpollEvent ev;
+		ev.set(fd, events);
+		return ctrl(EPOLL_CTL_ADD, fd, &ev, err);
+	}
+	bool del(int fd, int *err = 0) {
+		return ctrl(EPOLL_CTL_DEL, fd, NULL, err);
+	}
+	/*
+		msec : 0 : block
+	*/
+	int wait(EpollEvent *ev, int maxEv, int msec = 0)
+	{
+		/*
+		 0 : return immediately
+		-1 : block indefinitely
+		*/
+		if (msec == 0) {
+			msec = -1;
+		} else if (msec == -1) {
+			msec = 0;
+		}
+		int ret = ::epoll_wait(efd_, &ev->ev_, maxEv, msec);
+		if (ret == 0) return 0; // timeout
+		if (ret < 0) return -errno;
+		return ret;
+	}
+};
+
+struct AutoLock {
+	Epoll& ep_;
+	int fd_;
+	AutoLock(Epoll& ep, int fd, int events = EPOLLIN)
+		: ep_(ep)
+		, fd_(fd)
+	{
+		ep_.add(fd, events);
+	}
+	~AutoLock()
+	{
+		int err;
+		ep_.del(fd_, &err);
+	}
+};
+
+} // cybozu::experimental
 #endif
 
 namespace ssl {
@@ -419,24 +516,25 @@ public:
 		connect to address:port
 		@param address [in] address
 		@param port [in] port
+		@param msec: 0 : block
 	*/
-	void connect(const std::string& address, uint16_t port, int timeoutMsec = 0)
+	void connect(const std::string& address, uint16_t port, int msec = 0)
 	{
 		SocketAddr addr;
 		addr.set(address, port);
-		connect(addr, timeoutMsec);
+		connect(addr, msec);
 	}
 	/**
 		connect to resolved socket addr
 	*/
-	void connect(const cybozu::SocketAddr& addr, int timeoutMsec = 0)
+	void connect(const cybozu::SocketAddr& addr, int msec = 0)
 	{
 		if (isValid()) throw cybozu::Exception("Socket:connect:already connect");
 		sd_ = ::socket(addr.getFamily(), SOCK_STREAM, IPPROTO_TCP);
 		if (!isValid()) {
 			throw cybozu::Exception("Socket:connect:socket") << cybozu::NetErrorNo();
 		}
-		if (timeoutMsec == 0) {
+		if (msec == 0) {
 			if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
 				throw cybozu::Exception("Socket:connect") << cybozu::NetErrorNo() << addr.toStr();
 			}
@@ -449,7 +547,7 @@ public:
 				bool inProgress = errno == EINPROGRESS;
 #endif
 				if (!inProgress) throw cybozu::Exception("Socket:connect:not in progress") << cybozu::NetErrorNo() << addr.toStr();
-				if (!queryAccept(timeoutMsec, false)) throw cybozu::Exception("Socket:connect:timeout") << addr.toStr();
+				if (!queryAccept(msec, false)) throw cybozu::Exception("Socket:connect:timeout") << addr.toStr();
 				int err = getSocketOption(SO_ERROR);
 				if (err != 0) throw cybozu::Exception("Socket::connect:bad socket") << cybozu::NetErrorNo(err);
 			}
@@ -507,6 +605,18 @@ public:
 	int queryAcceptNoThrow(int msec = 1000, bool checkWrite = true)
 	{
 		if (sd_ < 0) return -EBADF;
+#ifdef CYBOZU_USE_EPOLL
+		int err;
+		experimental::Epoll ep;
+		if (!ep.init(&err)) return -err;
+		uint32_t events = checkWrite ? EPOLLIN : EPOLLOUT;
+		experimental::AutoLock al(ep, sd_, events);
+		experimental::EpollEvent ev;
+		int ret = ep.wait(&ev, 1, msec);
+		if (ret != 1) return ret;
+		assert(ev.getFd() == sd_);
+		return ret;
+#else
 		if (sd_ >= FD_SETSIZE) return -EMFILE;
 		struct timeval timeout;
 		timeout.tv_sec = msec / 1000;
@@ -522,6 +632,7 @@ public:
 		}
 		if (fdNum < 0) return -errno;
 		return fdNum;
+#endif
 	}
 	/**
 		return true if acceptable, otherwise false
