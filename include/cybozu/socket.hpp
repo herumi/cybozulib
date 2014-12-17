@@ -37,7 +37,7 @@
 #include <string>
 
 #ifdef __linux__
-	#define CYBOZU_USE_EPOLL
+//	#define CYBOZU_USE_EPOLL
 	#include <sys/epoll.h>
 #endif
 
