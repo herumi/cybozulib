@@ -264,16 +264,16 @@ private:
 		return t.tv_sec * 1000 + t.tv_usec / 1000; /* msec */
 	}
 #endif
-	void setBlock(bool isNonBlock)
+	void setBlocking(bool isBlocking)
 	{
 #ifdef _WIN32
-		u_long val = isNonBlock ? 1 : 0;
+		u_long val = isBlocking ? 0 : 1;
 		int ret = ::ioctlsocket(sd_, FIONBIO, &val);
 #else
-		int val = isNonBlock ? 1 : 0;
+		int val = isBlocking ? 0 : 1;
 		int ret = ::ioctl(sd_, FIONBIO, &val);
 #endif
-		if (ret < 0) throw cybozu::Exception("Socket:setBlock") << cybozu::NetErrorNo() << isNonBlock;
+		if (ret < 0) throw cybozu::Exception("Socket:setBlocking") << cybozu::NetErrorNo() << isBlocking;
 	}
 public:
 #ifndef _WIN32
@@ -441,7 +441,7 @@ public:
 				throw cybozu::Exception("Socket:connect") << cybozu::NetErrorNo() << addr.toStr();
 			}
 		} else {
-			setBlock(true);
+			setBlocking(false);
 			if (::connect(sd_, addr.get(), addr.getSize()) < 0) {
 #ifdef _WIN32
 				bool inProgress = WSAGetLastError() == WSAEWOULDBLOCK;
@@ -453,7 +453,7 @@ public:
 				int err = getSocketOption(SO_ERROR);
 				if (err != 0) throw cybozu::Exception("Socket::connect:bad socket") << cybozu::NetErrorNo(err);
 			}
-			setBlock(false);
+			setBlocking(true);
 		}
 	}
 
