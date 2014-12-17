@@ -504,9 +504,9 @@ public:
 		return zero if timeout
 		return negative(-errno) if error
 	*/
-	int queryAcceptNothrow(int msec = 1000, bool checkWrite = true)
+	int queryAcceptNoThrow(int msec = 1000, bool checkWrite = true)
 	{
-		if (!isValid()) return -EBADF;
+		if (sd_ < 0) return -EBADF;
 		if (sd_ >= FD_SETSIZE) return -EMFILE;
 		struct timeval timeout;
 		timeout.tv_sec = msec / 1000;
@@ -532,7 +532,7 @@ public:
 	*/
 	bool queryAccept(int msec = 1000, bool checkWrite = true)
 	{
-		int ret = queryAcceptNothrow(msec, checkWrite);
+		int ret = queryAcceptNoThrow(msec, checkWrite);
 		if (ret < 0) throw cybozu::Exception("Socket:queryAccept") << cybozu::NetErrorNo(-ret);
 		return ret > 0;
 	}
