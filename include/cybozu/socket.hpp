@@ -37,7 +37,7 @@
 #include <string>
 
 #ifdef __linux__
-//	#define CYBOZU_USE_EPOLL
+//	#define CYBOZU_SOCKET_USE_EPOLL
 	#include <sys/epoll.h>
 #endif
 
@@ -58,7 +58,7 @@ struct NetErrorNo : public cybozu::ErrorNo {
 typedef cybozu::ErrorNo NetErrorNo;
 #endif
 
-#ifdef CYBOZU_USE_EPOLL
+#ifdef CYBOZU_SOCKET_USE_EPOLL
 
 namespace experimental {
 
@@ -605,7 +605,7 @@ public:
 	int queryAcceptNoThrow(int msec = 1000, bool checkWrite = true)
 	{
 		if (sd_ < 0) return -EBADF;
-#ifdef CYBOZU_USE_EPOLL
+#ifdef CYBOZU_SOCKET_USE_EPOLL
 		int err;
 		experimental::Epoll ep;
 		if (!ep.init(&err)) return -err;
