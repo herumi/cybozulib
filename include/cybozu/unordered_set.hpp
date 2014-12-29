@@ -2,7 +2,7 @@
 
 #include <cybozu/inttype.hpp>
 
-#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
+#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11) || defined(__APPLE__)
 	#include <unordered_set>
 #elif (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_TR1)
 	#include <list>
