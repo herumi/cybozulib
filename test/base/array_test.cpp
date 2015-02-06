@@ -78,7 +78,7 @@ CYBOZU_TEST_AUTO(resize)
 	CYBOZU_TEST_EQUAL(a.size(), 10);
 	CYBOZU_TEST_ASSERT(isAligned(&a[0], 16));
 	for (size_t i = 0; i < 10; i++) {
-		a[i] = i;
+		a[i] = (char)i;
 	}
 	a.resize(20);
 	CYBOZU_TEST_EQUAL(a.size(), 20);
@@ -99,23 +99,33 @@ CYBOZU_TEST_AUTO(resize)
 	CYBOZU_TEST_ASSERT(!a.empty());
 	a.resize(0);
 	CYBOZU_TEST_EQUAL(a.size(), 0);
-	CYBOZU_TEST_EQUAL_POINTER(a.data(), (char*)0);
 	CYBOZU_TEST_ASSERT(a.empty());
+	a.resize(20);
+	CYBOZU_TEST_EQUAL(a.size(), 20);
+	CYBOZU_TEST_EQUAL(&a[0], p); // same pointer until resize(20)
+	a.resize(21);
+	CYBOZU_TEST_EQUAL(a.size(), 21);
+	CYBOZU_TEST_ASSERT(&a[0] != p); // different pointer
 }
 
 CYBOZU_TEST_AUTO(AlignedArray_copy)
 {
 	cybozu::AlignedArray<int> x, z, y;
 	x.resize(10);
-	for (size_t i = 0; i < x.size(); i++) x[i] = i;
+	for (size_t i = 0; i < x.size(); i++) x[i] = (int)i;
 	y.resize(5);
 
 	y = x;
 	z = x;
 	cybozu::AlignedArray<int> w(x);
 	CYBOZU_TEST_EQUAL_ARRAY(x.data(), y.data(), x.size());
-	CYBOZU_TEST_EQUAL_ARRAY(x.data(), y.data(), x.size());
 	CYBOZU_TEST_EQUAL_ARRAY(x.data(), z.data(), x.size());
+	CYBOZU_TEST_EQUAL_ARRAY(x.data(), w.data(), x.size());
+
+	w.resize(25);
+	for (size_t i = 0; i < w.size(); i++) w[i] = (int)i + 123;
+	w = x;
+	CYBOZU_TEST_EQUAL_ARRAY(x.data(), w.data(), x.size());
 }
 
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
@@ -129,10 +139,10 @@ CYBOZU_TEST_AUTO(AlignedArray_move)
 	CYBOZU_TEST_EQUAL(x.size(), 10);
 	CYBOZU_TEST_EQUAL(y.size(), 5);
 	for (size_t i = 0; i < x.size(); i++) {
-		x[i] = i;
+		x[i] = (long)i;
 	}
 	for (size_t i = 0; i < y.size(); i++) {
-		y[i] = i + 10;
+		y[i] = (long)i + 10;
 	}
 	for (size_t i = 0; i < x.size(); i++) {
 		CYBOZU_TEST_EQUAL(x[i], (long)i);

@@ -31,6 +31,7 @@ inline void *AlignedMalloc(size_t size, size_t alignment)
 inline void AlignedFree(void *p)
 {
 #ifdef _MSC_VER
+	if (p == 0) return;
 	_aligned_free(p);
 #else
 	free(p);
@@ -73,100 +74,109 @@ template<class T, size_t N = 16, bool defaultDoClear = true>
 class AlignedArray {
 	T *p_;
 	size_t size_;
-	T *alloc(size_t size, bool doClear) const
+	size_t allocSize_;
+	T *alloc(size_t size) const
 	{
-		// +16 to avoid overrunning by SSE4.2 string operation
-		T *p = static_cast<T*>(AlignedMalloc(size * sizeof(T) + 16, N));
+		T *p = static_cast<T*>(AlignedMalloc(size * sizeof(T), N));
 		if (p == 0) throw std::bad_alloc();
-		if (doClear) {
-			for (size_t i = 0; i < size; i++) {
-				p[i] = 0;
-			}
-		}
 		return p;
 	}
-	void copy(T *dst, const T *src) const
+	void copy(T *dst, const T *src, size_t n) const
 	{
-		for (size_t i = 0; i < size_; i++) {
-			dst[i] = src[i];
-		}
+		for (size_t i = 0; i < n; i++) dst[i] = src[i];
+	}
+	void setZero(T *p, size_t n) const
+	{
+		for (size_t i = 0; i < n; i++) p[i] = 0;
+	}
+	/*
+		alloc allocN and copy [p, p + copyN) to new p_
+		don't modify size_
+	*/
+	void allocCopy(size_t allocN, const T *p, size_t copyN)
+	{
+		T *q = alloc(allocN);
+		copy(q, p, copyN);
+		AlignedFree(p_);
+		p_ = q;
+		allocSize_ = allocN;
 	}
 public:
 	/*
-		don't clear buffer with zero if doClear is false and T = char/int, ...
+		don't clear buffer with zero if doClear is false
 	*/
 	explicit AlignedArray(size_t size = 0, bool doClear = defaultDoClear)
 		: p_(0)
 		, size_(0)
+		, allocSize_(0)
 	{
 		resize(size, doClear);
 	}
 	AlignedArray(const AlignedArray& rhs)
 		: p_(0)
 		, size_(0)
+		, allocSize_(0)
 	{
 		*this = rhs;
 	}
 	AlignedArray& operator=(const AlignedArray& rhs)
 	{
-		clear();
-		p_ = alloc(rhs.size_, false);
+		if (allocSize_ < rhs.size_) {
+			allocCopy(rhs.size_, rhs.p_, rhs.size_);
+		} else {
+			copy(p_, rhs.p_, rhs.size_);
+		}
 		size_ = rhs.size_;
-		copy(p_, rhs.p_);
 		return *this;
 	}
 #if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
 	AlignedArray(AlignedArray&& rhs) throw()
 		: p_(rhs.p_)
 		, size_(rhs.size_)
+		, allocSize_(rhs.allocSize_)
 	{
 		rhs.p_ = 0;
 		rhs.size_ = 0;
+		rhs.allocSize_ = 0;
 	}
 	AlignedArray& operator=(AlignedArray&& rhs) throw()
 	{
-		clear();
-		p_ = rhs.p_;
-		size_ = rhs.size_;
-		rhs.p_ = 0;
-		rhs.size_ = 0;
+		swap(rhs);
+		rhs.clear();
 		return *this;
 	}
 #endif
 	/*
 		don't clear buffer with zero if doClear is false
+		@note don't free if shrinked
 	*/
 	void resize(size_t size, bool doClear = defaultDoClear)
 	{
-		if (size == size_) return;
 		// shrink
-		if (size < size_) {
+		if (size <= size_) {
 			size_ = size;
-			if (size == 0) {
-				AlignedFree(p_);
-				p_ = 0;
-			}
 			return;
 		}
-		// extend
-		T *p = alloc(size, doClear);
-		copy(p, p_);
-		AlignedFree(p_);
-		p_ = p;
+		// realloc if necessary
+		if (size > allocSize_) {
+			allocCopy(size, p_, size_);
+		}
+		if (doClear) setZero(p_ + size_, size - size_);
 		size_ = size;
 	}
-	void clear()
+	void clear() // not free
 	{
-		resize(0, false);
+		size_ = 0;
 	}
 	~AlignedArray()
 	{
-		clear();
+		AlignedFree(p_);
 	}
 	void swap(AlignedArray& rhs) throw()
 	{
 		std::swap(p_, rhs.p_);
 		std::swap(size_, rhs.size_);
+		std::swap(allocSize_, rhs.allocSize_);
 	}
 	T& operator[](size_t idx) throw() { return p_[idx]; }
 	const T& operator[](size_t idx) const throw() { return p_[idx]; }
