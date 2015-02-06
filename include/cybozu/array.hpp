@@ -69,7 +69,7 @@ public:
 	T must be POD type
 	16byte aligment array
 */
-template<class T, size_t N = 16>
+template<class T, size_t N = 16, bool defaultDoClear = true>
 class AlignedArray {
 	T *p_;
 	size_t size_;
@@ -95,7 +95,7 @@ public:
 	/*
 		don't clear buffer with zero if doClear is false and T = char/int, ...
 	*/
-	explicit AlignedArray(size_t size = 0, bool doClear = true)
+	explicit AlignedArray(size_t size = 0, bool doClear = defaultDoClear)
 		: p_(0)
 		, size_(0)
 	{
@@ -136,7 +136,7 @@ public:
 	/*
 		don't clear buffer with zero if doClear is false
 	*/
-	void resize(size_t size, bool doClear = true)
+	void resize(size_t size, bool doClear = defaultDoClear)
 	{
 		if (size == size_) return;
 		// shrink
