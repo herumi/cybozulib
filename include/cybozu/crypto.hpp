@@ -208,10 +208,25 @@ class Cipher {
 public:
 	enum Name {
 		N_AES128_CBC,
+		N_AES192_CBC,
 		N_AES256_CBC,
 		N_AES128_ECB, // be carefull to use
+		N_AES192_ECB, // be carefull to use
 		N_AES256_ECB, // be carefull to use
 	};
+	static inline size_t getSize(Name name)
+	{
+		switch (name) {
+		case N_AES128_CBC: return 128;
+		case N_AES192_CBC: return 192;
+		case N_AES256_CBC: return 256;
+		case N_AES128_ECB: return 128;
+		case N_AES192_ECB: return 192;
+		case N_AES256_ECB: return 256;
+		default:
+			throw cybozu::Exception("crypto:Cipher:getSize") << name;
+		}
+	}
 	enum Mode {
 		Decoding,
 		Encoding
@@ -222,8 +237,10 @@ public:
 		EVP_CIPHER_CTX_init(&ctx_);
 		switch (name) {
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
+		case N_AES192_CBC: cipher_ = EVP_aes_192_cbc(); break;
 		case N_AES256_CBC: cipher_ = EVP_aes_256_cbc(); break;
 		case N_AES128_ECB: cipher_ = EVP_aes_128_ecb(); break;
+		case N_AES192_ECB: cipher_ = EVP_aes_192_ecb(); break;
 		case N_AES256_ECB: cipher_ = EVP_aes_256_ecb(); break;
 		default:
 			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
