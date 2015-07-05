@@ -161,6 +161,24 @@ static int CYBOZU_UNUSED g_loopNum;
 }
 
 /*
+	double clk;
+	CYBOZU_BENCH_T(clk, <func>, <param1>, <param2>, ...);
+	clk is set by CYBOZU_BENCH_T
+*/
+#define CYBOZU_BENCH_T(clk, func, ...) \
+{ \
+	const uint64_t _cybozu_maxClk = cybozu::CpuClock::maxClk; \
+	cybozu::CpuClock _cybozu_clk; \
+	for (int _cybozu_i = 0; _cybozu_i < cybozu::CpuClock::loopN2; _cybozu_i++) { \
+		_cybozu_clk.begin(); \
+		for (int _cybozu_j = 0; _cybozu_j < cybozu::CpuClock::loopN1; _cybozu_j++) { func(__VA_ARGS__); } \
+		_cybozu_clk.end(); \
+		if (_cybozu_clk.getClock() > _cybozu_maxClk) break; \
+	} \
+	clk = _cybozu_clk.getClock() / (double)_cybozu_clk.getCount() / cybozu::CpuClock::loopN1; \
+}
+
+/*
 	loop counter N is given
 	CYBOZU_BENCH_C(<msg>, <counter>, <func>, <param1>, <param2>, ...);
 	if msg == "" then only set g_clk, g_loopNum
