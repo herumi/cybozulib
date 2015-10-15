@@ -269,6 +269,13 @@ public:
 		if (ret != 1) {
 			throw cybozu::Exception("crypto:Cipher:setup:EVP_CIPHER_CTX_set_padding") << ret;
 		}
+/*
+		const int ivLen = static_cast<int>(iv.size());
+		const int expectedIvLen = EVP_CIPHER_CTX_iv_length(&ctx_);
+		if (ivLen != expectedIvLen) {
+			throw cybozu::Exception("crypto:Cipher:setup:ivLen") << ivLen << expectedIvLen;
+		}
+*/
 	}
 	/*
 		the size of outBuf must be larger than inBufSize + blockSize
