@@ -62,7 +62,11 @@ class Ctx {
 public:
 	explicit Ctx()
 		: engine_(Engine::getInstance())
-		, ctx_(SSL_CTX_new(SSLv3_client_method()))
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+		, ctx_(SSL_CTX_new(TLS_client_method()))
+#else
+		, ctx_(SSL_CTX_new(TLSv1_client_method()))
+#endif
 	{
 		if (ctx_ == 0) {
 			engine_.putError();
@@ -140,8 +144,9 @@ public:
 		int size = (int)std::min((size_t)0x7fffffff, bufSize);
 	RETRY:
 		int ret = SSL_read(ssl_, buf, size);
-		if (ret > 0) return size;
+		if (ret > 0) return ret;
 		ret = SSL_get_error(ssl_, ret);
+		if (ret == SSL_ERROR_ZERO_RETURN) return 0;
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) goto RETRY;
 		Engine::getInstance().putError();
 		throw cybozu::Exception("ssl:ClientSocket:readSome") << ret;
