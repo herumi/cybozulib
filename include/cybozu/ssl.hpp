@@ -18,8 +18,17 @@
 //	#pragma warning(disable : 4996)
 //	#include <openssl/applink.c>
 //	#pragma warning(pop)
-	#pragma comment(lib, "ssleay32.lib")
-	#pragma comment(lib, "libeay32.lib")
+	#ifdef _MT
+		#pragma comment(lib, "mt/ssleay32.lib")
+		#pragma comment(lib, "advapi32.lib")
+		#pragma comment(lib, "user32.lib")
+
+		#pragma comment(lib, "mt/libeay32.lib")
+		#pragma comment(lib, "gdi32.lib")
+	#else
+		#pragma comment(lib, "ssleay32.lib")
+		#pragma comment(lib, "libeay32.lib")
+	#endif
 #endif
 
 namespace cybozu {
