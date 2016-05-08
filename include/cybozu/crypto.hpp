@@ -25,7 +25,12 @@
 #include <openssl/sha.h>
 #endif
 #ifdef _MSC_VER
-	#pragma comment(lib, "libeay32.lib")
+	#ifdef _MT
+		#pragma comment(lib, "mt/libeay32.lib")
+		#pragma comment(lib, "gdi32.lib")
+	#else
+		#pragma comment(lib, "libeay32.lib")
+	#endif
 #endif
 
 namespace cybozu {
