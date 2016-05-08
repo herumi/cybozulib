@@ -26,23 +26,9 @@ class Mmap {
 #ifdef _WIN32
 	HANDLE hFile_;
 	HANDLE hMap_;
-#endif
-	uint64_t size_;
-public:
-	explicit Mmap(const std::string& fileName)
-#ifdef _WIN32
-		: map_(0)
-		, hFile_(INVALID_HANDLE_VALUE)
-		, hMap_(0)
-#else
-		: map_(static_cast<const char*>(MAP_FAILED))
-#endif
-		, size_(0)
+	void subOpen(const std::string& fileName)
 	{
 		const char *errMsg = 0;
-#ifdef _WIN32
-		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile_ == INVALID_HANDLE_VALUE) {
 			errMsg = "CreateFile"; goto ERR_EXIT;
 		}
@@ -73,7 +59,26 @@ ERR_EXIT:
 		if (hMap_) CloseHandle(hMap_);
 		if (hFile_ != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
 		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
+	}
+#endif
+	uint64_t size_;
+public:
+	explicit Mmap(const std::string& fileName)
+#ifdef _WIN32
+		: map_(0)
+		, hFile_(INVALID_HANDLE_VALUE)
+		, hMap_(0)
 #else
+		: map_(static_cast<const char*>(MAP_FAILED))
+#endif
+		, size_(0)
+	{
+#ifdef _WIN32
+		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		subOpen(fileName);
+#else
+		const char *errMsg = 0;
 		int fd = ::open(fileName.c_str(), O_RDONLY);
 		if (fd == -1) {
 			errMsg = "open"; goto ERR_EXIT;
@@ -104,6 +109,29 @@ ERR_EXIT:
 		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
 #endif
 	}
+#ifdef _WIN32
+	explicit Mmap(const std::wstring& fileName)
+		: map_(0)
+		, hFile_(INVALID_HANDLE_VALUE)
+		, hMap_(0)
+		, size_(0)
+	{
+		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		std::string hex;
+		for (size_t i = 0; i < fileName.size(); i++) {
+			uint16_t c = fileName[i];
+			if (c < 0x80) {
+				hex += char(c);
+			} else {
+				char buf[16];
+				CYBOZU_SNPRINTF(buf, sizeof(buf), "\\u%04x", c);
+				hex += buf;
+			}
+		}
+		subOpen(hex);
+	}
+#endif
 	~Mmap()
 	{
 #ifdef _WIN32
