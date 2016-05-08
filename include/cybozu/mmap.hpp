@@ -26,7 +26,8 @@ class Mmap {
 #ifdef _WIN32
 	HANDLE hFile_;
 	HANDLE hMap_;
-	void subOpen(const std::string& fileName)
+	template<class T>
+	void subOpen(const T& fileName)
 	{
 		const char *errMsg = 0;
 		if (hFile_ == INVALID_HANDLE_VALUE) {
@@ -63,21 +64,32 @@ ERR_EXIT:
 #endif
 	uint64_t size_;
 public:
-	explicit Mmap(const std::string& fileName)
 #ifdef _WIN32
+	explicit Mmap(const std::string& fileName)
 		: map_(0)
 		, hFile_(INVALID_HANDLE_VALUE)
 		, hMap_(0)
-#else
-		: map_(static_cast<const char*>(MAP_FAILED))
-#endif
 		, size_(0)
 	{
-#ifdef _WIN32
 		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		subOpen(fileName);
+	}
+	explicit Mmap(const std::wstring& fileName)
+		: map_(0)
+		, hFile_(INVALID_HANDLE_VALUE)
+		, hMap_(0)
+		, size_(0)
+	{
+		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		subOpen(fileName);
+	}
 #else
+	explicit Mmap(const std::string& fileName)
+		: map_(static_cast<const char*>(MAP_FAILED))
+		, size_(0)
+	{
 		const char *errMsg = 0;
 		int fd = ::open(fileName.c_str(), O_RDONLY);
 		if (fd == -1) {
@@ -107,29 +119,6 @@ public:
 		std::string reason = cybozu::ErrorNo().toString();
 		if (fd != -1) close(fd);
 		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
-#endif
-	}
-#ifdef _WIN32
-	explicit Mmap(const std::wstring& fileName)
-		: map_(0)
-		, hFile_(INVALID_HANDLE_VALUE)
-		, hMap_(0)
-		, size_(0)
-	{
-		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		std::string hex;
-		for (size_t i = 0; i < fileName.size(); i++) {
-			uint16_t c = fileName[i];
-			if (c < 0x80) {
-				hex += char(c);
-			} else {
-				char buf[16];
-				CYBOZU_SNPRINTF(buf, sizeof(buf), "\\u%04x", c);
-				hex += buf;
-			}
-		}
-		subOpen(hex);
 	}
 #endif
 	~Mmap()

@@ -32,6 +32,24 @@ inline std::string makeString(const char *str, size_t size)
 	return std::string(str, std::min<size_t>(size, 16));
 }
 
+#ifdef _WIN32
+inline std::string wstr2str(const std::wstring& wstr)
+{
+	std::string str;
+	for (size_t i = 0; i < wstr.size(); i++) {
+		uint16_t c = wstr[i];
+		if (c < 0x80) {
+			str += char(c);
+		} else {
+			char buf[16];
+			CYBOZU_SNPRINTF(buf, sizeof(buf), "\\u%04x", c);
+			str += buf;
+		}
+	}
+	return str;
+}
+#endif
+
 } // cybozu::exception
 
 /**
@@ -101,14 +119,28 @@ public:
 #endif
 		return str_;
 	}
+	Exception& operator<<(const char *s)
+	{
+		str_ += ':';
+		str_ += s;
+		return *this;
+	}
+	Exception& operator<<(const std::string& s)
+	{
+		return operator<<(s.c_str());
+	}
+#ifdef _WIN32
+	Exception& operator<<(const std::wstring& s)
+	{
+		return operator<<(cybozu::exception::wstr2str(s));
+	}
+#endif
 	template<class T>
 	Exception& operator<<(const T& x)
 	{
-		str_ += ':';
 		std::ostringstream os;
 		os << x;
-		str_ += os.str();
-		return *this;
+		return operator<<(os.str());
 	}
 };
 
