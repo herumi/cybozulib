@@ -36,7 +36,7 @@
 namespace cybozu {
 
 class File {
-	std::string name_;
+	std::string name_; // used for only errmsg
 #ifdef _WIN32
 	typedef HANDLE handleType;
 #else
@@ -50,6 +50,84 @@ class File {
 	bool isReadOnly_;
 	File(const File&);
 	void operator=(const File&);
+#ifdef _WIN32
+	void openSub()
+	{
+	}
+#endif
+	void verifyMode(std::ios::openmode mode)
+	{
+		doClose_ = true;
+		bool isCorrectMode = true;
+		if (!!(mode & std::ios::in) == !!(mode & std::ios::out)) {
+			isCorrectMode = false;
+		} else {
+			if (mode & std::ios::in) {
+				isReadOnly_ = true;
+				if ((mode & std::ios::app) || (mode & std::ios::trunc)) isCorrectMode = false;
+			} else {
+				isReadOnly_ = false;
+				if ((mode & std::ios::app) && (mode & std::ios::trunc)) isCorrectMode = false;
+			}
+		}
+		if (!isCorrectMode) {
+			throw cybozu::Exception("File:open:bad mode") << name_ << mode;
+		}
+	}
+#ifdef _WIN32
+	HANDLE createFile(const std::string& name, DWORD access, DWORD share, DWORD disposition)
+	{
+		return  ::CreateFileA(name.c_str(), access, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+	}
+	HANDLE createFile(const std::wstring& name, DWORD access, DWORD share, DWORD disposition)
+	{
+		return  ::CreateFileW(name.c_str(), access, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+	}
+	template<class T>
+	void setHandle(const T& name, std::ios::openmode mode)
+	{
+		DWORD access = GENERIC_READ;
+		DWORD disposition = OPEN_EXISTING;
+		DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		if (mode & std::ios::out) {
+			access = GENERIC_WRITE;
+			disposition = CREATE_ALWAYS;
+			if (mode & std::ios::app) {
+				disposition = OPEN_ALWAYS;
+			}
+		}
+		hdl_ = createFile(name, access, share, disposition);
+	}
+#else
+	void setHandle(const std::string& name, std::ios::openmode mode)
+	{
+		int flags = O_RDONLY; // | O_NOATIME; /* can't use on NFS */
+		mode_t access = 0644;
+		if (mode & std::ios::out) {
+			flags = O_WRONLY | O_CREAT;
+			if (mode & std::ios::app) {
+				flags |= O_APPEND;
+			} else {
+				flags |= O_TRUNC;
+			}
+		}
+		hdl_ = ::open(name.c_str(), flags, access);
+	}
+#endif
+	template<class T>
+	void openSub(const T& name, std::ios::openmode mode)
+	{
+		if (isOpen()) throw cybozu::Exception("File:open:alread opened") << name_;
+		verifyMode(mode);
+		setHandle(name, mode);
+		if (isOpen()) {
+			if (mode & std::ios::app) {
+				seek(getSize(), std::ios::beg);
+			}
+			return;
+		}
+		throw cybozu::Exception("File:open") << name_ << cybozu::ErrorNo() << static_cast<int>(mode);
+	}
 public:
 	File()
 		: hdl_(INVALID_HANDLE_VALUE)
@@ -95,60 +173,8 @@ public:
 	*/
 	void open(const std::string& name, std::ios::openmode mode)
 	{
-		if (isOpen()) throw cybozu::Exception("File:open:alread opened") << name;
 		name_ = name;
-		doClose_ = true;
-		bool isCorrectMode = true;
-		// verify mode
-		if (!!(mode & std::ios::in) == !!(mode & std::ios::out)) {
-			isCorrectMode = false;
-		} else {
-			if (mode & std::ios::in) {
-				isReadOnly_ = true;
-				if ((mode & std::ios::app) || (mode & std::ios::trunc)) isCorrectMode = false;
-			} else {
-				isReadOnly_ = false;
-				if ((mode & std::ios::app) && (mode & std::ios::trunc)) isCorrectMode = false;
-			}
-		}
-		if (!isCorrectMode) {
-			throw cybozu::Exception("File:open:bad mode") << name_ << mode;
-		}
-#ifdef _WIN32
-		DWORD access = GENERIC_READ;
-		DWORD disposition = OPEN_EXISTING;
-		DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE;
-		if (mode & std::ios::out) {
-			access = GENERIC_WRITE;
-			disposition = CREATE_ALWAYS;
-			if (mode & std::ios::app) {
-				disposition = OPEN_ALWAYS;
-			}
-		}
-#else
-		int flags = O_RDONLY; // | O_NOATIME; /* can't use on NFS */
-		mode_t access = 0644;
-		if (mode & std::ios::out) {
-			flags = O_WRONLY | O_CREAT;
-			if (mode & std::ios::app) {
-				flags |= O_APPEND;
-			} else {
-				flags |= O_TRUNC;
-			}
-		}
-#endif
-#ifdef _WIN32
-		hdl_ = ::CreateFileA(name.c_str(), access, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
-#else
-		hdl_ = ::open(name.c_str(), flags, access);
-#endif
-		if (isOpen()) {
-			if (mode & std::ios::app) {
-				seek(getSize(), std::ios::beg);
-			}
-			return;
-		}
-		throw cybozu::Exception("File:open") << name_ << cybozu::ErrorNo() << static_cast<int>(mode);
+		openSub(name, mode);
 	}
 	void openW(const std::string& name)
 	{
@@ -158,6 +184,26 @@ public:
 	{
 		open(name, std::ios::in | std::ios::binary);
 	}
+#ifdef _WIN32
+	void open(const std::wstring& name, std::ios::openmode mode)
+	{
+		name_ = cybozu::exception::wstr2str(name);
+		openSub(name, mode);
+	}
+	File(const std::wstring& name, std::ios::openmode mode)
+		: hdl_(INVALID_HANDLE_VALUE)
+	{
+		open(name, mode);
+	}
+	void openW(const std::wstring& name)
+	{
+		open(name, std::ios::out | std::ios::binary | std::ios::trunc);
+	}
+	void openR(const std::wstring& name)
+	{
+		open(name, std::ios::in | std::ios::binary);
+	}
+#endif
 	void close()
 	{
 		if (!isOpen()) return;
