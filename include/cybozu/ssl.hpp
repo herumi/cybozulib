@@ -13,22 +13,9 @@
 #include <openssl/rand.h>
 //#include <openssl/crypto.h>
 //#include <openssl/conf.h>
-#ifdef _WIN32
-//	#pragma warning(push)
-//	#pragma warning(disable : 4996)
-//	#include <openssl/applink.c>
-//	#pragma warning(pop)
-	#ifdef _MT
-		#pragma comment(lib, "mt/ssleay32.lib")
-		#pragma comment(lib, "advapi32.lib")
-		#pragma comment(lib, "user32.lib")
-
-		#pragma comment(lib, "mt/libeay32.lib")
-		#pragma comment(lib, "gdi32.lib")
-	#else
-		#pragma comment(lib, "ssleay32.lib")
-		#pragma comment(lib, "libeay32.lib")
-	#endif
+#ifdef _MSC_VER
+	#include <cybozu/link_libeay32.hpp>
+	#include <cybozu/link_ssleay32.hpp>
 #endif
 
 namespace cybozu {
