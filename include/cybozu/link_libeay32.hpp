@@ -9,6 +9,7 @@
 		#pragma comment(lib, "mt/14/libeay32.lib")
 	#elif _MSC_VER == 1800 // VC2013
 		#pragma comment(lib, "mt/12/libeay32.lib")
+		#pragma comment(lib, "advapi32.lib")
 	#endif
 	#pragma comment(lib, "gdi32.lib")
 #endif

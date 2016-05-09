@@ -9,7 +9,7 @@
 		#pragma comment(lib, "mt/14/mpir.lib")
 		#pragma comment(lib, "mt/14/mpirxx.lib")
 	#elif _MSC_VER == 1800 // VC2013
-		#pragma comment(lib, "mt/14/mpir.lib")
-		#pragma comment(lib, "mt/14/mpirxx.lib")
+		#pragma comment(lib, "mt/12/mpir.lib")
+		#pragma comment(lib, "mt/12/mpirxx.lib")
 	#endif
 #endif
