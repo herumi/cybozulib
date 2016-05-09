@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
 	try {
 		argc--, argv++;
 		if (argc < 2) {
-			fprintf(stderr, "ssl-smpl host dir\n");
-			fprintf(stderr, " ex ssl-smpl www.cybozu.com /\n");
+			fprintf(stderr, "ssl_smpl host dir\n");
+			fprintf(stderr, " ex ssl_smpl www.cybozu.com /\n");
 			return 1;
 		}
 		const std::string host = argv[0];
