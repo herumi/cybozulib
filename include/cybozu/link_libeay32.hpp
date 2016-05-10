@@ -12,4 +12,5 @@
 		#pragma comment(lib, "advapi32.lib")
 	#endif
 	#pragma comment(lib, "gdi32.lib")
+	#pragma comment(lib, "user32.lib")
 #endif
