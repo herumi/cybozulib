@@ -11,5 +11,8 @@
 	#elif _MSC_VER == 1800 // VC2013
 		#pragma comment(lib, "mt/12/mpir.lib")
 		#pragma comment(lib, "mt/12/mpirxx.lib")
+	#elif _MSC_VER == 1700 // VC2012
+		#pragma comment(lib, "mt/11/mpir.lib")
+		#pragma comment(lib, "mt/11/mpirxx.lib")
 	#endif
 #endif
