@@ -617,7 +617,10 @@ public:
 		assert(ev.getFd() == sd_);
 		return ret;
 #else
+#ifndef _WIN32
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms739169.aspx
 		if (sd_ >= FD_SETSIZE) return -EMFILE;
+#endif
 		struct timeval timeout;
 		timeout.tv_sec = msec / 1000;
 		timeout.tv_usec = (msec % 1000) * 1000;
