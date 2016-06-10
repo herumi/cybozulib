@@ -77,9 +77,9 @@ public:
 		if (msg && *msg) printf("\n");
 	}
 	// adhoc constatns for CYBOZU_BENCH
-	static const int loopN1 = 1000;
-	static const int loopN2 = 1000000;
-	static const uint64_t maxClk = (uint64_t)3e8;
+	static const int loopN1 = 100;
+	static const int loopN2 = 100;
+	static const uint64_t maxClk = (uint64_t)1e7;
 private:
 	uint64_t clock_;
 	int count_;
@@ -129,9 +129,9 @@ public:
 		if (msg && *msg) printf("\n");
 	}
 	// adhoc constatns for CYBOZU_BENCH
-	static const int loopN1 = 1000;
-	static const int loopN2 = 1000000;
-	static const uint64_t maxClk = (uint64_t)3e8;
+	static const int loopN1 = 100;
+	static const int loopN2 = 100;
+	static const uint64_t maxClk = (uint64_t)1e7;
 };
 #endif
 
