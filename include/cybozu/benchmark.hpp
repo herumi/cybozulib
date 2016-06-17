@@ -11,16 +11,24 @@
 #endif
 #include <stdio.h>
 
-#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
-	#define CYBOZU_BENCH_USE_RDTSC
-#endif
-#ifdef CYBOZU_BENCH_USE_RDTSC
-	#ifdef _MSC_VER
-		#include <intrin.h>
+#ifndef CYBOZU_BENCH_DONT_USE_RDTSC
+	#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
+		#define CYBOZU_BENCH_USE_RDTSC
+		#define CYBOZU_BENCH_USE_CPU_TIMER
 	#endif
+	#if defined(__GNUC__) && defined(__ARM_ARCH_7A__)
+		#define CYBOZU_BENCH_USE_MRC
+		#define CYBOZU_BENCH_USE_CPU_TIMER
+	#endif
+#endif
+
+
+#include <assert.h>
+#include <time.h>
+#ifdef _MSC_VER
+	#include <intrin.h>
+	#include <sys/timeb.h>
 #else
-	#include <time.h>
-	#include <assert.h>
 #endif
 
 #ifndef CYBOZU_UNUSED
@@ -33,17 +41,33 @@
 
 namespace cybozu {
 
-#ifdef CYBOZU_BENCH_USE_RDTSC
 class CpuClock {
 public:
-	static inline uint64_t getRdtsc()
+	static inline uint64_t getCpuClk()
 	{
+#ifdef CYBOZU_BENCH_USE_RDTSC
 #ifdef _MSC_VER
 		return __rdtsc();
 #else
 		unsigned int eax, edx;
 		__asm__ volatile("rdtsc" : "=a"(eax), "=d"(edx));
 		return ((uint64_t)edx << 32) | eax;
+#endif
+#elif defined(CYBOZU_BENCH_USE_MRC)
+		uint32_t clk;
+		__asm__ volatile("mrc p15, 0, %0, c9, c13, 0" : "=r"(clk));
+		return clk;
+#else
+#ifdef _MSC_VER
+		struct _timeb timeb;
+		_ftime_s(&timeb);
+		return uint64_t(timeb.time) * 1000000000 + timeb.millitm * 1000000;
+#else
+		struct timespec tp;
+		int ret CYBOZU_UNUSED = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
+		assert(ret == 0);
+		return uint64_t(tp.tv_sec) * 1000000000 + tp.tv_nsec;
+#endif
 #endif
 	}
 	CpuClock()
@@ -53,11 +77,11 @@ public:
 	}
 	void begin()
 	{
-		clock_ -= getRdtsc();
+		clock_ -= getCpuClk();
 	}
 	void end()
 	{
-		clock_ += getRdtsc();
+		clock_ += getCpuClk();
 		count_++;
 	}
 	int getCount() const { return count_; }
@@ -67,6 +91,7 @@ public:
 	{
 		double t = getClock() / double(getCount()) / N;
 		if (msg && *msg) printf("%s ", msg);
+#ifdef CYBOZU_BENCH_USE_CPU_TIMER
 		if (t > 1e6) {
 			printf("%7.3fMclk", t * 1e-6);
 		} else if (t > 1e3) {
@@ -74,66 +99,31 @@ public:
 		} else {
 			printf("%6.2f clk", t);
 		}
+#else
+		if (t > 1e6) {
+			printf("%7.3fmsec", t * 1e-6);
+		} else if (t > 1e3) {
+			printf("%7.3fusec", t * 1e-3);
+		} else {
+			printf("%6.2fnsec", t);
+		}
+#endif
 		if (msg && *msg) printf("\n");
 	}
 	// adhoc constatns for CYBOZU_BENCH
+#ifdef CYBOZU_BENCH_USE_CPU_TIMER
 	static const int loopN1 = 100;
 	static const int loopN2 = 100;
 	static const uint64_t maxClk = (uint64_t)1e7;
+#else
+	static const int loopN1 = 10000;
+	static const int loopN2 = 1000;
+	static const uint64_t maxClk = (uint64_t)1e8;
+#endif
 private:
 	uint64_t clock_;
 	int count_;
 };
-#else
-class CpuClock {
-	uint64_t startNsec_;
-	uint64_t clock_;
-	int count_;
-	uint64_t getTimeNsec() const
-	{
-		struct timespec tp;
-		int ret CYBOZU_UNUSED = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
-		assert(ret == 0);
-		return tp.tv_sec * 1000000000 + tp.tv_nsec;
-	}
-public:
-	CpuClock() : startNsec_(0), clock_(0), count_(0) { }
-	void begin()
-	{
-		startNsec_ = getTimeNsec();
-	}
-	/*
-		@note QQQ ; this is not same api as rdtsc version
-	*/
-	void end()
-	{
-		uint64_t cur = getTimeNsec();
-		clock_ += cur - startNsec_;
-		startNsec_ = cur;
-		count_++;
-	}
-	int getCount() const { return count_; }
-	uint64_t getClock() const { return clock_; }
-	void clear() { startNsec_ = 0; clock_ = 0; count_ = 0; }
-	void put(const char *msg = 0, int N = 1) const
-	{
-		double t = getClock() / double(getCount()) / N;
-		if (msg && *msg) printf("%s ", msg);
-		if (t > 1) {
-			printf("%6.2fmsec", t * 1e-6);
-		} else if (t > 1e-3) {
-			printf("%6.2fusec", t * 1e-3);
-		} else {
-			printf("%6.2fnsec", t);
-		}
-		if (msg && *msg) printf("\n");
-	}
-	// adhoc constatns for CYBOZU_BENCH
-	static const int loopN1 = 100;
-	static const int loopN2 = 100;
-	static const uint64_t maxClk = (uint64_t)1e7;
-};
-#endif
 
 namespace bench {
 
