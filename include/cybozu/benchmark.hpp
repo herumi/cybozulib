@@ -17,8 +17,8 @@
 		#define CYBOZU_BENCH_USE_CPU_TIMER
 	#endif
 	#if defined(__GNUC__) && defined(__ARM_ARCH_7A__)
-		#define CYBOZU_BENCH_USE_MRC
-		#define CYBOZU_BENCH_USE_CPU_TIMER
+//		#define CYBOZU_BENCH_USE_MRC
+//		#define CYBOZU_BENCH_USE_CPU_TIMER
 	#endif
 #endif
 
@@ -112,12 +112,12 @@ public:
 	}
 	// adhoc constatns for CYBOZU_BENCH
 #ifdef CYBOZU_BENCH_USE_CPU_TIMER
+	static const int loopN1 = 1000;
+	static const int loopN2 = 100;
+	static const uint64_t maxClk = (uint64_t)1e8;
+#else
 	static const int loopN1 = 100;
 	static const int loopN2 = 100;
-	static const uint64_t maxClk = (uint64_t)1e7;
-#else
-	static const int loopN1 = 10000;
-	static const int loopN2 = 1000;
 	static const uint64_t maxClk = (uint64_t)1e8;
 #endif
 private:
