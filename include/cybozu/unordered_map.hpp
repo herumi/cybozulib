@@ -2,7 +2,9 @@
 
 #include <cybozu/inttype.hpp>
 
-#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11) || (defined __APPLE__)
+#ifdef CYBOZU_USE_BOOST
+	#include <boost/unordered_map.hpp>
+#elif (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11) || (defined __APPLE__)
 	#include <unordered_map>
 #elif (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_TR1)
 	#include <list>
