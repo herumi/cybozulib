@@ -50,8 +50,10 @@ namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
 	#pragma warning(push)
 	#pragma warning(disable : 4099) // missmatch class and struct
 #endif
+#ifndef __APPLE__
 template<class T>
 struct hash;
+#endif
 #ifdef _MSC_VER
 	#pragma warning(pop)
 #endif
