@@ -141,7 +141,7 @@ public:
 			} else if (*p == '.' && (p + 4 == end || (p + 5 == end && *(p + 4) == 'Z'))) {
 				msec_ = getNum(&b, p + 1, 3, 0, 999);
 				if (!b) goto ERR;
-				p += 4;
+//				p += 4;
 			} else {
 				goto ERR;
 			}
