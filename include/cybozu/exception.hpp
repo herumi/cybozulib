@@ -200,7 +200,7 @@ public:
 			ret[i] = (char)msg[i];
 		}
 		char buf2[64];
-		CYBOZU_SNPRINTF(buf2, sizeof(buf2), "(%d)", err_);
+		CYBOZU_SNPRINTF(buf2, sizeof(buf2), "(%u)", err_);
 		ret += buf2;
 		return ret;
 #else
