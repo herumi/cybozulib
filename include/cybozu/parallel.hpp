@@ -57,6 +57,7 @@ struct Thread : public cybozu::ThreadBase {
 template<class T, class N>
 void parallel_for(T& target, N n, N threadNum)
 {
+	if (n == 0) return;
 	if (threadNum == 0) throw cybozu::Exception("cybozu:parallel_for:threadNum is zero");
 	if ((N)threadNum > n) threadNum = (size_t)n;
 	typedef parallel_util::Thread<T, N> Thread;
