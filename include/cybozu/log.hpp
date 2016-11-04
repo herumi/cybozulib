@@ -28,12 +28,14 @@ class Logger {
 	FILE *fp_;
 	bool doClose_;
 	bool useSyslog_;
+	bool useMsec_;
 public:
 	Logger()
 		: priority_(cybozu::LogInfo)
 		, fp_(stderr)
 		, doClose_(false)
 		, useSyslog_(true)
+		, useMsec_(false)
 	{
 	}
 	~Logger() throw()
@@ -45,7 +47,7 @@ public:
 		if (priority < priority_) return;
 		if (fp_) {
 			cybozu::Time cur(true);
-			if (fprintf(fp_, "%s %s\n", cur.toString(false).c_str(), str.c_str()) < 0) {
+			if (fprintf(fp_, "%s %s\n", cur.toString(useMsec_).c_str(), str.c_str()) < 0) {
 				fprintf(stderr, "ERR:cybozu:Logger:put:fprintf:%s\n", str.c_str());
 			}
 			if (fflush(fp_) < 0) {
@@ -131,6 +133,10 @@ public:
 	{
 		priority_ = priority;
 	}
+	void setUseMsec(bool useMsec)
+	{
+		useMsec_ = useMsec;
+	}
 };
 
 } // cybozu::log_local
@@ -170,6 +176,13 @@ inline void useSyslog(bool useSyslog)
 inline void SetLogPriority(LogPriority priority)
 {
 	log_local::Logger::getInstance().setPriority(priority);
+}
+/*
+	set useMsec
+*/
+inline void SetLogUseMsec(bool useMsec = true)
+{
+	log_local::Logger::getInstance().setUseMsec(useMsec);
 }
 /*
 	write log like printf

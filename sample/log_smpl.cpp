@@ -5,6 +5,7 @@ int main()
 {
 	cybozu::PutLog(cybozu::LogInfo, "this is a pen1");
 	cybozu::useSyslog(false);
+	cybozu::SetLogUseMsec();
 	cybozu::PutLog(cybozu::LogInfo, "this is a pen2");
 	cybozu::OpenLogFile("test.log");
 	cybozu::PutLog(cybozu::LogInfo, "this is a pen3");
