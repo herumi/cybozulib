@@ -532,7 +532,7 @@ typedef std::vector<FileInfo> FileList;
 
 namespace file_local {
 
-void filterAndPush(FileList& list, const FileInfo& fi, const std::string& extension, bool cond(const std::string&, const std::string&))
+inline void filterAndPush(FileList& list, const FileInfo& fi, const std::string& extension, bool cond(const std::string&, const std::string&))
 {
 	if (fi.name == "." || fi.name == "..") {
 		return;
