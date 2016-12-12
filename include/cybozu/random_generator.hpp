@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <wincrypt.h>
 #pragma comment (lib, "advapi32.lib")
+#include <cybozu/critical_section.hpp>
 #else
 #include <sys/types.h>
 #include <fcntl.h>
@@ -70,6 +71,7 @@ public:
 	template<class T>
 	void read(T *buf, size_t bufNum)
 	{
+		cybozu::AutoLockCs al(cs_);
 		const size_t byteSize = sizeof(T) * bufNum;
 		if (byteSize > bufSize) {
 			read_inner(buf, byteSize);
@@ -87,6 +89,7 @@ private:
 	static const size_t bufSize = 1024;
 	char buf_[bufSize];
 	size_t pos_;
+	cybozu::CriticalSection cs_;
 #else
 	RandomGenerator()
 		: fp_(::fopen("/dev/urandom", "rb"))
