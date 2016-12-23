@@ -191,7 +191,7 @@ public:
 	}
 	std::string eval(const std::string& key, const std::string& data)
 	{
-		std::string out(evp_->md_size + 1, 0);
+		std::string out(EVP_MD_size(evp_) + 1, 0);
 		unsigned int outLen = 0;
 		if (HMAC(evp_, key.c_str(), static_cast<int>(key.size()),
 			cybozu::cast<const uint8_t *>(data.c_str()), data.size(), cybozu::cast<uint8_t *>(&out[0]), &outLen)) {
@@ -204,7 +204,7 @@ public:
 
 class Cipher {
 	const EVP_CIPHER *cipher_;
-	EVP_CIPHER_CTX ctx_;
+	EVP_CIPHER_CTX *ctx_;
 public:
 	enum Name {
 		N_AES128_CBC,
@@ -233,8 +233,10 @@ public:
 	};
 	explicit Cipher(Name name = N_AES128_CBC)
 		: cipher_(0)
+		, ctx_(0)
 	{
-		EVP_CIPHER_CTX_init(&ctx_);
+		ctx_ = EVP_CIPHER_CTX_new();
+		if (ctx_ == 0) throw cybozu::Exception("crypto:Cipher:EVP_CIPHER_CTX_new");
 		switch (name) {
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
 		case N_AES192_CBC: cipher_ = EVP_aes_192_cbc(); break;
@@ -248,7 +250,7 @@ public:
 	}
 	~Cipher()
 	{
-		EVP_CIPHER_CTX_cleanup(&ctx_);
+		if (ctx_) EVP_CIPHER_CTX_free(ctx_);
 	}
 	/*
 		@note don't use padding = true
@@ -261,11 +263,11 @@ public:
 			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
 		}
 
-		int ret = EVP_CipherInit_ex(&ctx_, cipher_, NULL, cybozu::cast<const uint8_t*>(key.c_str()), cybozu::cast<const uint8_t*>(iv.c_str()), mode == Encoding ? 1 : 0);
+		int ret = EVP_CipherInit_ex(ctx_, cipher_, NULL, cybozu::cast<const uint8_t*>(key.c_str()), cybozu::cast<const uint8_t*>(iv.c_str()), mode == Encoding ? 1 : 0);
 		if (ret != 1) {
 			throw cybozu::Exception("crypto:Cipher:setup:EVP_CipherInit_ex") << ret;
 		}
-		ret = EVP_CIPHER_CTX_set_padding(&ctx_, padding ? 1 : 0);
+		ret = EVP_CIPHER_CTX_set_padding(ctx_, padding ? 1 : 0);
 		if (ret != 1) {
 			throw cybozu::Exception("crypto:Cipher:setup:EVP_CIPHER_CTX_set_padding") << ret;
 		}
@@ -285,7 +287,7 @@ public:
 	int update(char *outBuf, const char *inBuf, int inBufSize)
 	{
 		int outLen = 0;
-		int ret = EVP_CipherUpdate(&ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen, cybozu::cast<const uint8_t*>(inBuf), inBufSize);
+		int ret = EVP_CipherUpdate(ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen, cybozu::cast<const uint8_t*>(inBuf), inBufSize);
 		if (ret != 1) return -1;
 		return outLen;
 	}
@@ -296,7 +298,7 @@ public:
 	int finalize(char *outBuf)
 	{
 		int outLen = 0;
-		int ret = EVP_CipherFinal_ex(&ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen);
+		int ret = EVP_CipherFinal_ex(ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen);
 		if (ret != 1) return -1;
 		return outLen;
 	}
