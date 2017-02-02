@@ -10,8 +10,8 @@
 //	#elif _MSC_VER == 1800 // VC2013
 	#else
 		#pragma comment(lib, "mt/12/libeay32.lib")
-		#pragma comment(lib, "advapi32.lib")
 	#endif
+	#pragma comment(lib, "advapi32.lib")
 	#pragma comment(lib, "gdi32.lib")
 	#pragma comment(lib, "user32.lib")
 #endif
