@@ -112,7 +112,7 @@ bool convert(T* x, const char *str)
 }
 
 template<>
-bool convert(std::string* x, const char *str)
+inline bool convert(std::string* x, const char *str)
 {
 	*x = str;
 	return true;
@@ -156,7 +156,7 @@ bool convertInt(T* x, const char *str)
 }
 
 #define CYBOZU_OPTION_DEFINE_CONVERT_INT(type) \
-template<>bool convert(type* x, const char *str) { return convertInt(x, str); }
+template<>inline bool convert(type* x, const char *str) { return convertInt(x, str); }
 
 CYBOZU_OPTION_DEFINE_CONVERT_INT(int)
 CYBOZU_OPTION_DEFINE_CONVERT_INT(long)
