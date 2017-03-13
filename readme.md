@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/herumi/cybozulib.png)](https://travis-ci.org/herumi/cybozulib)
+
 cybozulib
 =====
 
