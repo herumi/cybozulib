@@ -1,0 +1,9 @@
+sudo: required
+dist: trusty
+language: cpp
+compiler:
+  - gcc
+  - clang
+script:
+  - make test
+ 
