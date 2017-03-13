@@ -83,7 +83,7 @@ CLEAN=$(RM) $(TARGET) $(OBJDIR)
 
 define UNIT_TEST
 sh -ec 'for i in $(TARGET); do $$i|grep "ctest:name"; done' > result.txt
-grep -v "ng=0, exception=0" result.txt || echo "all unit tests are ok"
+grep -v "ng=0, exception=0" result.txt; if [ $$? -eq 1 ]; then echo "all unit tests succeed"; else exit 1; fi
 endef
 
 define SAMPLE_TEST

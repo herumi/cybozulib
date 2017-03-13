@@ -8,9 +8,9 @@ SRC=$(wildcard *.cpp)
 ifneq ($(HAS_BOOST),1)
 	SRC:=$(filter-out regex_test.cpp,$(SRC))
 endif
-ifneq ($(HAS_MECAB),1)
+#ifneq ($(HAS_MECAB),1)
 	SRC:=$(filter-out mecab_test.cpp,$(SRC))
-endif
+#endif
 
 all: $(TARGET)
 

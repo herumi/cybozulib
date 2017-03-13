@@ -10,7 +10,7 @@ CYBOZU_TEST_AUTO(read)
 		CYBOZU_TEST_ASSERT(buf8[i] != 0); // maybe
 	}
 
-	const size_t N = 33;
+	const size_t N = 10;
 
 	uint32_t buf32[N] = {};
 	rg.read(buf32, N);
