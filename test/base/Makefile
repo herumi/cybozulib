@@ -11,6 +11,9 @@ endif
 #ifneq ($(HAS_MECAB),1)
 	SRC:=$(filter-out mecab_test.cpp,$(SRC))
 #endif
+ifeq ($(TRAVIS_TEST),1)
+	SRC:=$(filter-out env_test.cpp,$(SRC))
+endif
 
 all: $(TARGET)
 

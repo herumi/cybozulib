@@ -83,7 +83,7 @@ CLEAN=$(RM) $(TARGET) $(OBJDIR)
 
 define UNIT_TEST
 sh -ec 'for i in $(TARGET); do $$i|grep "ctest:name"; done' > result.txt
-awk 'BEGIN{E=0} match($$0,/name=([^,]*),.*ng=([0-9]*), exception=([0-9]*)/,r){ print r[1],r[2],r[3];if (r[2] +r[3] > 0) {system("$(TOPDIR)/bin/" r[1] ".exe"); E++}} END{if(E==0) {print("all unit tests succeed")}else{exit(1)}}' < result.txt
+awk 'BEGIN{E=0} match($$0,/name=([^,]*),.*ng=([0-9]*), exception=([0-9]*)/,r){ if (r[2] +r[3] > 0) {system("$(TOPDIR)/bin/" r[1] ".exe"); E++}} END{if(E==0) {print("all unit tests succeed")}else{exit(1)}}' < result.txt
 endef
 
 define SAMPLE_TEST
