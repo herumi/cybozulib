@@ -86,13 +86,14 @@ public:
 		}
 		fflush(stdout);
 		if (msg.empty()) {
+			int total = okCount_ + ngCount_ + exceptionCount_;
 			std::cout << "ctest:name=" << getBaseName(*argv)
 					  << ", module=" << list_.size()
-					  << ", total=" << (okCount_ + ngCount_ + exceptionCount_)
+					  << ", total=" << total
 					  << ", ok=" << okCount_
 					  << ", ng=" << ngCount_
 					  << ", exception=" << exceptionCount_ << std::endl;
-			return 0;
+			return total > 0 ? 1 : 0;
 		} else {
 			std::cout << msg << std::endl;
 			return 1;
