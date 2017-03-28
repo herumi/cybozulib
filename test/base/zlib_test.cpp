@@ -251,17 +251,17 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 
 CYBOZU_TEST_AUTO(random)
 {
-	const size_t maxOutSize = 4096;
-	char out[maxOutSize];
+	std::vector<char> out;
 	std::vector<char> in;
 	std::vector<char> out2;
 
-	for (size_t inSize = 1; inSize < 3000; inSize += 3) {
+	for (size_t inSize = 12000; inSize < 14000; inSize += 3) {
 		in.resize(inSize);
+		out.resize(inSize + 100);
 		for (size_t i = 0; i < inSize; i++) {
-			in[i] = i % 10;
+			in[i] = (3 * i * i + i) % 1905;
 		}
-		cybozu::MemoryOutputStream os(out, maxOutSize);
+		cybozu::MemoryOutputStream os(out.data(), out.size());
 		{
 			cybozu::ZlibCompressorT<cybozu::MemoryOutputStream> enc(os, false, Z_DEFAULT_COMPRESSION);
 			enc.write(in.data(), inSize);
@@ -269,8 +269,9 @@ CYBOZU_TEST_AUTO(random)
 		}
 		out2.resize(in.size() + 100);
 		size_t outSize = os.pos;
+		printf("inSize=%zd, outSize=%zd\n", inSize, outSize);
 		{
-			cybozu::MemoryInputStream is(out, outSize);
+			cybozu::MemoryInputStream is(out.data(), outSize);
 			cybozu::ZlibDecompressorT<cybozu::MemoryInputStream> dec(is);
 			char *const top = (char*)out2.data();
 			size_t pos = 0;
