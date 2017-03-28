@@ -248,3 +248,43 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 		CYBOZU_TEST_ASSERT(yi == y.end());
 	}
 }
+
+CYBOZU_TEST_AUTO(random)
+{
+	const size_t maxOutSize = 4096;
+	char out[maxOutSize];
+	std::vector<char> in;
+	std::vector<char> out2;
+
+	for (size_t inSize = 1; inSize < 3000; inSize += 3) {
+		in.resize(inSize);
+		for (size_t i = 0; i < inSize; i++) {
+			in[i] = i % 10;
+		}
+		cybozu::MemoryOutputStream os(out, maxOutSize);
+		{
+			cybozu::ZlibCompressorT<cybozu::MemoryOutputStream> enc(os, false, Z_DEFAULT_COMPRESSION);
+			enc.write(in.data(), inSize);
+			enc.flush();
+		}
+		out2.resize(in.size() + 100);
+		size_t outSize = os.pos;
+		{
+			cybozu::MemoryInputStream is(out, outSize);
+			cybozu::ZlibDecompressorT<cybozu::MemoryInputStream> dec(is);
+			char *const top = (char*)out2.data();
+			size_t pos = 0;
+			for (;;) {
+				size_t readSize = dec.readSome(top + pos, out2.size() - pos);
+				if (readSize == 0) goto QUIT;
+				pos += readSize;
+				if (pos == out2.size()) {
+					if (dec.isEmpty()) goto QUIT;
+					CYBOZU_TEST_ASSERT(0);
+				}
+			}
+		QUIT:;
+			CYBOZU_TEST_ASSERT(memcmp(in.data(), out2.data(), pos) == 0);
+		}
+	}
+}
