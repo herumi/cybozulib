@@ -118,6 +118,7 @@ public:
 	}
 	void flush()
 	{
+		if (isFlushCalled_) return;
 		isFlushCalled_ = true;
 		z_.next_in = 0;
 		z_.avail_in = 0;
@@ -296,5 +297,31 @@ public:
 	}
 };
 
-} // cybozu
+/*
+	compress in[0, inSize) to out
+	return 0 if compressed size > maxOutSize
+*/
+inline size_t ZlibCompress(void *out, size_t maxOutSize, const void *in, size_t inSize, int level = Z_DEFAULT_COMPRESSION)
+{
+	uLongf outSize = (uLongf)maxOutSize;
+	int ret = ::compress2((Bytef*)out, &outSize, (const Bytef*)in, (uLong)inSize, level);
+	if (ret == Z_BUF_ERROR) {
+		return 0;
+	}
+	if (ret == Z_OK) {
+		return (size_t)outSize;
+	}
+	throw cybozu::Exception("zlibCompress") << ret << inSize << level;
+}
 
+inline size_t ZlibUncompress(void *out, size_t maxOutSize, const void *in, size_t inSize)
+{
+	uLongf outSize = (uLongf)maxOutSize;
+	int ret = ::uncompress((Bytef*)out, &outSize, (const Bytef*)in, (uLong)inSize);
+	if (ret == Z_OK) {
+		return (size_t)outSize;
+	}
+	throw cybozu::Exception("zlibUncompress") << ret << maxOutSize << inSize;
+}
+
+} // cybozu

@@ -1,7 +1,9 @@
+#define CYBOZU_TEST_DISABLE_AUTO_RUN
 #include <cybozu/test.hpp>
 #include <cybozu/zlib.hpp>
 #include <cybozu/file.hpp>
 #include <cybozu/stream.hpp>
+#include <cybozu/mmap.hpp>
 #include <cybozu/serializer.hpp>
 #include <cybozu/nlp/sparse.hpp>
 #include <sstream>
@@ -11,6 +13,8 @@
 #include <map>
 
 const char *g_testFile = "zlib_test.log";
+const char *g_extraFile = 0;
+const char *g_compressFile = 0;
 
 CYBOZU_TEST_AUTO(test1_deflate)
 {
@@ -252,24 +256,39 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 CYBOZU_TEST_AUTO(random)
 {
 	std::vector<char> out;
-	std::vector<char> in;
+	std::string in;
 	std::vector<char> out2;
 
 	for (size_t inSize = 12000; inSize < 14000; inSize += 3) {
 		in.resize(inSize);
 		out.resize(inSize + 100);
 		for (size_t i = 0; i < inSize; i++) {
-			in[i] = (3 * i * i + i) % 1905;
+			in[i] = char((3 * i * i + i) % 1905);
 		}
 		cybozu::MemoryOutputStream os(out.data(), out.size());
 		{
 			cybozu::ZlibCompressorT<cybozu::MemoryOutputStream> enc(os, false, Z_DEFAULT_COMPRESSION);
 			enc.write(in.data(), inSize);
 			enc.flush();
+			out.resize(os.pos);
+		}
+		{
+			std::string ok;
+			ok.resize(in.size());
+			size_t okSize = cybozu::ZlibCompress(&ok[0], ok.size(), in.data(), in.size());
+			CYBOZU_TEST_EQUAL(okSize, out.size());
+			CYBOZU_TEST_ASSERT(memcmp(ok.data(), out.data(), okSize) == 0);
+		}
+		{
+			std::string dec;
+			dec.resize(in.size() + 100);
+			size_t decSize = cybozu::ZlibUncompress(&dec[0], dec.size(), out.data(), out.size());
+			dec.resize(decSize);
+			CYBOZU_TEST_EQUAL(decSize, in.size());
+			CYBOZU_TEST_EQUAL(dec, in);
 		}
 		out2.resize(in.size() + 100);
-		size_t outSize = os.pos;
-		printf("inSize=%zd, outSize=%zd\n", inSize, outSize);
+		size_t outSize = out.size();
 		{
 			cybozu::MemoryInputStream is(out.data(), outSize);
 			cybozu::ZlibDecompressorT<cybozu::MemoryInputStream> dec(is);
@@ -288,4 +307,70 @@ CYBOZU_TEST_AUTO(random)
 			CYBOZU_TEST_ASSERT(memcmp(in.data(), out2.data(), pos) == 0);
 		}
 	}
+}
+
+CYBOZU_TEST_AUTO(extra)
+{
+	if (g_extraFile == 0) return;
+	cybozu::Mmap f(g_extraFile);
+	printf("extraFile=%s\n", g_extraFile);
+	std::string comp;
+	std::string decomp;
+	{
+		cybozu::MemoryInputStream is(f.get(), f.size());
+		cybozu::StringOutputStream os(comp);
+		cybozu::ZlibCompressorT<cybozu::StringOutputStream> enc(os);
+		enc.write(f.get(), f.size());
+	}
+	if (g_compressFile) {
+		std::ofstream ofs(g_compressFile, std::ios::binary);
+		ofs.write(comp.data(), comp.size());
+	}
+
+	{
+		std::string ok;
+		ok.resize(f.size());
+		size_t okSize = cybozu::ZlibCompress(&ok[0], ok.size(), f.get(), f.size());
+		ok.resize(okSize);
+		CYBOZU_TEST_EQUAL(okSize, comp.size());
+		CYBOZU_TEST_EQUAL(ok, comp);
+	}
+
+	const size_t decompSize = f.size() + 100;
+	decomp.resize(decompSize);
+	{
+		cybozu::StringInputStream is(comp);
+		cybozu::ZlibDecompressorT<cybozu::StringInputStream> dec(is);
+		char *top = &decomp[0];
+		size_t pos = 0;
+		for (;;) {
+			size_t readSize = dec.readSome(top + pos, decompSize - pos);
+			if (readSize == 0) break;
+			pos += readSize;
+			if (pos == decompSize) break;
+		}
+		decomp.resize(pos);
+		CYBOZU_TEST_ASSERT(dec.isEmpty());
+		CYBOZU_TEST_EQUAL(pos, f.size());
+		CYBOZU_TEST_ASSERT(memcmp(f.get(), decomp.data(), f.size()) == 0);
+	}
+	{
+		std::string ok;
+		ok.resize(decomp.size() + 100);
+		size_t okSize = cybozu::ZlibUncompress(&ok[0], ok.size(), comp.data(), comp.size());
+		ok.resize(okSize);
+		CYBOZU_TEST_EQUAL(okSize, decomp.size());
+		CYBOZU_TEST_ASSERT(ok == decomp);
+	}
+}
+
+int main(int argc, char *argv[])
+{
+	if (argc >= 2) {
+		g_extraFile = argv[1];
+	}
+	if (argc == 3) {
+		g_compressFile = argv[2];
+	}
+	return cybozu::test::autoRun.run(argc, argv);
 }
