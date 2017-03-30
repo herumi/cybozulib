@@ -260,7 +260,6 @@ public:
 	*/
 	size_t readSome(void *buf, size_t _size)
 	{
-		if (_size == 0) return 0;
 		if (_size >= (1u << 31)) throw cybozu::Exception("zlib:ZlibDecompressorT:readSome:too large size") << _size;
 		uint32_t size = (uint32_t)_size;
 		if (useGzip_ && !readGzipHeader_) {

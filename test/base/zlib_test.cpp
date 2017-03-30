@@ -296,14 +296,10 @@ CYBOZU_TEST_AUTO(random)
 			size_t pos = 0;
 			for (;;) {
 				size_t readSize = dec.readSome(top + pos, out2.size() - pos);
-				if (readSize == 0) goto QUIT;
+				if (readSize == 0) break;
 				pos += readSize;
-				if (pos == out2.size()) {
-					if (dec.isEmpty()) goto QUIT;
-					CYBOZU_TEST_ASSERT(0);
-				}
 			}
-		QUIT:;
+			CYBOZU_TEST_ASSERT(dec.isEmpty());
 			CYBOZU_TEST_ASSERT(memcmp(in.data(), out2.data(), pos) == 0);
 		}
 	}
@@ -347,10 +343,9 @@ CYBOZU_TEST_AUTO(extra)
 			size_t readSize = dec.readSome(top + pos, decompSize - pos);
 			if (readSize == 0) break;
 			pos += readSize;
-			if (pos == decompSize) break;
 		}
-		decomp.resize(pos);
 		CYBOZU_TEST_ASSERT(dec.isEmpty());
+		decomp.resize(pos);
 		CYBOZU_TEST_EQUAL(pos, f.size());
 		CYBOZU_TEST_ASSERT(memcmp(f.get(), decomp.data(), f.size()) == 0);
 	}
