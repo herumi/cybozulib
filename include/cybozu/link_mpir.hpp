@@ -5,7 +5,7 @@
 	Copyright (C) 2016 Cybozu Labs, Inc., all rights reserved.
 */
 #if defined(_WIN32) && defined(_MT)
-	#if _MSC_VER == 1900 // VC2015
+	#if _MSC_VER >= 1900 // VC2015, VC2017(1910)
 		#pragma comment(lib, "mt/14/mpir.lib")
 		#pragma comment(lib, "mt/14/mpirxx.lib")
 	#elif _MSC_VER == 1800 // VC2013
