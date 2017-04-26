@@ -141,4 +141,16 @@ public:
 	}
 };
 
+template<class InputStream>
+size_t readSome(InputStream& is, void *buf, size_t size)
+{
+	return stream_local::readSome_inner(is, buf, size);
+}
+
+template<class OutputStream>
+void write(OutputStream& os, const void *buf, size_t size)
+{
+	stream_local::writeSub(os, buf, size);
+}
+
 } // cybozu
