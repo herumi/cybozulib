@@ -17,10 +17,10 @@ clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C sample clean
 
-PREFIX?=/usr/local/include
+PREFIX?=/usr/local
 install:
-	$(MKDIR) $(PREFIX)/cybozu
-	cp -a include/cybozu/ $(PREFIX)/
+	$(MKDIR) $(PREFIX)/include/cybozu
+	cp -a include/cybozu/ $(PREFIX)/include/
 
 .PHONY: sample clean
 
