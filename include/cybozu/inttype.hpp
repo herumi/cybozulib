@@ -58,7 +58,7 @@
 		#include <malloc.h>
 		#define CYBOZU_ALLOCA(x) _malloca(x)
 	#else
-		#define CYBOZU_ALLOCA_(x) __builtin_alloca(x)
+		#define CYBOZU_ALLOCA(x) __builtin_alloca(x)
 	#endif
 #endif
 #ifndef CYBOZU_NUM_OF_ARRAY
