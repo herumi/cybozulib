@@ -11,7 +11,9 @@
 #endif
 #include <stdio.h>
 
-#ifndef CYBOZU_BENCH_DONT_USE_RDTSC
+#ifdef CYBOZU_BENCH_USE_GETTIMEOFDAY
+	#include <sys/time.h>
+#elif !defined(CYBOZU_BENCH_DONT_USE_RDTSC)
 	#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
 		#define CYBOZU_BENCH_USE_RDTSC
 		#define CYBOZU_BENCH_USE_CPU_TIMER
@@ -62,6 +64,11 @@ public:
 		struct _timeb timeb;
 		_ftime_s(&timeb);
 		return uint64_t(timeb.time) * 1000000000 + timeb.millitm * 1000000;
+#elif defined(CYBOZU_BENCH_USE_GETTIMEOFDAY)
+		struct timeval tv;
+		int ret CYBOZU_UNUSED = gettimeofday(&tv, 0);
+		assert(ret == 0);
+		return uint64_t(tv.tv_sec) * 1000000000 + tv.tv_usec * 1000;
 #else
 		struct timespec tp;
 		int ret CYBOZU_UNUSED = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
