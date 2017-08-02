@@ -109,7 +109,7 @@
 #endif
 
 #ifndef CYBOZU_OS_BIT
-	#if defined(_WIN64) || defined(__x86_64__) || defined(__AARCH64EL__)
+	#if defined(_WIN64) || defined(__x86_64__) || defined(__AARCH64EL__) || defined(__EMSCRIPTEN__)
 		#define CYBOZU_OS_BIT 64
 	#else
 		#define CYBOZU_OS_BIT 32

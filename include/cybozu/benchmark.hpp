@@ -11,6 +11,10 @@
 #endif
 #include <stdio.h>
 
+#ifdef __EMSCRIPTEN__
+	#define CYBOZU_BENCH_USE_GETTIMEOFDAY
+#endif
+
 #ifdef CYBOZU_BENCH_USE_GETTIMEOFDAY
 	#include <sys/time.h>
 #elif !defined(CYBOZU_BENCH_DONT_USE_RDTSC)
