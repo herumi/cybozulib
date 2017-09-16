@@ -272,7 +272,7 @@ class Option {
 		std::string opt; // option param name without '-'
 		std::string help; // description of option
 
-		Info() : mode(N_is0) {}
+		Info() : mode(N_is0), isMust(false) {}
 		template<class T>
 		Info(T* pvar, Mode mode, bool isMust, const char *opt, const std::string& help)
 			: var(pvar)
