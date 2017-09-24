@@ -138,6 +138,11 @@ public:
 	{
 		clear();
 	}
+	Sha256(const void *buf, size_t bufSize)
+	{
+		clear();
+		digest(buf, bufSize);
+	}
 	void clear()
 	{
 		static const uint32_t kTbl[] = {
@@ -162,8 +167,9 @@ public:
 		h_[6] = 0x1f83d9ab;
 		h_[7] = 0x5be0cd19;
 	}
-	void update(const char *buf, size_t bufSize)
+	void update(const void *buf_, size_t bufSize)
 	{
+		const char *buf = reinterpret_cast<const char*>(buf_);
 		if (bufSize == 0) return;
 		if (roundBufSize_ > 0) {
 			size_t size = (std::min)(blockSize_ - roundBufSize_, bufSize);
@@ -194,15 +200,14 @@ public:
 	{
 		update(buf.c_str(), buf.size());
 	}
-	std::string digest(const char *buf, size_t bufSize)
+	void digest(const void *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
 		term(roundBuf_, roundBufSize_);
-		return get();
 	}
-	std::string digest(const std::string& str = "")
+	void digest(const std::string& str = "")
 	{
-		return digest(str.c_str(), str.size());
+		digest(str.c_str(), str.size());
 	}
 	void get(void *out) const
 	{
@@ -318,6 +323,11 @@ public:
 	{
 		clear();
 	}
+	Sha512(const void *buf, size_t bufSize)
+	{
+		clear();
+		digest(buf, bufSize);
+	}
 	void clear()
 	{
 		static const uint64_t kTbl[] = {
@@ -350,8 +360,9 @@ public:
 		h_[6] = 0x1f83d9abfb41bd6bull;
 		h_[7] = 0x5be0cd19137e2179ull;
 	}
-	void update(const char *buf, size_t bufSize)
+	void update(const void *buf_, size_t bufSize)
 	{
+		const char *buf = reinterpret_cast<const char*>(buf_);
 		if (bufSize == 0) return;
 		if (roundBufSize_ > 0) {
 			size_t size = (std::min)(blockSize_ - roundBufSize_, bufSize);
@@ -382,15 +393,14 @@ public:
 	{
 		update(buf.c_str(), buf.size());
 	}
-	std::string digest(const char *buf, size_t bufSize)
+	void digest(const void *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
 		term(roundBuf_, roundBufSize_);
-		return get();
 	}
-	std::string digest(const std::string& str = "")
+	void digest(const std::string& str = "")
 	{
-		return digest(str.c_str(), str.size());
+		digest(str.c_str(), str.size());
 	}
 	void get(void *out) const
 	{
