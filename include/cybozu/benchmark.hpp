@@ -47,6 +47,17 @@
 
 namespace cybozu {
 
+namespace bench {
+
+static void (*g_putCallback)(double);
+
+static inline void setPutCallback(void (*f)(double))
+{
+	g_putCallback = f;
+}
+
+} // cybozu::bench
+
 class CpuClock {
 public:
 	static inline uint64_t getCpuClk()
@@ -102,6 +113,10 @@ public:
 	{
 		double t = getClock() / double(getCount()) / N;
 		if (msg && *msg) printf("%s ", msg);
+		if (bench::g_putCallback) {
+			bench::g_putCallback(t);
+			return;
+		}
 #ifdef CYBOZU_BENCH_USE_CPU_TIMER
 		if (t > 1e6) {
 			printf("%7.3fMclk", t * 1e-6);
