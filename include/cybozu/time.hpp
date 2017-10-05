@@ -26,8 +26,7 @@ class Time {
 	std::time_t time_;
 	int msec_;
 public:
-	Time() {}
-	explicit Time(std::time_t time, int msec = 0)
+	explicit Time(std::time_t time = 0, int msec = 0)
 		: time_(time)
 		, msec_(msec)
 	{

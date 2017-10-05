@@ -137,6 +137,8 @@ public:
 	}
 	File(const std::string& name, std::ios::openmode mode)
 		: hdl_(INVALID_HANDLE_VALUE)
+		, doClose_(true)
+		, isReadOnly_(false)
 	{
 		open(name, mode);
 	}
