@@ -515,11 +515,11 @@ struct CSucVector {
 	void putSub() const
 	{
 		const uint32_t inSize = bitSize_ / 8;
+		if (inSize == 0) return;
 		const uint32_t compSize = (uint32_t)vec.size();
 		const uint32_t idxSize = (uint32_t)(blkVec.size() * sizeof(blkVec[0]));
 		const double cr = compSize * 100.0 / inSize;
 		const double ir = idxSize * 100.0 / inSize;
-		if (inSize == 0) return;
 		printf("in   Size= %9d, rank=%u\n", inSize, rk_);
 		printf("comp Size= %9u\n", compSize);
 		printf("idx  Size= %9u(blkVec.size=%7u)\n", idxSize, (uint32_t)blkVec.size());
