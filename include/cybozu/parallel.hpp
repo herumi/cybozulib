@@ -34,7 +34,7 @@ struct Thread : public cybozu::ThreadBase {
 		begin_ = begin;
 		end_ = end;
 		threadIdx_ = threadIdx;
-		err_.empty();
+		err_.clear();
 	}
 	void threadEntry()
 	{
