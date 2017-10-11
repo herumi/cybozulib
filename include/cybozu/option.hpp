@@ -191,6 +191,12 @@ struct Holder : public HolderBase {
 	const void *get() const { return (void*)p_; }
 };
 
+/*
+	for gcc 7 with -fnew-ttp-matching
+	this specialization is not necessary under -fno-new-ttp-matching
+*/
+template struct Holder<std::string>;
+
 template<class T, class Alloc, template<class T_, class Alloc_>class Container>
 struct Holder<Container<T, Alloc> > : public HolderBase {
 	typedef Container<T, Alloc> Vec;
