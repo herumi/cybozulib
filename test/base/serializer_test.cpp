@@ -145,7 +145,7 @@ CYBOZU_TEST_AUTO(string)
 		"abc",
 		"abc\n\r,xxx",
 		"abc\n\r\\,xxx",
-		"XX99\x01\x02\0x33\xff",
+		"XX99\x01\x02\x33\xff",
 	};
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		std::string x = tbl[i], y;
