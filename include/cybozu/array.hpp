@@ -129,7 +129,7 @@ public:
 		size_ = rhs.size_;
 		return *this;
 	}
-#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
+#if (CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11)
 	AlignedArray(AlignedArray&& rhs) throw()
 		: p_(rhs.p_)
 		, size_(rhs.size_)
@@ -188,7 +188,7 @@ public:
 	const T* end() const throw() { return p_ + size_; }
     T* data() throw() { return p_; }
     const T* data() const throw() { return p_; }
-#if (CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11)
+#if (CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11)
 	const T* cbegin() const throw() { return p_; }
 	const T* cend() const throw() { return p_ + size_; }
 #endif

@@ -44,6 +44,10 @@ struct hash;
 
 } // boost
 
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
+#include <functional>
+#else
+
 namespace std { CYBOZU_NAMESPACE_TR1_BEGIN
 
 #ifdef _MSC_VER
@@ -59,3 +63,5 @@ struct hash;
 #endif
 
 CYBOZU_NAMESPACE_TR1_END } // std
+
+#endif

@@ -384,7 +384,7 @@ public:
 	bool isValid() const { return sd_ != INVALID_SOCKET; }
 
 	// move
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 	Socket(Socket&& rhs)
 		: sd_(INVALID_SOCKET)
 	{
@@ -397,7 +397,7 @@ public:
 		close();
 		sd_ = cybozu::AtomicExchange(&rhs.sd_, INVALID_SOCKET);
 	}
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 	void operator=(Socket&& rhs)
 #else
 	void operator=(Socket& rhs)

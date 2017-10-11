@@ -75,6 +75,8 @@
 #define CYBOZU_CPP_VERSION_CPP03 0
 #define CYBOZU_CPP_VERSION_TR1 1
 #define CYBOZU_CPP_VERSION_CPP11 2
+#define CYBOZU_CPP_VERSION_CPP14 3
+#define CYBOZU_CPP_VERSION_CPP17 4
 
 #ifdef __GNUC__
 	#define CYBOZU_GNUC_PREREQ(major, minor) ((__GNUC__) * 100 + (__GNUC_MINOR__) >= (major) * 100 + (minor))
@@ -82,7 +84,11 @@
 	#define CYBOZU_GNUC_PREREQ(major, minor) 0
 #endif
 
-#if (__cplusplus >= 201103) || (_MSC_VER >= 1500) || defined(__GXX_EXPERIMENTAL_CXX0X__)
+#if (__cplusplus >= 201703)
+	#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_CPP17
+#elif (__cplusplus >= 201402)
+	#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_CPP14
+#elif (__cplusplus >= 201103) || (_MSC_VER >= 1500) || defined(__GXX_EXPERIMENTAL_CXX0X__)
 	#if defined(_MSC_VER) && (_MSC_VER <= 1600)
 		#define CYBOZU_CPP_VERSION CYBOZU_CPP_VERSION_TR1
 	#else

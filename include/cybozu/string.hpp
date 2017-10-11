@@ -1479,7 +1479,7 @@ public:
 		}
 		return true;
 	}
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 	StringT(StringT&& rhs) throw()
 	{
 		assign(std::forward<StringT>(rhs));
@@ -1605,7 +1605,7 @@ inline bool operator>(const std::wstring& lhs, const String& rhs) { return rhs <
 inline void swap(String& lhs, String& rhs) { lhs.swap(rhs); }
 
 inline String operator+(const String& lhs, const String& rhs) { return String(lhs) += rhs; }
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 inline String operator+(String&& lhs, const String& rhs) { return std::move(lhs.append(rhs)); }
 #endif
 

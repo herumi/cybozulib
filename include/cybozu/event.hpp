@@ -13,7 +13,7 @@
 	#include <unistd.h>
 #endif
 #include <cybozu/exception.hpp>
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 #include <mutex>
 #include <condition_variable>
 #endif
@@ -58,7 +58,7 @@ public:
 	}
 };
 #else
-#if CYBOZU_CPP_VERSION == CYBOZU_CPP_VERSION_CPP11
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
 
 class Event {
 	bool isSignaled_;
