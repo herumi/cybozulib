@@ -5,7 +5,7 @@
 
 	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 */
-#include <cybozu/string.hpp>
+#include <assert.h>
 #include <cybozu/stream.hpp>
 
 #ifdef _MSC_VER
@@ -243,18 +243,6 @@ void load(std::string& str, InputStream& is)
 
 template<class OutputStream>
 void save(OutputStream& os, const std::string& str)
-{
-	savePodVec(os, str);
-}
-
-template<class InputStream>
-void load(cybozu::String& str, InputStream& is)
-{
-	loadPodVec(str, is);
-}
-
-template<class OutputStream>
-void save(OutputStream& os, const cybozu::String& str)
 {
 	savePodVec(os, str);
 }

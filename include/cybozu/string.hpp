@@ -1690,6 +1690,18 @@ struct Utf8ref : Utf8refT<const char*> {
 	explicit Utf8ref(const std::string& str, bool ignoreBadChar = false) : Utf8refT<const char*>(str.c_str(), str.c_str() + str.size(), ignoreBadChar) {}
 };
 
+template<class InputStream>
+void load(cybozu::String& str, InputStream& is)
+{
+	loadPodVec(str, is);
+}
+
+template<class OutputStream>
+void save(OutputStream& os, const cybozu::String& str)
+{
+	savePodVec(os, str);
+}
+
 } // cybozu
 
 // specialization for boost::hash
