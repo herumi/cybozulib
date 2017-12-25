@@ -270,7 +270,7 @@ CYBOZU_TEST_AUTO(random)
 			cybozu::ZlibCompressorT<cybozu::MemoryOutputStream> enc(os, false, Z_DEFAULT_COMPRESSION);
 			enc.write(in.data(), inSize);
 			enc.flush();
-			out.resize(os.pos);
+			out.resize(os.getPos());
 		}
 		{
 			std::string ok;
