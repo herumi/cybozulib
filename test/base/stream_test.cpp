@@ -4,6 +4,7 @@
 
 CYBOZU_TEST_AUTO(sstream)
 {
+	typedef cybozu::InputStreamTag<std::istringstream> InputStream;
 	const std::string str = "123";
 	{
 		std::ostringstream os;
@@ -13,9 +14,9 @@ CYBOZU_TEST_AUTO(sstream)
 	{
 		char buf[64] = {};
 		std::istringstream is(str);
-		CYBOZU_TEST_ASSERT(cybozu::InputStreamTag<std::istringstream>::hasNext(is));
-		size_t readSize = cybozu::InputStreamTag<std::istringstream>::readSome(is, buf, sizeof(buf));
-		CYBOZU_TEST_ASSERT(!cybozu::InputStreamTag<std::istringstream>::hasNext(is));
+		CYBOZU_TEST_ASSERT(InputStream::hasNext(is));
+		size_t readSize = InputStream::readSome(is, buf, sizeof(buf));
+		CYBOZU_TEST_ASSERT(!InputStream::hasNext(is));
 		CYBOZU_TEST_EQUAL(str.size(), readSize);
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
 	}
@@ -24,6 +25,16 @@ CYBOZU_TEST_AUTO(sstream)
 		std::istringstream is(str);
 		cybozu::stream::read(is, buf, str.size());
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
+	}
+	{
+		std::istringstream is("123");
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '1');
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '2');
+		CYBOZU_TEST_ASSERT(InputStream::hasNext(is));
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '3');
+		CYBOZU_TEST_ASSERT(!InputStream::hasNext(is));
+		CYBOZU_TEST_ASSERT(is);
+		CYBOZU_TEST_EXCEPTION(InputStream::readChar(is), std::exception);
 	}
 }
 

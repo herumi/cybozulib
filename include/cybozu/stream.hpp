@@ -50,14 +50,21 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 
 /* specialization for istream */
 template<class InputStream>
-bool hasNext_inner(const InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
+bool hasNext_inner(InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
-	return !is.eof();
+	std::ios_base::iostate state = is.rdstate();
+	char c;
+	if (is.get(c)) {
+		is.unget();
+		return true;
+	}
+	is.clear(state);
+	return false;
 }
 
 /* generic version for bool hasNext() */
 template<class InputStream>
-bool hasNext_inner(const InputStream& is, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
+bool hasNext_inner(InputStream& is, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
 	return is.hasNext();
 }
@@ -87,7 +94,7 @@ struct InputStreamTag {
 	{
 		return stream_local::readSome_inner<InputStream>(is, buf, size);
 	}
-	static inline bool hasNext(const InputStream& is)
+	static inline bool hasNext(InputStream& is)
 	{
 		return stream_local::hasNext_inner<InputStream>(is);
 	}
