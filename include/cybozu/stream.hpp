@@ -91,6 +91,12 @@ struct InputStreamTag {
 	{
 		return stream_local::hasNext_inner<InputStream>(is);
 	}
+	static inline char readChar(InputStream& is)
+	{
+		char c;
+		if (readSome(is, &c, 1) != 1) throw cybozu::Exception("InputStreamTag:readChar");
+		return c;
+	}
 };
 
 template<class OutputStream>
