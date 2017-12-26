@@ -29,6 +29,7 @@ CYBOZU_TEST_AUTO(sstream)
 
 CYBOZU_TEST_AUTO(memory)
 {
+	typedef cybozu::InputStreamTag<cybozu::MemoryInputStream> InputStream;
 	const std::string str = "123";
 	{
 		char buf[64] = {};
@@ -41,7 +42,7 @@ CYBOZU_TEST_AUTO(memory)
 		cybozu::MemoryInputStream is(str.c_str(), str.size());
 		char buf[64] = {};
 		CYBOZU_TEST_ASSERT(is.hasNext());
-		size_t readSize = cybozu::InputStreamTag<cybozu::MemoryInputStream>::readSome(is, buf, sizeof(buf));
+		size_t readSize = InputStream::readSome(is, buf, sizeof(buf));
 		CYBOZU_TEST_ASSERT(!is.hasNext());
 		CYBOZU_TEST_EQUAL(str.size(), readSize);
 		CYBOZU_TEST_EQUAL(is.getPos(), readSize);
@@ -53,6 +54,14 @@ CYBOZU_TEST_AUTO(memory)
 		cybozu::stream::read(is, buf, str.size());
 		CYBOZU_TEST_EQUAL(str.size(), is.getPos());
 		CYBOZU_TEST_ASSERT(memcmp(buf, str.c_str(), str.size()) == 0);
+	}
+	{
+		cybozu::MemoryInputStream is(str.c_str(), str.size());
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '1');
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '2');
+		CYBOZU_TEST_ASSERT(InputStream::hasNext(is));
+		CYBOZU_TEST_EQUAL(InputStream::readChar(is), '3');
+		CYBOZU_TEST_ASSERT(!InputStream::hasNext(is));
 	}
 }
 
