@@ -106,7 +106,7 @@ struct VecInputStream2 {
 	size_t pos;
 	VecInputStream2() : pos(0) {}
 
-	size_t readsome(void *buf, size_t size)
+	size_t readSome(void *buf, size_t size)
 	{
 		size_t readSize = std::min(size, data.size() - pos);
 		memcpy(buf, &data[pos], readSize);
@@ -119,9 +119,9 @@ namespace cybozu {
 template<>
 struct InputStreamTag<VecInputStream2>
 {
-	static size_t readSome(VecInputStream2& is, void *buf, size_t size)
+	static size_t readSome(void *buf, size_t size, VecInputStream2& is)
 	{
-		return is.readsome(buf, size);
+		return is.readSome(buf, size);
 	}
 };
 } // cybozu
