@@ -178,4 +178,10 @@ bool readChar(char *c, InputStream& is)
 	return readSome(c, 1, is) == 1;
 }
 
+template<class OutputStream>
+void writeChar(OutputStream& os, char c)
+{
+	cybozu::write(os, &c, 1);
+}
+
 } // cybozu
