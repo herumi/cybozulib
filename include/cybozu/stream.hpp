@@ -8,7 +8,6 @@
 #include <string>
 #include <iosfwd>
 #include <cybozu/exception.hpp>
-#include <cybozu/stream_fwd.hpp>
 
 namespace cybozu {
 
@@ -32,7 +31,7 @@ struct enable_if<false, T> {};
 
 /* specialization for istream */
 template<class InputStream>
-size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
+size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
 	is.read(static_cast<char *>(buf), size);
 	const std::streamsize readSize = is.gcount();
@@ -43,30 +42,9 @@ size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_i
 
 /* generic version for size_t readSome(void *, size_t) */
 template<class InputStream>
-size_t readSome_inner(InputStream& is, void *buf, size_t size, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
+size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
 	return is.readSome(buf, size);
-}
-
-/* specialization for istream */
-template<class InputStream>
-bool hasNext_inner(InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
-{
-	std::ios_base::iostate state = is.rdstate();
-	char c;
-	if (is.get(c)) {
-		is.unget();
-		return true;
-	}
-	is.clear(state);
-	return false;
-}
-
-/* generic version for bool hasNext() */
-template<class InputStream>
-bool hasNext_inner(InputStream& is, typename enable_if<!is_convertible<InputStream, std::istream>::value>::type* = 0)
-{
-	return is.hasNext();
 }
 
 /* specialization for ostream */
@@ -90,25 +68,19 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 */
 template<class InputStream>
 struct InputStreamTag {
-	static inline size_t readSome(InputStream& is, void *buf, size_t size)
+	static size_t readSome(void *buf, size_t size, InputStream& is)
 	{
-		return stream_local::readSome_inner<InputStream>(is, buf, size);
+		return stream_local::readSome_inner<InputStream>(buf, size, is);
 	}
-	static inline bool hasNext(InputStream& is)
+	static bool readChar(char *c, InputStream& is)
 	{
-		return stream_local::hasNext_inner<InputStream>(is);
-	}
-	static inline char readChar(InputStream& is)
-	{
-		char c;
-		if (readSome(is, &c, 1) != 1) throw cybozu::Exception("InputStreamTag:readChar");
-		return c;
+		return readSome(c, 1, is) == 1;
 	}
 };
 
 template<class OutputStream>
 struct OutputStreamTag {
-	static inline void write(OutputStream& os, const void *buf, size_t size)
+	static void write(OutputStream& os, const void *buf, size_t size)
 	{
 		stream_local::writeSub<OutputStream>(os, buf, size);
 	}
@@ -128,7 +100,6 @@ public:
 		return size;
 	}
 	size_t getPos() const { return pos; }
-	bool hasNext() const { return pos < size_; }
 };
 
 class MemoryOutputStream {
@@ -162,7 +133,6 @@ public:
 		return size;
 	}
 	size_t getPos() const { return pos; }
-	bool hasNext() const { return pos < str_.size(); }
 };
 
 class StringOutputStream {
@@ -179,15 +149,33 @@ public:
 };
 
 template<class InputStream>
-size_t readSome(InputStream& is, void *buf, size_t size)
+size_t readSome(void *buf, size_t size, InputStream& is)
 {
-	return stream_local::readSome_inner(is, buf, size);
+	return stream_local::readSome_inner(buf, size, is);
 }
 
 template<class OutputStream>
 void write(OutputStream& os, const void *buf, size_t size)
 {
 	stream_local::writeSub(os, buf, size);
+}
+
+template<typename InputStream>
+void read(void *buf, size_t size, InputStream& is)
+{
+	char *p = static_cast<char*>(buf);
+	while (size > 0) {
+		size_t readSize = cybozu::readSome(p, size, is);
+		if (readSize == 0) throw cybozu::Exception("stream:read");
+		p += readSize;
+		size -= readSize;
+	}
+}
+
+template<class InputStream>
+bool readChar(char *c, InputStream& is)
+{
+	return readSome(c, 1, is) == 1;
 }
 
 } // cybozu

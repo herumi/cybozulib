@@ -155,7 +155,7 @@ private:
 		if (pos_ < bufSize_) {
 			return buf_[pos_++];
 		}
-		bufSize_ = In::readSome(is_, buf_, sizeof(buf_));
+		bufSize_ = cybozu::readSome(buf_, sizeof(buf_), is_);
 		if (bufSize_ > 0) {
 			pos_ = 1;
 			return buf_[0];

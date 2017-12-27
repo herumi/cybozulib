@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <sys/stat.h> // for stat
 #include <cybozu/exception.hpp>
-#include <cybozu/stream_fwd.hpp>
 #include <vector>
 #include <ios>
 #ifdef _WIN32

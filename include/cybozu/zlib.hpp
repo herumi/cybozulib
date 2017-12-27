@@ -6,7 +6,7 @@
 	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
 */
 
-#include <cybozu/stream_fwd.hpp>
+#include <cybozu/stream.hpp>
 #include <cybozu/endian.hpp>
 #include <assert.h>
 #include <stdio.h>
@@ -154,7 +154,6 @@ private:
 */
 template<class InputStream, size_t maxBufSize = 2048>
 class ZlibDecompressorT {
-	typedef cybozu::InputStreamTag<InputStream> In;
 	InputStream& is_;
 	unsigned int crc_;
 	unsigned int totalSize_; /* mod 2^32 */
@@ -165,7 +164,7 @@ class ZlibDecompressorT {
 	bool readGzipHeader_;
 	void readAll(char *buf, size_t size)
 	{
-		cybozu::stream::read(is_, buf, size);
+		cybozu::read(buf, size, is_);
 	}
 	void skipToZero()
 	{
@@ -270,7 +269,7 @@ public:
 		z_.avail_out = size;
 		do {
 			if (z_.avail_in == 0) {
-				z_.avail_in = (uint32_t)In::readSome(is_, buf_, maxBufSize);
+				z_.avail_in = (uint32_t)cybozu::readSome(buf_, maxBufSize, is_);
 				if (ret_ == Z_STREAM_END && z_.avail_in == 0) return 0;
 				z_.next_in = (Bytef*)buf_;
 			}

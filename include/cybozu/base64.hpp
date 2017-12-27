@@ -42,8 +42,6 @@ static inline void addEndLine(char *outBuf, size_t& outBufSize, int mode)
 template<class OutputStream, class InputStream>
 void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, int mode = base64::useCRLF)
 {
-	typedef typename cybozu::OutputStreamTag<OutputStream> Out;
-	typedef typename cybozu::InputStreamTag<InputStream> In;
 	const size_t innerMaxLineSize = 128;
 	if (maxLineSize > innerMaxLineSize || ((maxLineSize % 4) != 0)) {
 		throw cybozu::Exception("base64::EncodeToBase64:bad line size") << maxLineSize;
@@ -60,7 +58,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 	assert(sizeof(outBuf) > (sizeof(inBuf) * 4) / 3 +(sizeof(inBuf) * 2) /* max # of CRLF */ + 16 /* margin */);
 	size_t outBufSize = 0;
 	for (;;) {
-		size_t readSize = In::readSome(is, inBuf, sizeof(inBuf));
+		size_t readSize = cybozu::readSome(inBuf, sizeof(inBuf), is);
 		if (readSize == 0) break;
 		for (size_t i = 0; i < readSize; i++) {
 			unsigned int c = static_cast<unsigned char>(inBuf[i]);
@@ -87,7 +85,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 			}
 			assert(outBufSize <= sizeof(outBuf));
 		}
-		Out::write(os, outBuf, outBufSize);
+		cybozu::write(os, outBuf, outBufSize);
 		outBufSize = 0;
 	}
 	if (idx > 0) {
@@ -103,7 +101,7 @@ void EncodeToBase64(OutputStream& os, InputStream& is, size_t maxLineSize = 76, 
 		base64_local::addEndLine(outBuf, outBufSize, mode);
 	}
 	if (outBufSize > 0) {
-		Out::write(os, outBuf, outBufSize);
+		cybozu::write(os, outBuf, outBufSize);
 	}
 }
 
@@ -120,7 +118,6 @@ class Base64Decoder {
 	unsigned int cur_;
 	Base64Decoder(const Base64Decoder&);
 	void operator=(const Base64Decoder&);
-	typedef typename cybozu::OutputStreamTag<OutputStream> Out;
 public:
 	Base64Decoder(OutputStream& os)
 		: os_(os)
@@ -174,7 +171,7 @@ public:
 				idx_ = 0;
 			}
 			if (outBufSize_ == sizeof(outBuf_)) {
-				Out::write(os_, outBuf_, outBufSize_);
+				cybozu::write(os_, outBuf_, outBufSize_);
 				outBufSize_ = 0;
 			}
 		}
@@ -186,7 +183,7 @@ public:
 	void flush()
 	{
 		if (outBufSize_ > 0) {
-			Out::write(os_, outBuf_, outBufSize_);
+			cybozu::write(os_, outBuf_, outBufSize_);
 			outBufSize_ = 0;
 		}
 	}
@@ -201,10 +198,9 @@ template<class OutputStream, class InputStream>
 void DecodeFromBase64(OutputStream& os, InputStream& is)
 {
 	cybozu::Base64Decoder<OutputStream> dec(os);
-	typedef typename cybozu::InputStreamTag<InputStream> In;
 	for (;;) {
 		char buf[1024];
-		size_t readSize = In::readSome(is, buf, sizeof(buf));
+		size_t readSize = cybozu::readSome(buf, sizeof(buf), is);
 		if (readSize <= 0) break;
 		dec.write(buf, readSize);
 	}

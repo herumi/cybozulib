@@ -50,8 +50,7 @@ void reserve_if_exists(T& t, size_t size)
 template<class InputStream, class T>
 void loadRange(T *p, size_t num, InputStream& is)
 {
-//	cybozu::InputStreamTag<InputStream>::read(is, p, num * sizeof(T));
-	cybozu::stream::read(is, p, num * sizeof(T));
+	cybozu::read(p, num * sizeof(T), is);
 }
 
 template<class OutputStream, class T>

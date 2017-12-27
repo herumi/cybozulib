@@ -32,7 +32,6 @@
 
 #include <cybozu/atomic.hpp>
 #include <cybozu/exception.hpp>
-#include <cybozu/stream_fwd.hpp>
 #include <cybozu/itoa.hpp>
 #include <string>
 
