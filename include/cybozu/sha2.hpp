@@ -209,12 +209,13 @@ public:
 	{
 		digest(str.c_str(), str.size());
 	}
-	void get(void *out) const
+	size_t get(void *out) const
 	{
 		char *p = reinterpret_cast<char*>(out);
 		for (size_t i = 0; i < hSize_; i++) {
 			cybozu::Set32bitAsBE(&p[i * sizeof(h_[0])], h_[i]);
 		}
+		return outByteSize_;
 	}
 	std::string get() const
 	{
@@ -402,12 +403,13 @@ public:
 	{
 		digest(str.c_str(), str.size());
 	}
-	void get(void *out) const
+	size_t get(void *out) const
 	{
 		char *p = reinterpret_cast<char*>(out);
 		for (size_t i = 0; i < hSize_; i++) {
 			cybozu::Set64bitAsBE(&p[i * sizeof(h_[0])], h_[i]);
 		}
+		return outByteSize_;
 	}
 	std::string get() const
 	{
