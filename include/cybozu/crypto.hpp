@@ -97,7 +97,7 @@ public:
 	{
 		reset();
 	}
-	void update(const char *buf, size_t bufSize)
+	void update(const void *buf, size_t bufSize)
 	{
 		switch (name_) {
 		case N_SHA1:   SHA1_Update(&ctx_.sha1, buf, bufSize);     break;
@@ -127,7 +127,7 @@ public:
 		md must have hashSize byte
 		@note clear inner buffer after calling digest
 	*/
-	void digest(char *out, const char *buf, size_t bufSize)
+	void digest(void *out, const void *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
 		unsigned char *md = reinterpret_cast<unsigned char*>(out);
@@ -142,7 +142,7 @@ public:
 		}
 		reset();
 	}
-	std::string digest(const char *buf, size_t bufSize)
+	std::string digest(const void *buf, size_t bufSize)
 	{
 		std::string ret;
 		ret.resize(hashSize_);
@@ -153,20 +153,30 @@ public:
 	{
 		return digest(buf.c_str(), buf.size());
 	}
-	static inline std::string digest(Name name, const char *buf, size_t bufSize)
+	/*
+		out must have necessary size
+		@note return written size
+	*/
+	static inline size_t digest(void *out, Name name, const void *buf, size_t bufSize)
 	{
-		unsigned char md[128];
+		unsigned char *md = (unsigned char*)out;
 		const unsigned char *src = cybozu::cast<const unsigned char *>(buf);
 		switch (name) {
-		case N_SHA1:   SHA1(src, bufSize, md);   break;
-		case N_SHA224: SHA224(src, bufSize, md); break;
-		case N_SHA256: SHA256(src, bufSize, md); break;
-		case N_SHA384: SHA384(src, bufSize, md); break;
-		case N_SHA512: SHA512(src, bufSize, md); break;
+		case N_SHA1:   SHA1(src, bufSize, md);   return 160 / 8;
+		case N_SHA224: SHA224(src, bufSize, md); return 224 / 8;
+		case N_SHA256: SHA256(src, bufSize, md); return 256 / 8;
+		case N_SHA384: SHA384(src, bufSize, md); return 384 / 8;
+		case N_SHA512: SHA512(src, bufSize, md); return 512 / 8;
 		default:
-			throw cybozu::Exception("crypt:Hash:digest") << name;
+			return 0;
 		}
-		return std::string(cybozu::cast<const char*>(md), getSize(name));
+	}
+	static inline std::string digest(Name name, const void *buf, size_t bufSize)
+	{
+		char md[128];
+		size_t size = digest(md, name, buf, bufSize);
+		if (size == 0) throw cybozu::Exception("crypt:Hash:digest") << name;
+		return std::string(md, size);
 	}
 	static inline std::string digest(Name name, const std::string& buf)
 	{
