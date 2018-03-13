@@ -1606,7 +1606,7 @@ inline void swap(String& lhs, String& rhs) { lhs.swap(rhs); }
 
 inline String operator+(const String& lhs, const String& rhs) { return String(lhs) += rhs; }
 #if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
-inline String operator+(String&& lhs, const String& rhs) { return lhs.append(rhs); }
+inline String operator+(String&& lhs, const String& rhs) { return std::move(lhs.append(rhs)); }
 #endif
 
 template<class Iter16>
