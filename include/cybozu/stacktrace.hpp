@@ -276,8 +276,8 @@ public:
 #endif
 		return out;
 	}
-	bool empty() const throw() { return data_.empty(); }
-	void clear() throw() { data_.clear(); }
+	bool empty() const CYBOZU_NOEXCEPT { return data_.empty(); }
+	void clear() CYBOZU_NOEXCEPT { data_.clear(); }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const StackTrace& self)

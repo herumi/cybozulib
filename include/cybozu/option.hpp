@@ -238,7 +238,7 @@ public:
 
 	~Var() { delete p_; }
 
-	void swap(Var& rhs) throw()
+	void swap(Var& rhs) CYBOZU_NOEXCEPT
 	{
 		std::swap(p_, rhs.p_);
 		std::swap(isSet_, rhs.isSet_);

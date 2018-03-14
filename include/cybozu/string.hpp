@@ -961,42 +961,42 @@ public:
 	/**
 		return iterator for beginning of mutable sequence
 	*/
-	iterator begin() throw() { return str_.begin(); }
+	iterator begin() CYBOZU_NOEXCEPT { return str_.begin(); }
 
 	/**
 		return iterator for beginning of nonmutable sequence
 	*/
-	const_iterator begin() const throw() { return str_.begin(); }
+	const_iterator begin() const CYBOZU_NOEXCEPT { return str_.begin(); }
 
 	/**
 		return iterator for end of mutable sequence
 	*/
-	iterator end() throw() { return str_.end(); }
+	iterator end() CYBOZU_NOEXCEPT { return str_.end(); }
 
 	/**
 		return iterator for end of nonmutable sequence
 	*/
-	const_iterator end() const throw() { return str_.end(); }
+	const_iterator end() const CYBOZU_NOEXCEPT { return str_.end(); }
 
 	/**
 		return iterator for beginning of reversed mutable sequence
 	*/
-	reverse_iterator rbegin() throw() { return str_.rbegin(); }
+	reverse_iterator rbegin() CYBOZU_NOEXCEPT { return str_.rbegin(); }
 
 	/**
 		return iterator for beginning of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rbegin() const throw() { return str_.rbegin(); }
+	const_reverse_iterator rbegin() const CYBOZU_NOEXCEPT { return str_.rbegin(); }
 
 	/**
 		return iterator for end of reversed mutable sequence
 	*/
-	reverse_iterator rend() throw() { return str_.rend(); }
+	reverse_iterator rend() CYBOZU_NOEXCEPT { return str_.rend(); }
 
 	/**
 		return iterator for end of reversed nonmutable sequence
 	*/
-	const_reverse_iterator rend() const throw() { return str_.rend(); }
+	const_reverse_iterator rend() const CYBOZU_NOEXCEPT { return str_.rend(); }
 
 	/**
 		subscript mutable sequence with checking
@@ -1044,17 +1044,17 @@ public:
 	/**
 		return length of sequence
 	*/
-	size_type length() const throw() { return str_.length(); }
+	size_type length() const CYBOZU_NOEXCEPT { return str_.length(); }
 
 	/**
 		return length of sequence
 	*/
-	size_type size() const throw() { return str_.size(); }
+	size_type size() const CYBOZU_NOEXCEPT { return str_.size(); }
 
 	/**
 		return maximum possible length of sequence
 	*/
-	size_type max_size() const throw() { return str_.max_size(); }
+	size_type max_size() const CYBOZU_NOEXCEPT { return str_.max_size(); }
 
 	/**
 		determine new length, padding with null elements as needed
@@ -1074,7 +1074,7 @@ public:
 	/**
 		return current length of allocated storage
 	*/
-	size_type capacity() const throw() { return str_.capacity(); }
+	size_type capacity() const CYBOZU_NOEXCEPT { return str_.capacity(); }
 
 	/**
 		determine new minimum length of allocated storage
@@ -1086,7 +1086,7 @@ public:
 		test if sequence is empty
 		@return true if empty
 	*/
-	bool empty() const throw() { return str_.empty(); }
+	bool empty() const CYBOZU_NOEXCEPT { return str_.empty(); }
 
 	/**
 		copy [off, off + count) to [dest, dest + count)
@@ -1480,24 +1480,24 @@ public:
 		return true;
 	}
 #if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
-	StringT(StringT&& rhs) throw()
+	StringT(StringT&& rhs) CYBOZU_NOEXCEPT
 	{
 		assign(std::forward<StringT>(rhs));
 	}
-	StringT& operator=(StringT&& rhs) throw()
+	StringT& operator=(StringT&& rhs) CYBOZU_NOEXCEPT
 	{
 		assign(std::forward<StringT>(rhs));
 		return *this;
 	}
-	StringT& assign(StringT&& rhs) throw()
+	StringT& assign(StringT&& rhs) CYBOZU_NOEXCEPT
 	{
 		str_.assign(std::forward<BasicString>(rhs.str_));
 		return *this;
 	}
-	const_iterator cbegin() const throw() { return begin(); }
-	const_iterator cend() const throw() { return end(); }
-	const_reverse_iterator crbegin() const throw() { return rbegin(); }
-	const_reverse_iterator crend() const throw() { return rend(); }
+	const_iterator cbegin() const CYBOZU_NOEXCEPT { return begin(); }
+	const_iterator cend() const CYBOZU_NOEXCEPT { return end(); }
+	const_reverse_iterator crbegin() const CYBOZU_NOEXCEPT { return rbegin(); }
+	const_reverse_iterator crend() const CYBOZU_NOEXCEPT { return rend(); }
 	void shrink_to_fit() { str_.shrink_to_fit(); }
 	void pop_back() { str_.erase(str_.size() - 1, 1); }
 	reference front() { return operator[](0); }

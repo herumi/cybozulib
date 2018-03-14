@@ -73,7 +73,7 @@ public:
 		{
 			obj_ = new Object(obj);
 		}
-		void swap(Value& rhs) throw()
+		void swap(Value& rhs) CYBOZU_NOEXCEPT
 		{
 			std::swap(type_, rhs.type_);
 			std::swap(ptn_, rhs.ptn_);

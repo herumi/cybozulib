@@ -97,9 +97,9 @@ public:
 		cybozu::disable_warning_unused_variable(enableStackTrace);
 #endif
 	}
-	~Exception() throw() {}
-	const char *what() const throw() { return toString().c_str(); }
-	const std::string& toString() const throw()
+	~Exception() CYBOZU_NOEXCEPT {}
+	const char *what() const CYBOZU_NOEXCEPT { return toString().c_str(); }
+	const std::string& toString() const CYBOZU_NOEXCEPT
 	{
 #ifdef CYBOZU_EXCEPTION_WITH_STACKTRACE
 		try {

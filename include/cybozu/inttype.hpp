@@ -148,6 +148,11 @@
 	#endif
 #endif
 
+#if CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11
+	#define CYBOZU_NOEXCEPT noexcept
+#else
+	#define CYBOZU_NOEXCEPT throw()
+#endif
 namespace cybozu {
 template<class T>
 void disable_warning_unused_variable(const T&) { }

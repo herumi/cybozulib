@@ -106,7 +106,7 @@ public:
 			printf("%s%s=%s\n", tab, i->first.c_str(), i->second.c_str());
 		}
 	}
-	void swap(Attributes& attr) throw()
+	void swap(Attributes& attr) CYBOZU_NOEXCEPT
 	{
 		m_.swap(attr.m_);
 	}

@@ -54,16 +54,16 @@ public:
 	{
 		delete[] p_;
 	}
-	T& operator[](size_t idx) throw() { return p_[idx]; }
-	const T& operator[](size_t idx) const throw() { return p_[idx]; }
-	size_t size() const throw() { return size_; }
-	bool empty() const throw() { return size_ == 0; }
-	T* begin() throw() { return p_; }
-	T* end() throw() { return p_ + size_; }
-	const T* begin() const throw() { return p_; }
-	const T* end() const throw() { return p_ + size_; }
-    T* data() throw() { return p_; }
-    const T* data() const throw() { return p_; }
+	T& operator[](size_t idx) CYBOZU_NOEXCEPT { return p_[idx]; }
+	const T& operator[](size_t idx) const CYBOZU_NOEXCEPT { return p_[idx]; }
+	size_t size() const CYBOZU_NOEXCEPT { return size_; }
+	bool empty() const CYBOZU_NOEXCEPT { return size_ == 0; }
+	T* begin() CYBOZU_NOEXCEPT { return p_; }
+	T* end() CYBOZU_NOEXCEPT { return p_ + size_; }
+	const T* begin() const CYBOZU_NOEXCEPT { return p_; }
+	const T* end() const CYBOZU_NOEXCEPT { return p_ + size_; }
+    T* data() CYBOZU_NOEXCEPT { return p_; }
+    const T* data() const CYBOZU_NOEXCEPT { return p_; }
 };
 
 /**
@@ -130,7 +130,7 @@ public:
 		return *this;
 	}
 #if (CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11)
-	AlignedArray(AlignedArray&& rhs) throw()
+	AlignedArray(AlignedArray&& rhs) CYBOZU_NOEXCEPT
 		: p_(rhs.p_)
 		, size_(rhs.size_)
 		, allocSize_(rhs.allocSize_)
@@ -139,7 +139,7 @@ public:
 		rhs.size_ = 0;
 		rhs.allocSize_ = 0;
 	}
-	AlignedArray& operator=(AlignedArray&& rhs) throw()
+	AlignedArray& operator=(AlignedArray&& rhs) CYBOZU_NOEXCEPT
 	{
 		swap(rhs);
 		rhs.clear();
@@ -172,25 +172,25 @@ public:
 	{
 		AlignedFree(p_);
 	}
-	void swap(AlignedArray& rhs) throw()
+	void swap(AlignedArray& rhs) CYBOZU_NOEXCEPT
 	{
 		std::swap(p_, rhs.p_);
 		std::swap(size_, rhs.size_);
 		std::swap(allocSize_, rhs.allocSize_);
 	}
-	T& operator[](size_t idx) throw() { return p_[idx]; }
-	const T& operator[](size_t idx) const throw() { return p_[idx]; }
-	size_t size() const throw() { return size_; }
-	bool empty() const throw() { return size_ == 0; }
-	T* begin() throw() { return p_; }
-	T* end() throw() { return p_ + size_; }
-	const T* begin() const throw() { return p_; }
-	const T* end() const throw() { return p_ + size_; }
-    T* data() throw() { return p_; }
-    const T* data() const throw() { return p_; }
+	T& operator[](size_t idx) CYBOZU_NOEXCEPT { return p_[idx]; }
+	const T& operator[](size_t idx) const CYBOZU_NOEXCEPT { return p_[idx]; }
+	size_t size() const CYBOZU_NOEXCEPT { return size_; }
+	bool empty() const CYBOZU_NOEXCEPT { return size_ == 0; }
+	T* begin() CYBOZU_NOEXCEPT { return p_; }
+	T* end() CYBOZU_NOEXCEPT { return p_ + size_; }
+	const T* begin() const CYBOZU_NOEXCEPT { return p_; }
+	const T* end() const CYBOZU_NOEXCEPT { return p_ + size_; }
+    T* data() CYBOZU_NOEXCEPT { return p_; }
+    const T* data() const CYBOZU_NOEXCEPT { return p_; }
 #if (CYBOZU_CPP_VERSION >= CYBOZU_CPP_VERSION_CPP11)
-	const T* cbegin() const throw() { return p_; }
-	const T* cend() const throw() { return p_ + size_; }
+	const T* cbegin() const CYBOZU_NOEXCEPT { return p_; }
+	const T* cend() const CYBOZU_NOEXCEPT { return p_ + size_; }
 #endif
 };
 
