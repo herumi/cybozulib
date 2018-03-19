@@ -94,7 +94,7 @@ public:
 		fp = fopen(path.c_str(), "a+b");
 #endif
 		if (fp == 0) throw cybozu::Exception("cybozu:Logger:openFile") << path;
-		closeFile();
+		if (!closeFile()) throw cybozu::Exception("cybozu:Logger:openFile:fail to closeFile");
 		fp_ = fp;
 		doClose_ = true;
 		useSyslog_ = false;
@@ -106,7 +106,7 @@ public:
 	*/
 	void set(FILE *fp)
 	{
-		closeFile();
+		if (!closeFile()) throw cybozu::Exception("cybozu:Logger:set:fail to closeFile");
 		fp_ = fp;
 		doClose_ = false;
 		useSyslog_ = false;
