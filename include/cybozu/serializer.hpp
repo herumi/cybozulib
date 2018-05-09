@@ -56,7 +56,7 @@ void loadRange(T *p, size_t num, InputStream& is)
 template<class OutputStream, class T>
 void saveRange(OutputStream& os, const T *p, size_t num)
 {
-	cybozu::write(os, p, num * sizeof(T));
+	cybozu::OutputStreamTag<OutputStream>::write(os, p, num * sizeof(T));
 }
 
 template<class InputStream, class T>
