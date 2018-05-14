@@ -8,6 +8,7 @@
 #include <string>
 #include <iosfwd>
 #include <cybozu/exception.hpp>
+#include <memory.h>
 
 namespace cybozu {
 

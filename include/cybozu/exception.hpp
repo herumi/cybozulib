@@ -7,6 +7,7 @@
 #ifdef CYBOZU_MINIMUM_EXCEPTION
 
 #include <cybozu/inttype.hpp>
+
 namespace cybozu {
 
 namespace exception {
@@ -19,7 +20,7 @@ inline const char *makeString(const char *, size_t)
 
 class Exception {
 public:
-	explicit Exception(const std::string& = "", bool = true)
+	explicit Exception(const char* = 0, bool = true)
 	{
 	}
 	~Exception() CYBOZU_NOEXCEPT {}
