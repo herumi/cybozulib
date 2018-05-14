@@ -4,6 +4,37 @@
 	@brief definition of abstruct exception class
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
+#ifdef CYBOZU_MINIMUM_EXCEPTION
+
+#include <cybozu/inttype.hpp>
+namespace cybozu {
+
+namespace exception {
+inline const char *makeString(const char *, size_t)
+{
+	return "";
+}
+
+} // cybozu::exception
+
+class Exception {
+public:
+	explicit Exception(const std::string& = "", bool = true)
+	{
+	}
+	~Exception() CYBOZU_NOEXCEPT {}
+	const char *what() const CYBOZU_NOEXCEPT { return "cybozu:Exception"; }
+	template<class T>
+	Exception& operator<<(const T&)
+	{
+		return *this;
+	}
+};
+
+} // cybozu
+
+#else
+
 #include <string>
 #include <algorithm>
 #include <sstream>
@@ -217,3 +248,4 @@ inline std::ostream& operator<<(std::ostream& os, const cybozu::ErrorNo& self)
 }
 
 } // cybozu
+#endif

@@ -7,6 +7,7 @@
 */
 #include <limits.h>
 #include <string>
+#include <memory.h>
 #include <cybozu/inttype.hpp>
 #include <cybozu/bit_operation.hpp>
 
@@ -65,41 +66,55 @@ namespace itoa_local {
 	the top of string is buf + bufSize - writtenSize
 */
 template<class UT>
-size_t uintToStr(char *buf, size_t bufSize, UT v)
+size_t uintToDec(char *buf, size_t bufSize, UT x)
 {
 	for (size_t i = 0; i < bufSize; i++) {
-		buf[bufSize - 1 - i] = '0' + static_cast<int>(v % 10);
-		v /= 10;
-		if (v == 0) return i + 1;
+		buf[bufSize - 1 - i] = '0' + static_cast<int>(x % 10);
+		x /= 10;
+		if (x == 0) return i + 1;
 	}
 	return 0;
+}
+
+template<class T>
+size_t intToDec(char *buf, size_t bufSize, T x)
+{
+	if (x == LLONG_MIN) {
+		const char minStr[] = "-9223372036854775808";
+		const size_t minStrLen = sizeof(minStr) - 1;
+		if (bufSize < minStrLen) {
+			return 0;
+		} else {
+			memcpy(buf + bufSize - minStrLen, minStr, minStrLen);
+			return minStrLen;
+		}
+	}
+	bool negative = x < 0;
+	uint64_t absX = negative ? -x : x;
+	size_t n = uintToDec(buf, bufSize, absX);
+	if (n == 0) return 0;
+	if (negative) {
+		if (bufSize == n) return 0;
+		n++;
+		buf[bufSize - n] = '-';
+	}
+	return n;
 }
 
 template<typename T>
 void convertFromUint(std::string& out, T x)
 {
 	char buf[40];
-	size_t n = uintToStr(buf, sizeof(buf), x);
+	size_t n = uintToDec(buf, sizeof(buf), x);
 	assert(n > 0);
 	out.assign(buf + sizeof(buf) - n, n);
 }
 
-template<typename T, typename UT, size_t minusMaxStrLen>
-void convertFromInt(std::string& out, T x, T minusMax, const char (&minusMaxStr)[minusMaxStrLen])
+inline void convertFromInt(std::string& out, long long x)
 {
-	if (x == minusMax) {
-		out.assign(minusMaxStr, minusMaxStr + minusMaxStrLen - 1);
-		return;
-	}
-	bool negative = x < 0;
-	UT absX = negative ? -x : x;
 	char buf[40];
-	size_t n = uintToStr(buf, sizeof(buf), absX);
+	size_t n = intToDec(buf, sizeof(buf), x);
 	assert(n > 0);
-	if (negative) {
-		buf[sizeof(buf) - n - 1] = '-';
-		n++;
-	}
 	out.assign(buf + sizeof(buf) - n, n);
 }
 
@@ -128,7 +143,7 @@ void itobinLocal(std::string& out, T x, bool withZero)
 */
 inline void itoa(std::string& out, int x)
 {
-	itoa_local::convertFromInt<int, unsigned int>(out, x, INT_MIN, "-2147483648");
+	itoa_local::convertFromInt(out, x);
 }
 
 /**
@@ -138,7 +153,7 @@ inline void itoa(std::string& out, int x)
 */
 inline void itoa(std::string& out, long long x)
 {
-	itoa_local::convertFromInt<long long, unsigned long long>(out, x, LLONG_MIN, "-9223372036854775808");
+	itoa_local::convertFromInt(out, x);
 }
 
 /**

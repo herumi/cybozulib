@@ -242,7 +242,7 @@ CYBOZU_TEST_AUTO(test_uint64)
 		char buf[21];
 		for (size_t bufSize = 0; bufSize < sizeof(buf); bufSize++) {
 			memset(buf, 0, sizeof(buf));
-			size_t n = cybozu::itoa_local::uintToStr(buf, bufSize, tbl[i].x);
+			size_t n = cybozu::itoa_local::uintToDec(buf, bufSize, tbl[i].x);
 			const char *expectedStr = tbl[i].str;
 			size_t expectedLen = strlen(expectedStr);
 			if (bufSize < expectedLen) {
