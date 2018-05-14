@@ -18,6 +18,12 @@ size_t getHexLength(T x)
 {
 	return x == 0 ? 1 : cybozu::bsr(x) / 4 + 1;
 }
+
+template<class T>
+size_t getBinLength(T x)
+{
+	return x == 0 ? 1 : cybozu::bsr(x) + 1;
+}
 /*
 	convert x to hex string with len
 	@note out should have getHexLength(x) size
@@ -35,12 +41,6 @@ void itohex(char *out, size_t len, T x, bool upCase = true)
 		out[len - i - 1] = tbl[x % 16];
 		x /= 16;
 	}
-}
-
-template<class T>
-size_t getBinLength(T x)
-{
-	return x == 0 ? 1 : cybozu::bsr(x) + 1;
 }
 /*
 	convert x to bin string with len
@@ -71,6 +71,22 @@ size_t uintToDec(char *buf, size_t bufSize, UT x)
 	for (size_t i = 0; i < bufSize; i++) {
 		buf[bufSize - 1 - i] = '0' + static_cast<int>(x % 10);
 		x /= 10;
+		if (x == 0) return i + 1;
+	}
+	return 0;
+}
+
+template<class UT>
+size_t uintToHex(char *buf, size_t bufSize, UT x, bool upCase = true)
+{
+	static const char *hexTbl[] = {
+		"0123456789abcdef",
+		"0123456789ABCDEF"
+	};
+	const char *tbl = hexTbl[upCase];
+	for (size_t i = 0; i < bufSize; i++) {
+		buf[bufSize - 1 - i] = tbl[x % 16];
+		x /= 16;
 		if (x == 0) return i + 1;
 	}
 	return 0;
