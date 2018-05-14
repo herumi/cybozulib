@@ -57,50 +57,50 @@ void itobin(char *out, size_t len, T x)
 
 namespace itoa_local {
 
-template<typename T, typename UT, int n>
-void convertFromInt(std::string& out, T x, T minusMax, const char (&minusMaxStr)[n])
+/*
+	UT is unsigned integer
+	use buf[0, bufSize)
+	return 0 if false
+	return writtenSize which is not terminated
+	the top of string is buf + bufSize - writtenSize
+*/
+template<class UT>
+size_t uintToStr(char *buf, size_t bufSize, UT v)
 {
-	if (x == minusMax) {
-		out.assign(minusMaxStr, minusMaxStr + n - 1);
-		return;
+	for (size_t i = 0; i < bufSize; i++) {
+		buf[bufSize - 1 - i] = '0' + static_cast<int>(v % 10);
+		v /= 10;
+		if (v == 0) return i + 1;
 	}
-	if (x == 0) {
-		out.assign(1, '0');
-		return;
-	}
-	UT absX = x < 0 ? -x : x;
-	char buf[40];
-	int p = 0;
-	while (absX > 0) {
-		buf[p++] = '0' + static_cast<int>(absX % 10);
-		absX /= 10;
-	}
-	if (x < 0) {
-		buf[p++] = '-';
-	}
-	out.resize(p);
-	for (int i = 0; i < p; i++) {
-		out[i] = buf[p - 1 - i];
-	}
+	return 0;
 }
 
 template<typename T>
 void convertFromUint(std::string& out, T x)
 {
-	if (x == 0) {
-		out.assign(1, '0');
+	char buf[40];
+	size_t n = uintToStr(buf, sizeof(buf), x);
+	assert(n > 0);
+	out.assign(buf + sizeof(buf) - n, n);
+}
+
+template<typename T, typename UT, size_t minusMaxStrLen>
+void convertFromInt(std::string& out, T x, T minusMax, const char (&minusMaxStr)[minusMaxStrLen])
+{
+	if (x == minusMax) {
+		out.assign(minusMaxStr, minusMaxStr + minusMaxStrLen - 1);
 		return;
 	}
+	bool negative = x < 0;
+	UT absX = negative ? -x : x;
 	char buf[40];
-	int p = 0;
-	while (x > 0) {
-		buf[p++] = '0' + static_cast<int>(x % 10);
-		x /= 10;
+	size_t n = uintToStr(buf, sizeof(buf), absX);
+	assert(n > 0);
+	if (negative) {
+		buf[sizeof(buf) - n - 1] = '-';
+		n++;
 	}
-	out.resize(p);
-	for (int i = 0; i < p; i++) {
-		out[i] = buf[p - 1 - i];
-	}
+	out.assign(buf + sizeof(buf) - n, n);
 }
 
 template<typename T>
