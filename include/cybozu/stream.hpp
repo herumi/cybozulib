@@ -109,11 +109,21 @@ class MemoryOutputStream {
 	size_t pos;
 public:
 	MemoryOutputStream(void *p, size_t size) : p_(static_cast<char *>(p)), size_(size), pos(0) {}
-	void write(const void *buf, size_t size)
+	void write(const void *buf, size_t size, bool *pb)
 	{
-		if (size > size_ - pos) throw cybozu::Exception("MemoryOutputStream:write") << size << size_ << pos;
+		if (size > size_ - pos) {
+			*pb = false;
+			return;
+		}
 		memcpy(p_ + pos, buf, size);
 		pos += size;
+		*pb = true;
+	}
+	void write(const void *buf, size_t size)
+	{
+		bool b;
+		write(buf, size, &b);
+		if (!b) throw cybozu::Exception("MemoryOutputStream:write") << size << size_ << pos;
 	}
 	size_t getPos() const { return pos; }
 };
@@ -162,15 +172,27 @@ void write(OutputStream& os, const void *buf, size_t size)
 }
 
 template<typename InputStream>
-void read(void *buf, size_t size, InputStream& is)
+void read(void *buf, size_t size, InputStream& is, bool *pb)
 {
 	char *p = static_cast<char*>(buf);
 	while (size > 0) {
 		size_t readSize = cybozu::readSome(p, size, is);
-		if (readSize == 0) throw cybozu::Exception("stream:read");
+		if (readSize == 0) {
+			*pb = false;
+			return;
+		}
 		p += readSize;
 		size -= readSize;
 	}
+	*pb = true;
+}
+
+template<typename InputStream>
+void read(void *buf, size_t size, InputStream& is)
+{
+	bool b;
+	read(buf, size, is, &b);
+	if (!b) throw cybozu::Exception("stream:read");
 }
 
 template<class InputStream>
