@@ -285,7 +285,7 @@ CYBOZU_TEST_AUTO(itohexchar)
 		const char *strL;
 		const char *strH;
 		unsigned char val;
-	} intTbl[] = {
+	} tbl[] = {
 		{ "00", "00", 0 },
 		{ "01", "01", 1 },
 		{ "02", "02", 2 },
@@ -318,9 +318,60 @@ CYBOZU_TEST_AUTO(itohexchar)
 		{ "3e", "3E", 62 },
 		{ "3f", "3F", 63 },
 	};
-	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(intTbl); i++) {
-		CYBOZU_TEST_EQUAL(cybozu::itohex(intTbl[i].val), intTbl[i].strH);
-		CYBOZU_TEST_EQUAL(cybozu::itohex(intTbl[i].val, false), intTbl[i].strL);
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EQUAL(cybozu::itohex(tbl[i].val), tbl[i].strH);
+		CYBOZU_TEST_EQUAL(cybozu::itohex(tbl[i].val, false), tbl[i].strL);
+	}
+}
+
+CYBOZU_TEST_AUTO(uintToHex)
+{
+	const struct {
+		const char *str;
+		uint64_t val;
+	} tbl[] = {
+		{ "0", 0 },
+		{ "1", 1 },
+		{ "2", 2 },
+		{ "3", 3 },
+		{ "4", 4 },
+		{ "5", 5 },
+		{ "6", 6 },
+		{ "7", 7 },
+		{ "8", 8 },
+		{ "9", 9 },
+		{ "a", 10 },
+		{ "b", 11 },
+		{ "c", 12 },
+		{ "d", 13 },
+		{ "e", 14 },
+		{ "f", 15 },
+		{ "31", 49 },
+		{ "32", 50 },
+		{ "33", 51 },
+		{ "34", 52 },
+		{ "35", 53 },
+		{ "36", 54 },
+		{ "37", 55 },
+		{ "38", 56 },
+		{ "39", 57 },
+		{ "3a", 58 },
+		{ "3b", 59 },
+		{ "3c", 60 },
+		{ "3d", 61 },
+		{ "3e", 62 },
+		{ "3f", 63 },
+		{ "123", 0x123 },
+		{ "1234567890abcdef", 0x1234567890abcdefull },
+		{ "ffffffffffffffff", 0xffffffffffffffffull },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const char *expectedStr = tbl[i].str;
+		size_t expectedSize = strlen(expectedStr);
+		char buf[32];
+		size_t n = cybozu::itoa_local::uintToHex(buf, sizeof(buf), tbl[i].val, false);
+		CYBOZU_TEST_EQUAL(n, expectedSize);
+		CYBOZU_TEST_EQUAL_ARRAY(expectedStr, buf + sizeof(buf) - n, n);
 	}
 }
 
