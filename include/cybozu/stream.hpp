@@ -63,6 +63,12 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 	os.write(buf, size);
 }
 
+template<class OutputStream>
+void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb)
+{
+	os.write(buf, size, pb);
+}
+
 } // stream_local
 
 /*
@@ -172,6 +178,12 @@ void write(OutputStream& os, const void *buf, size_t size)
 	stream_local::writeSub(os, buf, size);
 }
 
+template<class OutputStream>
+void write(OutputStream& os, const void *buf, size_t size, bool *pb)
+{
+	stream_local::writeSub(os, buf, size, pb);
+}
+
 template<typename InputStream>
 void read(void *buf, size_t size, InputStream& is, bool *pb)
 {
@@ -206,6 +218,12 @@ template<class OutputStream>
 void writeChar(OutputStream& os, char c)
 {
 	cybozu::write(os, &c, 1);
+}
+
+template<class OutputStream>
+void writeChar(OutputStream& os, char c, bool *pb)
+{
+	cybozu::write(os, &c, 1, pb);
 }
 
 } // cybozu
