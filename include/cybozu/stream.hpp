@@ -34,10 +34,10 @@ struct enable_if<false, T> {};
 template<class InputStream>
 size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
 {
+	if (size > 0x7fffffff) size = 0x7fffffff;
 	is.read(static_cast<char *>(buf), size);
 	const std::streamsize readSize = is.gcount();
-	if (readSize < 0) throw cybozu::Exception("stream:readSome_inner:bad readSize") << size << readSize;
-	if (readSize > 0x7fffffff && sizeof(std::streamsize) > sizeof(size_t)) throw cybozu::Exception("stream:readSome_inner:too large") << readSize;
+	if (readSize < 0) return 0;
 	if (size == 1 && readSize == 0) is.clear();
 	return static_cast<size_t>(readSize);
 }
@@ -64,7 +64,14 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 }
 
 template<class OutputStream>
-void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb)
+void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
+{
+	*pb = os.write(static_cast<const char *>(buf), size);
+}
+
+/* generic version for void write(const void*, size_t), which writes all data */
+template<class OutputStream>
+void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb, typename enable_if<!is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
 	os.write(buf, size, pb);
 }
@@ -159,6 +166,11 @@ class StringOutputStream {
 	void operator=(const StringOutputStream&);
 public:
 	explicit StringOutputStream(std::string& str) : str_(str) {}
+	void write(const void *buf, size_t size, bool *pb)
+	{
+		str_.append(static_cast<const char *>(buf), size);
+		*pb = true;
+	}
 	void write(const void *buf, size_t size)
 	{
 		str_.append(static_cast<const char *>(buf), size);
@@ -181,7 +193,7 @@ void write(OutputStream& os, const void *buf, size_t size)
 template<class OutputStream>
 void write(OutputStream& os, const void *buf, size_t size, bool *pb)
 {
-	stream_local::writeSub(os, buf, size, pb);
+	stream_local::writeSub(os, buf, size, pb, pb);
 }
 
 template<typename InputStream>
