@@ -375,6 +375,46 @@ CYBOZU_TEST_AUTO(uintToHex)
 	}
 }
 
+CYBOZU_TEST_AUTO(uintToBin)
+{
+	const struct {
+		const char *str;
+		uint64_t val;
+	} tbl[] = {
+		{ "0", 0 },
+		{ "1", 1 },
+		{ "10", 2 },
+		{ "11", 3 },
+		{ "100", 4 },
+		{ "101", 5 },
+		{ "110", 6 },
+		{ "111", 7 },
+		{ "1000", 8 },
+		{ "1001", 9 },
+		{ "1010", 10 },
+		{ "1011", 11 },
+		{ "1100", 12 },
+		{ "1101", 13 },
+		{ "1110", 14 },
+		{ "1111", 15 },
+		{ "10000", 16 },
+		{ "10001", 17 },
+		{ "10010", 18 },
+		{ "10011", 19 },
+		{ "11111111111111111111111111111111", 0xffffffff },
+		{ "10001101000101011001111000100100000001001000110100010101100111", 0x2345678901234567ull },
+		{ "1111111111111111111111111111111111111111111111111111111111111111", 0xffffffffffffffffull },
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const char *expectedStr = tbl[i].str;
+		size_t expectedSize = strlen(expectedStr);
+		char buf[64];
+		size_t n = cybozu::itoa_local::uintToBin(buf, sizeof(buf), tbl[i].val);
+		CYBOZU_TEST_EQUAL(n, expectedSize);
+		CYBOZU_TEST_EQUAL_ARRAY(expectedStr, buf + sizeof(buf) - n, n);
+	}
+}
+
 CYBOZU_TEST_AUTO(itohex)
 {
 	CYBOZU_TEST_EQUAL(cybozu::itohex((unsigned short)0), "0000");

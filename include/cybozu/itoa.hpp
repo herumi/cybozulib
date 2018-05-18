@@ -59,11 +59,11 @@ void itobin(char *out, size_t len, T x)
 namespace itoa_local {
 
 /*
-	UT is unsigned integer
+	convert x to dec
 	use buf[0, bufSize)
 	return 0 if false
 	return writtenSize which is not terminated
-	the top of string is buf + bufSize - writtenSize
+	@REMARK the top of string is buf + bufSize - writtenSize
 */
 template<class UT>
 size_t uintToDec(char *buf, size_t bufSize, UT x)
@@ -76,6 +76,13 @@ size_t uintToDec(char *buf, size_t bufSize, UT x)
 	return 0;
 }
 
+/*
+	convert x to hex
+	use buf[0, bufSize)
+	return 0 if false
+	return writtenSize which is not terminated
+	@REMARK the top of string is buf + bufSize - writtenSize
+*/
 template<class UT>
 size_t uintToHex(char *buf, size_t bufSize, UT x, bool upCase = true)
 {
@@ -87,6 +94,24 @@ size_t uintToHex(char *buf, size_t bufSize, UT x, bool upCase = true)
 	for (size_t i = 0; i < bufSize; i++) {
 		buf[bufSize - 1 - i] = tbl[x % 16];
 		x /= 16;
+		if (x == 0) return i + 1;
+	}
+	return 0;
+}
+
+/*
+	convert x to bin
+	use buf[0, bufSize)
+	return 0 if false
+	return writtenSize which is not terminated
+	@REMARK the top of string is buf + bufSize - writtenSize
+*/
+template<class UT>
+size_t uintToBin(char *buf, size_t bufSize, UT x)
+{
+	for (size_t i = 0; i < bufSize; i++) {
+		buf[bufSize - 1 - i] = '0' + (x & 1);
+		x >>= 1;
 		if (x == 0) return i + 1;
 	}
 	return 0;
