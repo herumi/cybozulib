@@ -66,7 +66,7 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 template<class OutputStream>
 void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
-	*pb = os.write(static_cast<const char *>(buf), size);
+	*pb = !!os.write(static_cast<const char *>(buf), size);
 }
 
 /* generic version for void write(const void*, size_t), which writes all data */
