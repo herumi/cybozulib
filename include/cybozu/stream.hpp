@@ -64,16 +64,16 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 }
 
 template<class OutputStream>
-void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
+void writeSub(bool *pb, OutputStream& os, const void *buf, size_t size, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
 	*pb = !!os.write(static_cast<const char *>(buf), size);
 }
 
 /* generic version for void write(const void*, size_t), which writes all data */
 template<class OutputStream>
-void writeSub(OutputStream& os, const void *buf, size_t size, bool *pb, typename enable_if<!is_convertible<OutputStream, std::ostream>::value>::type* = 0)
+void writeSub(bool *pb, OutputStream& os, const void *buf, size_t size, typename enable_if<!is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
-	os.write(buf, size, pb);
+	os.write(pb, buf, size);
 }
 
 } // stream_local
@@ -123,7 +123,7 @@ class MemoryOutputStream {
 	size_t pos;
 public:
 	MemoryOutputStream(void *p, size_t size) : p_(static_cast<char *>(p)), size_(size), pos(0) {}
-	void write(const void *buf, size_t size, bool *pb)
+	void write(bool *pb, const void *buf, size_t size)
 	{
 		if (size > size_ - pos) {
 			*pb = false;
@@ -136,7 +136,7 @@ public:
 	void write(const void *buf, size_t size)
 	{
 		bool b;
-		write(buf, size, &b);
+		write(&b, buf, size);
 		if (!b) throw cybozu::Exception("MemoryOutputStream:write") << size << size_ << pos;
 	}
 	size_t getPos() const { return pos; }
@@ -166,7 +166,7 @@ class StringOutputStream {
 	void operator=(const StringOutputStream&);
 public:
 	explicit StringOutputStream(std::string& str) : str_(str) {}
-	void write(const void *buf, size_t size, bool *pb)
+	void write(bool *pb, const void *buf, size_t size)
 	{
 		str_.append(static_cast<const char *>(buf), size);
 		*pb = true;
@@ -191,13 +191,13 @@ void write(OutputStream& os, const void *buf, size_t size)
 }
 
 template<class OutputStream>
-void write(OutputStream& os, const void *buf, size_t size, bool *pb)
+void write(bool *pb, OutputStream& os, const void *buf, size_t size)
 {
-	stream_local::writeSub(os, buf, size, pb, pb);
+	stream_local::writeSub(pb, os, buf, size);
 }
 
 template<typename InputStream>
-void read(void *buf, size_t size, InputStream& is, bool *pb)
+void read(bool *pb, void *buf, size_t size, InputStream& is)
 {
 	char *p = static_cast<char*>(buf);
 	while (size > 0) {
@@ -216,7 +216,7 @@ template<typename InputStream>
 void read(void *buf, size_t size, InputStream& is)
 {
 	bool b;
-	read(buf, size, is, &b);
+	read(&b, buf, size, is);
 	if (!b) throw cybozu::Exception("stream:read");
 }
 
@@ -233,9 +233,9 @@ void writeChar(OutputStream& os, char c)
 }
 
 template<class OutputStream>
-void writeChar(OutputStream& os, char c, bool *pb)
+void writeChar(bool *pb, OutputStream& os, char c)
 {
-	cybozu::write(os, &c, 1, pb);
+	cybozu::write(pb, os, &c, 1);
 }
 
 } // cybozu
