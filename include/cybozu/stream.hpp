@@ -36,7 +36,7 @@ size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_i
 {
 	if (size > 0x7fffffff) size = 0x7fffffff;
 	is.read(static_cast<char *>(buf), size);
-	const std::streamsize readSize = is.gcount();
+	const int64_t readSize = is.gcount();
 	if (readSize < 0) return 0;
 	if (size == 1 && readSize == 0) is.clear();
 	return static_cast<size_t>(readSize);
