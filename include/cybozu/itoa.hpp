@@ -142,6 +142,7 @@ size_t intToDec(char *buf, size_t bufSize, T x)
 	return n;
 }
 
+#ifndef CYBOZU_DONT_USE_STRING
 template<typename T>
 void convertFromUint(std::string& out, T x)
 {
@@ -174,9 +175,11 @@ void itobinLocal(std::string& out, T x, bool withZero)
 	out.resize(size);
 	itobin(&out[0], size, x);
 }
+#endif
 
 } // itoa_local
 
+#ifndef CYBOZU_DONT_USE_STRING
 /**
 	convert int to string
 	@param out [out] string
@@ -327,5 +330,6 @@ inline std::string itoaWithZero(T x, size_t len, char c = '0')
 	}
 	return ret;
 }
+#endif
 
 } // cybozu

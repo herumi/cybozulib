@@ -49,12 +49,14 @@ size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_i
 	return is.readSome(buf, size);
 }
 
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 /* specialization for ostream */
 template<class OutputStream>
 void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if<is_convertible<OutputStream, std::ostream>::value>::type* = 0)
 {
 	if (!os.write(static_cast<const char *>(buf), size)) throw cybozu::Exception("stream:writeSub") << size;
 }
+#endif
 
 /* generic version for void write(const void*, size_t), which writes all data */
 template<class OutputStream>
@@ -133,15 +135,18 @@ public:
 		pos += size;
 		*pb = true;
 	}
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 	void write(const void *buf, size_t size)
 	{
 		bool b;
 		write(&b, buf, size);
 		if (!b) throw cybozu::Exception("MemoryOutputStream:write") << size << size_ << pos;
 	}
+#endif
 	size_t getPos() const { return pos; }
 };
 
+#ifndef CYBOZU_DONT_USE_STRING
 class StringInputStream {
 	const std::string& str_;
 	size_t pos;
@@ -177,6 +182,7 @@ public:
 	}
 	size_t getPos() const { return str_.size(); }
 };
+#endif
 
 template<class InputStream>
 size_t readSome(void *buf, size_t size, InputStream& is)
@@ -212,6 +218,7 @@ void read(bool *pb, void *buf, size_t size, InputStream& is)
 	*pb = true;
 }
 
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 template<typename InputStream>
 void read(void *buf, size_t size, InputStream& is)
 {
@@ -219,6 +226,7 @@ void read(void *buf, size_t size, InputStream& is)
 	read(&b, buf, size, is);
 	if (!b) throw cybozu::Exception("stream:read");
 }
+#endif
 
 template<class InputStream>
 bool readChar(char *c, InputStream& is)
