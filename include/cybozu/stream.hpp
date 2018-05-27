@@ -5,8 +5,10 @@
 
 	Copyright (C) Cybozu Labs, Inc., all rights reserved.
 */
+#ifndef CYBOZU_DONT_USE_STRING
 #include <string>
 #include <iosfwd>
+#endif
 #include <cybozu/exception.hpp>
 #include <memory.h>
 
@@ -30,6 +32,7 @@ struct enable_if { typedef T type; };
 template <class T>
 struct enable_if<false, T> {};
 
+#ifndef CYBOZU_DONT_USE_STRING
 /* specialization for istream */
 template<class InputStream>
 size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_if<is_convertible<InputStream, std::istream>::value>::type* = 0)
@@ -48,6 +51,13 @@ size_t readSome_inner(void *buf, size_t size, InputStream& is, typename enable_i
 {
 	return is.readSome(buf, size);
 }
+#else
+template<class InputStream>
+size_t readSome_inner(void *buf, size_t size, InputStream& is)
+{
+	return is.readSome(buf, size);
+}
+#endif
 
 #ifndef CYBOZU_DONT_USE_EXCEPTION
 /* specialization for ostream */
@@ -58,6 +68,7 @@ void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if
 }
 #endif
 
+#ifndef CYBOZU_DONT_USE_STRING
 /* generic version for void write(const void*, size_t), which writes all data */
 template<class OutputStream>
 void writeSub(OutputStream& os, const void *buf, size_t size, typename enable_if<!is_convertible<OutputStream, std::ostream>::value>::type* = 0)
@@ -77,6 +88,13 @@ void writeSub(bool *pb, OutputStream& os, const void *buf, size_t size, typename
 {
 	os.write(pb, buf, size);
 }
+#else
+template<class OutputStream>
+void writeSub(bool *pb, OutputStream& os, const void *buf, size_t size)
+{
+	os.write(pb, buf, size);
+}
+#endif
 
 } // stream_local
 

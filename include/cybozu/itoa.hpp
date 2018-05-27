@@ -6,7 +6,9 @@
 	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
 */
 #include <limits.h>
+#ifndef CYBOZU_DONT_USE_STRING
 #include <string>
+#endif
 #include <memory.h>
 #include <cybozu/inttype.hpp>
 #include <cybozu/bit_operation.hpp>
