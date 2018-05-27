@@ -7,9 +7,10 @@
 	http://opensource.org/licenses/BSD-3-Clause
 */
 #include <cybozu/endian.hpp>
+#ifndef CYBOZU_DONT_USE_STRING
 #include <cybozu/itoa.hpp>
 #include <string>
-#include <algorithm> // std::min
+#endif
 #include <memory.h>
 #include <assert.h>
 
@@ -17,6 +18,10 @@ namespace cybozu {
 
 namespace sha2_local {
 
+template<class T>
+T min_(T x, T y) { return x < y ? x : y;; }
+
+#ifndef CYBOZU_DONT_USE_STRING
 inline void uint32toHexStr(char *buf, const uint32_t *x, size_t n)
 {
 	for (size_t i = 0; i < n; i++) {
@@ -30,6 +35,7 @@ inline void uint64toHexStr(char *buf, const uint64_t *x, size_t n)
 		cybozu::itohex(buf + i * 16, 16, x[i], false);
 	}
 }
+#endif
 
 inline uint32_t rot32(uint32_t x, int s)
 {
@@ -172,7 +178,7 @@ public:
 		const char *buf = reinterpret_cast<const char*>(buf_);
 		if (bufSize == 0) return;
 		if (roundBufSize_ > 0) {
-			size_t size = (std::min)(blockSize_ - roundBufSize_, bufSize);
+			size_t size = sha2_local::min_(blockSize_ - roundBufSize_, bufSize);
 			memcpy(roundBuf_ + roundBufSize_, buf, size);
 			roundBufSize_ += size;
 			buf += size;
@@ -196,18 +202,10 @@ public:
 		}
 		assert(roundBufSize_ < blockSize_);
 	}
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
 	void digest(const void *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
 		term(roundBuf_, roundBufSize_);
-	}
-	void digest(const std::string& str = "")
-	{
-		digest(str.c_str(), str.size());
 	}
 	size_t get(void *out) const
 	{
@@ -216,6 +214,15 @@ public:
 			cybozu::Set32bitAsBE(&p[i * sizeof(h_[0])], h_[i]);
 		}
 		return outByteSize_;
+	}
+#ifndef CYBOZU_DONT_USE_STRING
+	void update(const std::string& buf)
+	{
+		update(buf.c_str(), buf.size());
+	}
+	void digest(const std::string& str = "")
+	{
+		digest(str.c_str(), str.size());
 	}
 	std::string get() const
 	{
@@ -229,6 +236,7 @@ public:
 		sha2_local::uint32toHexStr(buf, h_, hSize_);
 		return std::string(buf, sizeof(buf));
 	}
+#endif
 };
 
 class Sha512 {
@@ -366,7 +374,7 @@ public:
 		const char *buf = reinterpret_cast<const char*>(buf_);
 		if (bufSize == 0) return;
 		if (roundBufSize_ > 0) {
-			size_t size = (std::min)(blockSize_ - roundBufSize_, bufSize);
+			size_t size = sha2_local::min_(blockSize_ - roundBufSize_, bufSize);
 			memcpy(roundBuf_ + roundBufSize_, buf, size);
 			roundBufSize_ += size;
 			buf += size;
@@ -390,18 +398,10 @@ public:
 		}
 		assert(roundBufSize_ < blockSize_);
 	}
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
 	void digest(const void *buf, size_t bufSize)
 	{
 		update(buf, bufSize);
 		term(roundBuf_, roundBufSize_);
-	}
-	void digest(const std::string& str = "")
-	{
-		digest(str.c_str(), str.size());
 	}
 	size_t get(void *out) const
 	{
@@ -410,6 +410,15 @@ public:
 			cybozu::Set64bitAsBE(&p[i * sizeof(h_[0])], h_[i]);
 		}
 		return outByteSize_;
+	}
+#ifndef CYBOZU_DONT_USE_STRING
+	void digest(const std::string& str = "")
+	{
+		digest(str.c_str(), str.size());
+	}
+	void update(const std::string& buf)
+	{
+		update(buf.c_str(), buf.size());
 	}
 	std::string get() const
 	{
@@ -423,6 +432,7 @@ public:
 		sha2_local::uint64toHexStr(buf, h_, hSize_);
 		return std::string(buf, sizeof(buf));
 	}
+#endif
 };
 
 } // cybozu
