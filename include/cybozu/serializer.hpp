@@ -3,7 +3,7 @@
 	@file
 	@brief serializer for vector, list, map and so on
 
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <assert.h>
 #include <cybozu/stream.hpp>

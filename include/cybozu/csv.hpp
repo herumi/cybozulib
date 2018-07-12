@@ -3,7 +3,7 @@
 	@file
 	@brief csv reader and write class
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <string>

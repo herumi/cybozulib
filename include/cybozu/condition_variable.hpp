@@ -3,7 +3,7 @@
 	@file
 	@brief conditional variable
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@note http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
 */
 #include <cybozu/mutex.hpp>

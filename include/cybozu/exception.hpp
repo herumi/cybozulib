@@ -2,7 +2,7 @@
 /**
 	@file
 	@brief definition of abstruct exception class
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #ifdef CYBOZU_MINIMUM_EXCEPTION
 

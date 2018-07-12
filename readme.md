@@ -1,28 +1,29 @@
 [![Build Status](https://travis-ci.org/herumi/cybozulib.png)](https://travis-ci.org/herumi/cybozulib)
 
-cybozulib
-=====
+# cybozulib
 
-Abstract
------
+# Abstract
 This is a tiny C++ library for Windows and Linux.
 
-
-How to use
------
+# How to use
 
 directory position
 
-    <work dir>/cybozulib
-              /cybozulib_ext ; necessary for Windows if use zlib or openssl
+```
+<work dir>/cybozulib
+          /cybozulib_ext ; necessary for Windows if openssl, gmp are used
+```
 
-License
------
-BSD 3-Clause License
+# License
+[BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause)
 
-Copyright (c) 2012 Cybozu Labs, Inc. All rights reserved.
+# Author
 
-sais.hxx
------
+MITSUNARI Shigeo(herumi@nifty.com)
+
+# Disclaimer
+This OSS is my own personal work and does not have any relationship with Cybozu Labs, Inc.,
+Cybozu Inc. or any other organization which I belong to.
+
+# sais.hxx
 sais.hxx is written by Yuta Mori.
-

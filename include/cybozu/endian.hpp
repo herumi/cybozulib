@@ -4,7 +4,7 @@
 	@file
 	@brief deal with big and little endian
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <cybozu/inttype.hpp>
 #include <string.h>

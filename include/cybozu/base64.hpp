@@ -3,7 +3,7 @@
 	@file
 	@brief base64 encoder and decoder
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <iostream>

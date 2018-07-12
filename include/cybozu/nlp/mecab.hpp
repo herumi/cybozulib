@@ -3,7 +3,7 @@
 	@file
 	@brief wrapper of MeCab
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <assert.h>

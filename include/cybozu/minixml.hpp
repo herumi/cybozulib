@@ -3,7 +3,7 @@
 	@file
 	@brief mini XML parser(not strict)
 
-	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <assert.h>

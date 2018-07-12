@@ -2,7 +2,7 @@
 /**
 	@file
 	@brief link ssleay32.lib of openssl
-	Copyright (C) 2016 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #if defined(_WIN32) && defined(_MT)
 	#if _MSC_VER >= 1900 // VC2015

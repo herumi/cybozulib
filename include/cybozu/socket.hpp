@@ -3,7 +3,7 @@
 	@file
 	@brief tiny socket class
 
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #include <errno.h>

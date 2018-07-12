@@ -3,7 +3,7 @@
 	@file
 	@brief thread local strage
 
-	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #ifdef _WIN32

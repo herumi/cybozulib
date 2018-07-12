@@ -3,7 +3,7 @@
 	@file
 	@brief typedef of some STL data type
 
-	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <map>

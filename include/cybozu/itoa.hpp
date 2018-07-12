@@ -3,7 +3,7 @@
 	@file
 	@brief convert integer to string(ascii)
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <limits.h>
 #ifndef CYBOZU_DONT_USE_STRING

@@ -2,8 +2,7 @@
 /**
 	@file
 	@brief format string
-
-	Copyright (C) 2011 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <stdio.h>

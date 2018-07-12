@@ -2,7 +2,7 @@
 /**
 	@file
 	@brief stacktrace class
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <vector>

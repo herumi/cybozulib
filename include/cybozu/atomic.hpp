@@ -3,7 +3,7 @@
 	@file
 	@brief atomic operation
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #include <cybozu/inttype.hpp>

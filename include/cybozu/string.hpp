@@ -4,7 +4,7 @@
 	@brief unicode string class like std::string
 	support char*, std::string with UTF-8
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #ifdef _MSC_VER

@@ -3,7 +3,7 @@
 	@file
 	@brief logger
 
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <cybozu/format.hpp>
 #include <cybozu/time.hpp>

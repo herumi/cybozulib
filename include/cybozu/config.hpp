@@ -3,7 +3,7 @@
 	@file
 	@brief config file class
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <assert.h>

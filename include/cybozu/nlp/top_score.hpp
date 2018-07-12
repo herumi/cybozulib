@@ -2,8 +2,7 @@
 /**
 	@file
 	@brief a class to get top n score
-
-	Copyright (C) 2010 Cybozu Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <vector>
 

@@ -3,7 +3,7 @@
 	@file
 	@brief stream and line stream class
 
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #ifndef CYBOZU_DONT_USE_STRING
 #include <string>

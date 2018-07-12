@@ -3,7 +3,7 @@
 	@file
 	@brief SHA1 class
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@note this is naive implementation so is not fast.
 */
 

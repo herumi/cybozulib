@@ -3,7 +3,7 @@
 	@file
 	@brief mmap class
 
-	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <cybozu/exception.hpp>

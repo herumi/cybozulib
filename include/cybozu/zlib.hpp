@@ -3,7 +3,7 @@
 	@file
 	@brief zlib compressor and decompressor class
 
-	Copyright (C) 2009 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <cybozu/stream.hpp>

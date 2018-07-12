@@ -1,6 +1,6 @@
 /**
 	pLSI(probabilistic latent semantic indexing)
-	(c) 2010 Cybozu Labs, Inc. / Nakatani Shuyo
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <stdio.h>
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-	} catch (cybozu::Exception& e) {
-		printf("error : %s\n", e.toString().c_str());
+	} catch (std::exception& e) {
+		printf("error : %s\n", e.what());
 	}
 }

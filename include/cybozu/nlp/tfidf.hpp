@@ -3,7 +3,7 @@
 	@file
 	@brief TF-IDF
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <set>
 #include <map>
@@ -147,7 +147,7 @@ struct TfIdf {
 		fprintf(stderr, "#word = %d\n", (int)df_.size());
 		return true;
 	}
-	
+
 	void append(const std::string& word)
 	{
 		std::string lower;

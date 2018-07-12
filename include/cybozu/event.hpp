@@ -3,7 +3,7 @@
 	@file
 	@brief event class
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #ifdef _WIN32

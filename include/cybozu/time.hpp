@@ -3,7 +3,7 @@
 	@file
 	@brief tiny time class
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <ctime>
 #include <cybozu/exception.hpp>

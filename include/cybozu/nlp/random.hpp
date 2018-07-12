@@ -3,7 +3,7 @@
 	@file
 	@brief normal random generator
 
-	Copyright (C) 2007 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #include <cybozu/xorshift.hpp>

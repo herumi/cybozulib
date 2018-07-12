@@ -3,7 +3,7 @@
 	@file
 	@brief fast non-probabilistic SVD
 
-	Copyright (C) 2012 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #include <assert.h>

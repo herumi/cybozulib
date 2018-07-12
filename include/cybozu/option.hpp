@@ -3,7 +3,7 @@
 	@file
 	@brief command line parser
 
-	Copyright (C) Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
 #include <vector>

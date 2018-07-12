@@ -4,7 +4,7 @@
     @file
     @brief process class
 
-    Copyright (C) 2009 Cybozu Inc., all rights reserved.
+    @author MITSUNARI Shigeo(@herumi)
     @author MITSUNARI Shigeo
 */
 #include <vector>

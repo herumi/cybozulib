@@ -3,7 +3,7 @@
 	@file
 	@brief string operation for cybozu::String
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 
 	@note
 	modifying functions are almost the following type:

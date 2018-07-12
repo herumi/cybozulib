@@ -4,7 +4,7 @@
 	@file
 	@brief get env function
 
-	Copyright (C) 2008 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 #include <cybozu/exception.hpp>
 #include <stdlib.h>

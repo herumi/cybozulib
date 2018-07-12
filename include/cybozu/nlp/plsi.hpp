@@ -2,8 +2,7 @@
 /**
 	@file
 	@brief pLSI
-
-	Copyright (C) 2010 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <fstream>

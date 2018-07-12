@@ -4,7 +4,7 @@
 	@brief PCG
 	@see http://www.pcg-random.org/
 
-	Copyright (C) 2015 Cybozu Labs, Inc., all rights reserved.
+	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
 */
 #include <cybozu/inttype.hpp>
