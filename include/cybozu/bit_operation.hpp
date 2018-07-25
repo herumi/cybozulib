@@ -29,7 +29,7 @@ struct Tag<false> {
 	template<class T>
 	static inline int bsf(T x)
 	{
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 		unsigned long out;
 		_BitScanForward(&out, x);
 #pragma warning(suppress: 6102)

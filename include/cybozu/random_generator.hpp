@@ -8,7 +8,7 @@
 */
 
 #include <cybozu/exception.hpp>
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <winsock2.h>
 #include <windows.h>
 #include <wincrypt.h>
@@ -41,7 +41,7 @@ public:
 		read(&ret, 1);
 		return ret;
 	}
-#ifdef _WIN32
+#ifdef _MSC_VER
 	RandomGenerator()
 		: prov_(0)
 		, pos_(bufSize)
