@@ -64,7 +64,7 @@ struct Tag<true> {
 #pragma warning(suppress: 6102)
 		return out;
 #elif defined(__x86_64__)
-		return __builtin_ctzl(x);
+		return __builtin_ctzll(x);
 #else
 		const uint32_t L = uint32_t(x);
 		if (L) return Tag<false>::bsf(L);
@@ -81,7 +81,7 @@ struct Tag<true> {
 #pragma warning(suppress: 6102)
 		return out;
 #elif defined(__x86_64__)
-		return __builtin_clzl(x) ^ 0x3f;
+		return __builtin_clzll(x) ^ 0x3f;
 #else
 		const uint32_t H = uint32_t(x >> 32);
 		if (H) return Tag<false>::bsr(H) + 32;
@@ -127,10 +127,10 @@ inline uint32_t popcnt<uint32_t>(uint32_t x)
 template<>
 inline uint32_t popcnt<uint64_t>(uint64_t x)
 {
-#if defined(_WIN64)
+#if defined(__x86_64__)
+	return static_cast<uint32_t>(__builtin_popcountll(x));
+#elif defined(_WIN64)
 	return static_cast<uint32_t>(_mm_popcnt_u64(x));
-#elif defined(__x86_64__)
-	return static_cast<uint32_t>(__builtin_popcountl(x));
 #else
 	return popcnt<uint32_t>(static_cast<uint32_t>(x)) + popcnt<uint32_t>(static_cast<uint32_t>(x >> 32));
 #endif
