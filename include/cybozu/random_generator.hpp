@@ -8,11 +8,13 @@
 */
 
 #include <cybozu/exception.hpp>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <wincrypt.h>
+#ifdef _MSC_VER
 #pragma comment (lib, "advapi32.lib")
+#endif
 #include <cybozu/critical_section.hpp>
 #else
 #include <sys/types.h>
@@ -41,7 +43,7 @@ public:
 		read(&ret, 1);
 		return ret;
 	}
-#ifdef _MSC_VER
+#ifdef _WIN32
 	RandomGenerator()
 		: prov_(0)
 		, pos_(bufSize)
