@@ -8,7 +8,7 @@
 */
 #include <new>
 #include <utility>
-#ifdef _MSC_VER
+#ifdef _WIN32
 	#include <malloc.h>
 #else
 	#include <stdlib.h>
@@ -19,7 +19,7 @@ namespace cybozu {
 
 inline void *AlignedMalloc(size_t size, size_t alignment)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	return _aligned_malloc(size, alignment);
 #else
 	void *p;
@@ -30,7 +30,7 @@ inline void *AlignedMalloc(size_t size, size_t alignment)
 
 inline void AlignedFree(void *p)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	if (p == 0) return;
 	_aligned_free(p);
 #else
