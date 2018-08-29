@@ -471,7 +471,7 @@ public:
 		ssize_t readSize = ::read(sd_, buf, size);
 		if (readSize < 0 && errno == EINTR) goto RETRY;
 #endif
-		if (readSize < 0) throw cybozu::Exception("Socket:readSome") << cybozu::NetErrorNo();
+		if (readSize < 0) throw cybozu::Exception("Socket:readSome") << cybozu::NetErrorNo() << bufSize;
 		return readSize;
 	}
 
@@ -506,7 +506,7 @@ public:
 			int writeSize = ::write(sd_, p, size);
 			if (writeSize < 0 && errno == EINTR) continue;
 #endif
-			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::NetErrorNo();
+			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::NetErrorNo() << bufSize;
 			p += writeSize;
 			bufSize -= writeSize;
 		}
