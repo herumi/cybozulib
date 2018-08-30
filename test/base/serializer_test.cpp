@@ -415,12 +415,29 @@ void CustomStreamTest()
 	CYBOZU_TEST_ASSERT(ib == b.end());
 }
 
+struct Stream1 {
+	std::string buf;
+	size_t readSome(void *p, size_t n)
+	{
+		if (n > buf.size()) n = buf.size();
+		memcpy(p, buf.data(), n);
+		buf = buf.substr(n);
+		return n;
+	}
+	void write(const void *p, size_t n)
+	{
+		buf.append((char *)p, n);
+	}
+};
+
 struct Stream2 {
 	std::string buf;
 };
 
+namespace cybozu {
+
 template<>
-size_t cybozu::readSome<Stream2>(void *p, size_t n, Stream2& s)
+size_t readSome<Stream2>(void *p, size_t n, Stream2& s)
 {
 	std::string& buf = s.buf;
 	if (n > buf.size()) n = buf.size();
@@ -429,27 +446,15 @@ size_t cybozu::readSome<Stream2>(void *p, size_t n, Stream2& s)
 	return n;
 }
 template<>
-void cybozu::write<Stream2>(Stream2& s, const void *p, size_t n)
+void write<Stream2>(Stream2& s, const void *p, size_t n)
 {
 	s.buf.append((char*)p, n);
 }
 
+} // cybozu
+
 CYBOZU_TEST_AUTO(customStream)
 {
-	struct Stream1 {
-		std::string buf;
-		size_t readSome(void *p, size_t n)
-		{
-			if (n > buf.size()) n = buf.size();
-			memcpy(p, buf.data(), n);
-			buf = buf.substr(n);
-			return n;
-		}
-		void write(const void *p, size_t n)
-		{
-			buf.append((char *)p, n);
-		}
-	};
 	CustomStreamTest<Stream1>();
 	CustomStreamTest<Stream2>();
 }
