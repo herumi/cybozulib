@@ -393,6 +393,67 @@ CYBOZU_TEST_AUTO(hashHash)
 //	compressTest(x, y, false);
 }
 
+template<class Stream>
+void CustomStreamTest()
+{
+	typedef std::map<std::string, int> Str2Int;
+	Str2Int a, b;
+	a["sdf"] = 10;
+	a["this"] = -123;
+	a["dore"] = 2;
+	Stream s;
+	cybozu::save(s, a);
+	cybozu::load(b, s);
+	CYBOZU_TEST_EQUAL(a.size(), b.size());
+	Str2Int::const_iterator ia = a.begin(), ib = b.begin();
+	while (ia != a.end()) {
+		CYBOZU_TEST_ASSERT(ib != b.end());
+		CYBOZU_TEST_EQUAL(ia->first, ib->first);
+		CYBOZU_TEST_EQUAL(ia->second, ib->second);
+		++ia, ++ib;
+	}
+	CYBOZU_TEST_ASSERT(ib == b.end());
+}
+
+struct Stream2 {
+	std::string buf;
+};
+
+template<>
+size_t cybozu::readSome<Stream2>(void *p, size_t n, Stream2& s)
+{
+	std::string& buf = s.buf;
+	if (n > buf.size()) n = buf.size();
+	memcpy(p, buf.data(), n);
+	buf = buf.substr(n);
+	return n;
+}
+template<>
+void cybozu::write<Stream2>(Stream2& s, const void *p, size_t n)
+{
+	s.buf.append((char*)p, n);
+}
+
+CYBOZU_TEST_AUTO(customStream)
+{
+	struct Stream1 {
+		std::string buf;
+		size_t readSome(void *p, size_t n)
+		{
+			if (n > buf.size()) n = buf.size();
+			memcpy(p, buf.data(), n);
+			buf = buf.substr(n);
+			return n;
+		}
+		void write(const void *p, size_t n)
+		{
+			buf.append((char *)p, n);
+		}
+	};
+	CustomStreamTest<Stream1>();
+	CustomStreamTest<Stream2>();
+}
+
 #if 0
 #include <cybozu/stream_ext.hpp>
 template<class X, class Y>
