@@ -426,7 +426,7 @@ struct Stream1 {
 	}
 	void write(const void *p, size_t n)
 	{
-		buf.append((char *)p, n);
+		buf.append((const char *)p, n);
 	}
 };
 
@@ -448,7 +448,7 @@ size_t readSome<Stream2>(void *p, size_t n, Stream2& s)
 template<>
 void write<Stream2>(Stream2& s, const void *p, size_t n)
 {
-	s.buf.append((char*)p, n);
+	s.buf.append((const char*)p, n);
 }
 
 } // cybozu
