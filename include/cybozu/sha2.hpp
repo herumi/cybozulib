@@ -55,17 +55,69 @@ inline uint64_t rot64(uint64_t x, int s)
 #endif
 }
 
+template<class T>
+struct Common {
+	void term(const char *buf, size_t bufSize)
+	{
+		assert(bufSize < T::blockSize_);
+		T& self = static_cast<T&>(*this);
+		const uint64_t totalSize = self.totalSize_ + bufSize;
+
+		uint8_t last[T::blockSize_];
+		memcpy(last, buf, bufSize);
+		last[bufSize] = uint8_t(0x80); /* top bit = 1 */
+		memset(&last[bufSize + 1], 0, T::blockSize_ - bufSize - 1);
+		if (bufSize >= T::blockSize_ - T::msgLenByte_) {
+			self.round(reinterpret_cast<const char*>(last));
+			memset(last, 0, sizeof(last)); // clear stack
+		}
+		cybozu::Set64bitAsBE(&last[T::blockSize_ - 8], totalSize * 8);
+		self.round(reinterpret_cast<const char*>(last));
+	}
+	void inner_update(const char *buf, size_t bufSize)
+	{
+		T& self = static_cast<T&>(*this);
+		if (bufSize == 0) return;
+		if (self.roundBufSize_ > 0) {
+			size_t size = sha2_local::min_(T::blockSize_ - self.roundBufSize_, bufSize);
+			memcpy(self.roundBuf_ + self.roundBufSize_, buf, size);
+			self.roundBufSize_ += size;
+			buf += size;
+			bufSize -= size;
+		}
+		if (self.roundBufSize_ == T::blockSize_) {
+			self.round(self.roundBuf_);
+			self.roundBufSize_ = 0;
+		}
+		while (bufSize >= T::blockSize_) {
+			assert(self.roundBufSize_ == 0);
+			self.round(buf);
+			buf += T::blockSize_;
+			bufSize -= T::blockSize_;
+		}
+		if (bufSize > 0) {
+			assert(bufSize < T::blockSize_);
+			assert(self.roundBufSize_ == 0);
+			memcpy(self.roundBuf_, buf, bufSize);
+			self.roundBufSize_ = bufSize;
+		}
+		assert(self.roundBufSize_ < T::blockSize_);
+	}
+};
+
 } // cybozu::sha2_local
 
-class Sha256 {
+class Sha256 : public sha2_local::Common<Sha256> {
+	friend class sha2_local::Common<Sha256>;
 private:
 	static const size_t blockSize_ = 64;
 	static const size_t hSize_ = 8;
+	static const size_t msgLenByte_ = 8;
 	uint64_t totalSize_;
 	size_t roundBufSize_;
 	char roundBuf_[blockSize_];
 	uint32_t h_[hSize_];
-	static const size_t outByteSize_ = hSize_ * sizeof(uint32_t);
+	static const size_t outByteSize_ = sizeof(h_);
 	const uint32_t *k_;
 
 	/**
@@ -117,27 +169,7 @@ private:
 		h_[5] += f;
 		h_[6] += g;
 		h_[7] += h;
-		totalSize_ += 64;
-	}
-	/*
-		final phase
-	*/
-	void term(const char *buf, size_t bufSize)
-	{
-		assert(bufSize < blockSize_);
-		const uint64_t totalSize = totalSize_ + bufSize;
-
-		uint8_t last[blockSize_];
-		memcpy(last, buf, bufSize);
-		memset(&last[bufSize], 0, blockSize_ - bufSize);
-		last[bufSize] = uint8_t(0x80); /* top bit = 1 */
-		if (bufSize >= blockSize_ - 8) {
-			round(reinterpret_cast<const char*>(last));
-			memset(last, 0, sizeof(last)); // clear stack
-		}
-		cybozu::Set32bitAsBE(&last[56], uint32_t(totalSize >> 29));
-		cybozu::Set32bitAsBE(&last[60], uint32_t(totalSize * 8));
-		round(reinterpret_cast<const char*>(last));
+		totalSize_ += blockSize_;
 	}
 public:
 	Sha256()
@@ -173,34 +205,9 @@ public:
 		h_[6] = 0x1f83d9ab;
 		h_[7] = 0x5be0cd19;
 	}
-	void update(const void *buf_, size_t bufSize)
+	void update(const void *buf, size_t bufSize)
 	{
-		const char *buf = reinterpret_cast<const char*>(buf_);
-		if (bufSize == 0) return;
-		if (roundBufSize_ > 0) {
-			size_t size = sha2_local::min_(blockSize_ - roundBufSize_, bufSize);
-			memcpy(roundBuf_ + roundBufSize_, buf, size);
-			roundBufSize_ += size;
-			buf += size;
-			bufSize -= size;
-		}
-		if (roundBufSize_ == blockSize_) {
-			round(roundBuf_);
-			roundBufSize_ = 0;
-		}
-		while (bufSize >= blockSize_) {
-			assert(roundBufSize_ == 0);
-			round(buf);
-			buf += blockSize_;
-			bufSize -= blockSize_;
-		}
-		if (bufSize > 0) {
-			assert(bufSize < blockSize_);
-			assert(roundBufSize_ == 0);
-			memcpy(roundBuf_, buf, bufSize);
-			roundBufSize_ = bufSize;
-		}
-		assert(roundBufSize_ < blockSize_);
+		inner_update(reinterpret_cast<const char*>(buf), bufSize);
 	}
 	void digest(const void *buf, size_t bufSize)
 	{
@@ -239,15 +246,17 @@ public:
 #endif
 };
 
-class Sha512 {
+class Sha512 : public sha2_local::Common<Sha512> {
+	friend class sha2_local::Common<Sha512>;
 private:
 	static const size_t blockSize_ = 128;
 	static const size_t hSize_ = 8;
+	static const size_t msgLenByte_ = 16;
 	uint64_t totalSize_;
 	size_t roundBufSize_;
 	char roundBuf_[blockSize_];
 	uint64_t h_[hSize_];
-	static const size_t outByteSize_ = hSize_ * sizeof(uint64_t);
+	static const size_t outByteSize_ = sizeof(h_);
 	const uint64_t *k_;
 
 	template<size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7>
@@ -308,25 +317,6 @@ private:
 		}
 		totalSize_ += blockSize_;
 	}
-	/*
-		final phase
-	*/
-	void term(const char *buf, size_t bufSize)
-	{
-		assert(bufSize < blockSize_);
-		const uint64_t totalSize = totalSize_ + bufSize;
-
-		uint8_t last[blockSize_];
-		memcpy(last, buf, bufSize);
-		memset(&last[bufSize], 0, blockSize_ - bufSize);
-		last[bufSize] = uint8_t(0x80); /* top bit = 1 */
-		if (bufSize >= blockSize_ - 16) {
-			round(reinterpret_cast<const char*>(last));
-			memset(last, 0, sizeof(last)); // clear stack
-		}
-		cybozu::Set64bitAsBE(&last[blockSize_ - 8], totalSize * 8);
-		round(reinterpret_cast<const char*>(last));
-	}
 public:
 	Sha512()
 	{
@@ -369,34 +359,9 @@ public:
 		h_[6] = 0x1f83d9abfb41bd6bull;
 		h_[7] = 0x5be0cd19137e2179ull;
 	}
-	void update(const void *buf_, size_t bufSize)
+	void update(const void *buf, size_t bufSize)
 	{
-		const char *buf = reinterpret_cast<const char*>(buf_);
-		if (bufSize == 0) return;
-		if (roundBufSize_ > 0) {
-			size_t size = sha2_local::min_(blockSize_ - roundBufSize_, bufSize);
-			memcpy(roundBuf_ + roundBufSize_, buf, size);
-			roundBufSize_ += size;
-			buf += size;
-			bufSize -= size;
-		}
-		if (roundBufSize_ == blockSize_) {
-			round(roundBuf_);
-			roundBufSize_ = 0;
-		}
-		while (bufSize >= blockSize_) {
-			assert(roundBufSize_ == 0);
-			round(buf);
-			buf += blockSize_;
-			bufSize -= blockSize_;
-		}
-		if (bufSize > 0) {
-			assert(bufSize < blockSize_);
-			assert(roundBufSize_ == 0);
-			memcpy(roundBuf_, buf, bufSize);
-			roundBufSize_ = bufSize;
-		}
-		assert(roundBufSize_ < blockSize_);
+		inner_update(reinterpret_cast<const char*>(buf), bufSize);
 	}
 	void digest(const void *buf, size_t bufSize)
 	{
