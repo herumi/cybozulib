@@ -108,7 +108,7 @@ struct Common {
 } // cybozu::sha2_local
 
 class Sha256 : public sha2_local::Common<Sha256> {
-	friend class sha2_local::Common<Sha256>;
+	friend struct sha2_local::Common<Sha256>;
 private:
 	static const size_t blockSize_ = 64;
 	static const size_t hSize_ = 8;
@@ -117,7 +117,7 @@ private:
 	size_t roundBufSize_;
 	char roundBuf_[blockSize_];
 	uint32_t h_[hSize_];
-	static const size_t outByteSize_ = sizeof(h_);
+	static const size_t outByteSize_ = hSize_ * sizeof(uint32_t);
 	const uint32_t *k_;
 
 	/**
@@ -247,7 +247,7 @@ public:
 };
 
 class Sha512 : public sha2_local::Common<Sha512> {
-	friend class sha2_local::Common<Sha512>;
+	friend struct sha2_local::Common<Sha512>;
 private:
 	static const size_t blockSize_ = 128;
 	static const size_t hSize_ = 8;
@@ -256,7 +256,7 @@ private:
 	size_t roundBufSize_;
 	char roundBuf_[blockSize_];
 	uint64_t h_[hSize_];
-	static const size_t outByteSize_ = sizeof(h_);
+	static const size_t outByteSize_ = hSize_ * sizeof(uint64_t);
 	const uint64_t *k_;
 
 	template<size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7>
