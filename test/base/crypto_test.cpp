@@ -1,6 +1,7 @@
 #include <cybozu/test.hpp>
 #include <cybozu/crypto.hpp>
 #include <cybozu/sha2.hpp>
+#include <cybozu/itoa.hpp>
 
 CYBOZU_TEST_AUTO(hashName)
 {
