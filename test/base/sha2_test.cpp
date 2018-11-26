@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#define CYBOZU_DONT_USE_OPENSSL
 #include <cybozu/sha2.hpp>
 #include <cybozu/test.hpp>
+#include <cybozu/itoa.hpp>
 
 const struct Tbl {
 	const char *out;
@@ -79,13 +81,20 @@ const struct Tbl {
 	{"0f431aa36a3953f27987552b70ae548bf77be26b6100a710b0d870d7a5c538b9215e4dd6692b966f58b3710889adbd3fc4cab3a1618eb4d06b031e27f33ca3a1", "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"},
 };
 
+std::string toHex(const std::string& s)
+{
+	std::string ret(s.size() * 2, 0);
+	for (size_t i = 0; i < s.size(); i++) {
+		cybozu::itohex(&ret[i * 2], 2, uint8_t(s[i]), false);
+	}
+	return ret;
+}
 CYBOZU_TEST_AUTO(sha256)
 {
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(sha256Tbl); i++) {
 		const char *msg = sha256Tbl[i].in;
-		cybozu::Sha256 hash;
-		hash.digest(msg, strlen(msg));
-		CYBOZU_TEST_EQUAL(hash.toHexStr(), sha256Tbl[i].out);
+		std::string md = toHex(cybozu::Sha256().digest(msg, strlen(msg)));
+		CYBOZU_TEST_EQUAL(md, sha256Tbl[i].out);
 	}
 }
 
@@ -93,8 +102,7 @@ CYBOZU_TEST_AUTO(sha512)
 {
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(sha512Tbl); i++) {
 		const char *msg = sha512Tbl[i].in;
-		cybozu::Sha512 hash;
-		hash.digest(msg, strlen(msg));
-		CYBOZU_TEST_EQUAL(hash.toHexStr(), sha512Tbl[i].out);
+		std::string md = toHex(cybozu::Sha512().digest(msg, strlen(msg)));
+		CYBOZU_TEST_EQUAL(md, sha512Tbl[i].out);
 	}
 }
