@@ -307,7 +307,7 @@ CYBOZU_TEST_AUTO(string_index_test_at_exception)
 		String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 		s.at(200);
 		CYBOZU_TEST_FAIL("NEVER REACHED!");
-	} catch (std::out_of_range) {
+	} catch (std::out_of_range&) {
 		std::cout << "std::out_of_range thrown!" << std::endl;
 	} catch (...) {
 		CYBOZU_TEST_FAIL("NEVER REACHED!");
