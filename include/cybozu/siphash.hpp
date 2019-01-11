@@ -54,13 +54,13 @@ uint64_t siphash24(const void *src, size_t srcSize, uint64_t k0 = uint64_t(0x070
 	}
 
 	switch (srcSize) {
-	case 7: b |= uint64_t(in[6]) << 48;
-	case 6: b |= uint64_t(in[5]) << 40;
-	case 5: b |= uint64_t(in[4]) << 32;
-	case 4: b |= uint64_t(in[3]) << 24;
-	case 3: b |= uint64_t(in[2]) << 16;
-	case 2: b |= uint64_t(in[1]) << 8;
-	case 1: b |= in[0];
+	case 7: b |= uint64_t(in[6]) << 48; // fallthrough
+	case 6: b |= uint64_t(in[5]) << 40; // fallthrough
+	case 5: b |= uint64_t(in[4]) << 32; // fallthrough
+	case 4: b |= uint64_t(in[3]) << 24; // fallthrough
+	case 3: b |= uint64_t(in[2]) << 16; // fallthrough
+	case 2: b |= uint64_t(in[1]) << 8; // fallthrough
+	case 1: b |= in[0]; // fallthrough
 	}
 
 	v3 ^= b;
