@@ -81,10 +81,16 @@ MKDEP = sh -ec '$(PRE)$(CC) -MM $(CFLAGS) $< | sed "s@\($*\)\.o[ :]*@$(OBJDIR)/\
 
 CLEAN=$(RM) $(TARGET) $(OBJDIR)
 
+ifeq ($(TEST_OUTPUT),1)
+define UNIT_TEST
+sh -ec 'for i in $(TARGET); do echo $$i; $$i; done'
+endef
+else
 define UNIT_TEST
 sh -ec 'for i in $(TARGET); do $$i|grep "ctest:name"; done' > result.txt
 awk 'BEGIN{E=0} match($$0,/name=([^,]*),.*ng=([0-9]*), exception=([0-9]*)/,r){ if (r[2] +r[3] > 0) {system("$(TOPDIR)/bin/" r[1] ".exe"); E++}} END{if(E==0) {print("all unit tests succeed")}else{exit(1)}}' < result.txt
 endef
+endif
 
 define SAMPLE_TEST
 sh -ec 'for i in $(TARGET); do $$i; done'

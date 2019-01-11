@@ -5,5 +5,5 @@ compiler:
   - gcc
   - clang
 script:
-  - make test TRAVIS_TEST=1
+  - make test TRAVIS_TEST=1 TEST_OUTPUT=1
  
