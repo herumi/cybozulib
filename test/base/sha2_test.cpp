@@ -5,6 +5,7 @@
 #include <cybozu/sha2.hpp>
 #include <cybozu/test.hpp>
 #include <cybozu/itoa.hpp>
+#include <cybozu/benchmark.hpp>
 
 const struct Tbl {
 	const char *out;
@@ -95,6 +96,8 @@ CYBOZU_TEST_AUTO(sha256)
 		const char *msg = sha256Tbl[i].in;
 		std::string md = toHex(cybozu::Sha256().digest(msg, strlen(msg)));
 		CYBOZU_TEST_EQUAL(md, sha256Tbl[i].out);
+		char buf[32];
+		CYBOZU_BENCH_C("sha256", 100000, cybozu::Sha256().digest, buf, sizeof(buf), msg, strlen(msg));
 	}
 }
 
