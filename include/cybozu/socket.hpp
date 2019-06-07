@@ -495,7 +495,7 @@ public:
 		@param buf [out] send buffer
 		@param bufSize [in] send buffer size(byte)
 	*/
-	void write(const void *buf, size_t bufSize)
+	void write(bool *pb, const void *buf, size_t bufSize)
 	{
 		const char *p = (const char *)buf;
 		while (bufSize > 0) {
@@ -506,10 +506,20 @@ public:
 			int writeSize = ::write(sd_, p, size);
 			if (writeSize < 0 && errno == EINTR) continue;
 #endif
-			if (writeSize < 0) throw cybozu::Exception("Socket:write") << cybozu::NetErrorNo() << bufSize;
+			if (writeSize < 0) {
+				*pb = false;
+				return;
+			}
 			p += writeSize;
 			bufSize -= writeSize;
 		}
+		*pb = true;
+	}
+	void write(const void *buf, size_t bufSize)
+	{
+		bool b;
+		write(&b, buf, bufSize);
+		if (!b) throw cybozu::Exception("Socket:write") << cybozu::NetErrorNo() << bufSize;
 	}
 	/**
 		connect to address:port
