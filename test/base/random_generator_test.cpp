@@ -4,11 +4,13 @@
 CYBOZU_TEST_AUTO(read)
 {
 	cybozu::RandomGenerator rg;
+#if 0
 	char buf8[3] = {};
 	rg.read(buf8, sizeof(buf8));
 	for (size_t i = 0; i < sizeof(buf8); i++) {
 		CYBOZU_TEST_ASSERT(buf8[i] != 0); // maybe
 	}
+#endif
 
 	const size_t N = 10;
 
