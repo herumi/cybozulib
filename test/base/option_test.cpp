@@ -205,6 +205,24 @@ CYBOZU_TEST_AUTO(Var)
 		CYBOZU_TEST_ASSERT(v.isSet());
 	}
 	{
+		int8_t x = 0;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("9");
+		CYBOZU_TEST_EQUAL(x, 9);
+		CYBOZU_TEST_EQUAL(v.toStr(), "9");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+	{
+		uint8_t x = 0;
+		cybozu::option_local::Var v(&x);
+		CYBOZU_TEST_ASSERT(!v.isSet());
+		v.set("255");
+		CYBOZU_TEST_EQUAL(x, 255);
+		CYBOZU_TEST_EQUAL(v.toStr(), "255");
+		CYBOZU_TEST_ASSERT(v.isSet());
+	}
+	{
 		std::vector<int> x;
 		cybozu::option_local::Var v(&x);
 		CYBOZU_TEST_ASSERT(!v.isSet());
