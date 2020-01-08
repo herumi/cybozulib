@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
 #define CYBOZU_DONT_USE_OPENSSL
 #include <cybozu/sha2.hpp>
 #include <cybozu/test.hpp>
 #include <cybozu/itoa.hpp>
+#include <cybozu/atoi.hpp>
 #include <cybozu/benchmark.hpp>
 
 const struct Tbl {
@@ -90,6 +92,18 @@ std::string toHex(const std::string& s)
 	}
 	return ret;
 }
+
+typedef std::vector<uint8_t> Uint8Vec;
+
+Uint8Vec fromHex(const std::string& s)
+{
+	Uint8Vec ret(s.size() / 2);
+	for (size_t i = 0; i < s.size(); i += 2) {
+		ret[i / 2] = cybozu::hextoi(&s[i], 2);
+	}
+	return ret;
+}
+
 CYBOZU_TEST_AUTO(sha256)
 {
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(sha256Tbl); i++) {
@@ -107,5 +121,70 @@ CYBOZU_TEST_AUTO(sha512)
 		const char *msg = sha512Tbl[i].in;
 		std::string md = toHex(cybozu::Sha512().digest(msg, strlen(msg)));
 		CYBOZU_TEST_EQUAL(md, sha512Tbl[i].out);
+	}
+}
+
+const struct HmacTbl {
+	const char *key;
+	const char *msg;
+	const char *mac;
+} hmac256Tbl[] = {
+	{
+		"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+	    "4869205468657265",
+	    "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7",
+	},
+	{
+		"",
+		"",
+		"b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
+	},
+	{
+		"4a656665",
+		"7768617420646f2079612077616e7420666f72206e6f7468696e673f",
+		"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843",
+	},
+	{
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+		"773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe",
+	},
+	{
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374",
+		"60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54",
+	},
+	{
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e",
+		"9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2",
+	},
+	{
+		"01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+		"12",
+		"9fc5fd7acf75bf2125220240293bd8221d72a25ffb5bfb397ee1a2a00df7a1ad",
+	},
+	{
+		"0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+		"12",
+		"4a8ac5b5f14061a2ed19ea9ac716b3c2c27343ac4dc52e42fabb9b1ab019d335",
+	},
+	{
+		"010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+		"12",
+		"e4ab292c53a535617d5d5a80a74de6e5e2516faba8708ac536a5bb79c7c8e989",
+	},
+};
+
+CYBOZU_TEST_AUTO(hmac256)
+{
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(hmac256Tbl); i++) {
+		char hmac[32];
+		Uint8Vec key, msg;
+		key = fromHex(hmac256Tbl[i].key);
+		msg = fromHex(hmac256Tbl[i].msg);
+		cybozu::hmac256(hmac, key.data(), key.size(), msg.data(), msg.size());
+		std::string h = toHex(std::string(hmac, sizeof(hmac)));
+		CYBOZU_TEST_EQUAL(h, hmac256Tbl[i].mac);
 	}
 }
