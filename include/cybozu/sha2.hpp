@@ -13,6 +13,7 @@
 #ifndef CYBOZU_DONT_USE_STRING
 #include <string>
 #endif
+#include <memory.h>
 
 #ifdef CYBOZU_USE_OPENSSL_SHA
 #ifdef __APPLE__
@@ -465,6 +466,12 @@ public:
 #endif
 };
 
+} // cybozu
+
+#endif
+
+namespace cybozu {
+
 /*
 	HMAC-SHA-256
 	hmac must have 32 bytes buffer
@@ -497,5 +504,3 @@ inline void hmac256(void *hmac, const void *key, size_t keySize, const void *msg
 }
 
 } // cybozu
-
-#endif
