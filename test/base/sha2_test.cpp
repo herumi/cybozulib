@@ -188,3 +188,13 @@ CYBOZU_TEST_AUTO(hmac256)
 		CYBOZU_TEST_EQUAL(h, hmac256Tbl[i].mac);
 	}
 }
+
+CYBOZU_TEST_AUTO(hmac256addZeroByte)
+{
+	const char *key = "abc";
+	const char *msg = "xyz";
+	char hmac1[32], hmac2[32];
+	cybozu::hmac256(hmac1, key, strlen(key), msg, strlen(msg) + 1);
+	cybozu::hmac256addZeroByte(hmac2, key, strlen(key), msg, strlen(msg));
+	CYBOZU_TEST_EQUAL_ARRAY(hmac1, hmac2, sizeof(hmac1));
+}
