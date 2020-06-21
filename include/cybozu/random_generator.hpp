@@ -32,7 +32,7 @@ public:
 	RandomGenerator()
 		: prov_(0)
 	{
-		DWORD flagTbl[] = { CRYPT_VERIFYCONTEXT | CRYPT_SILENT, CRYPT_MACHINE_KEYSET };
+		DWORD flagTbl[] = { CRYPT_VERIFYCONTEXT | CRYPT_SILENT, 0, CRYPT_MACHINE_KEYSET };
 		for (int i = 0; i < CYBOZU_NUM_OF_ARRAY(flagTbl); i++) {
 			if (CryptAcquireContext(&prov_, NULL, NULL, PROV_RSA_FULL, flagTbl[i]) != 0) return;
 		}
