@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <assert.h>
 #ifdef _WIN32
-	#include <winsock2.h>
 	#include <intrin.h>
 #else
 	#ifdef __linux__

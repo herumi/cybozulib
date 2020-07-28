@@ -10,7 +10,9 @@
 #include <cybozu/atomic.hpp>
 #include <assert.h>
 #ifdef _WIN32
-	#include <winsock2.h>
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
 	#include <windows.h>
 	#include <process.h>
 	#pragma warning(disable : 4127)
