@@ -5,6 +5,7 @@
 
 	@author MITSUNARI Shigeo(@herumi)
 	@author MITSUNARI Shigeo
+	@remark mingw requires -lws2_32 option
 */
 #include <errno.h>
 #include <assert.h>
@@ -16,10 +17,12 @@
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h> // for socklen_t
-	#pragma comment(lib, "ws2_32.lib")
-	#pragma comment(lib, "iphlpapi.lib")
-	#pragma warning(push)
-	#pragma warning(disable : 4127) // constant condition
+	#ifdef _MSC_VER
+		#pragma comment(lib, "ws2_32.lib")
+		#pragma comment(lib, "iphlpapi.lib")
+		#pragma warning(push)
+		#pragma warning(disable : 4127) // constant condition
+	#endif
 #else
 	#include <unistd.h>
 	#include <sys/socket.h>
@@ -617,7 +620,7 @@ public:
 	*/
 	int queryAcceptNoThrow(int msec = 1000, bool checkWrite = true)
 	{
-		if (sd_ < 0) return -EBADF;
+		if (sd_ == INVALID_SOCKET) return -EBADF;
 #ifdef CYBOZU_SOCKET_USE_EPOLL
 		int err;
 		experimental::Epoll ep;
@@ -777,6 +780,6 @@ public:
 
 } // cybozu
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 	#pragma warning(pop)
 #endif

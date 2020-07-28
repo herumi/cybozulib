@@ -15,7 +15,10 @@
 	#endif
 	#include <windows.h>
 	#include <process.h>
-	#pragma warning(disable : 4127)
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4127)
+	#endif
 #else
 	#include <unistd.h>
 	#include <pthread.h>
@@ -220,3 +223,7 @@ public:
 };
 
 } // cybozu
+
+#ifdef _MSC_VER
+	#pragma warning(pop)
+#endif

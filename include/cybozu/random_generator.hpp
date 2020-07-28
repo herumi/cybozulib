@@ -35,7 +35,7 @@ public:
 		: prov_(0)
 	{
 		DWORD flagTbl[] = { CRYPT_VERIFYCONTEXT | CRYPT_SILENT, 0, CRYPT_MACHINE_KEYSET };
-		for (int i = 0; i < CYBOZU_NUM_OF_ARRAY(flagTbl); i++) {
+		for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(flagTbl); i++) {
 			if (CryptAcquireContext(&prov_, NULL, NULL, PROV_RSA_FULL, flagTbl[i]) != 0) return;
 		}
 #ifdef CYBOZU_DONT_USE_EXCEPTION
