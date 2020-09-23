@@ -72,6 +72,9 @@
 	#endif
 #endif
 
+// LLONG_MIN in limits.h is not defined in some env.
+#define CYBOZU_LLONG_MIN (-9223372036854775807ll-1)
+
 #define CYBOZU_CPP_VERSION_CPP03 0
 #define CYBOZU_CPP_VERSION_TR1 1
 #define CYBOZU_CPP_VERSION_CPP11 2

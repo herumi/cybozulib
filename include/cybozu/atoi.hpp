@@ -180,7 +180,7 @@ public:
 	}
 	inline operator long long() const
 	{
-		return atoi_local::convertToInt<long long>(b_, p_, size_, "9223372036854775808", /*LLONG_MIN*/-9223372036854775807ll-1, 922337203685477580LL, '8');
+		return atoi_local::convertToInt<long long>(b_, p_, size_, "9223372036854775808", CYBOZU_LLONG_MIN, 922337203685477580LL, '8');
 	}
 	inline operator unsigned long long() const
 	{
