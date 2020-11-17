@@ -89,9 +89,9 @@ private:
 		Data *data = (Data*)self;
 		if (data->found) return;
 		if (section == 0) return;
-		bfd_vma vma = bfd_get_section_vma(bfd, section);
+		bfd_vma vma = bfd_section_vma(bfd, section);
 		if (data->pc < vma) return;
-		bfd_size_type size = bfd_get_section_size(section);
+		bfd_size_type size = bfd_section_size(section);
 		if (data->pc >= vma + size) return;
 		const char *file;
 		const char *func;
