@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/herumi/cybozulib.png)](https://travis-ci.org/herumi/cybozulib)
+[![Build Status](https://api.travis-ci.com/herumi/cybozulib.svg?branch=master)](https://travis-ci.com/github/herumi/cybozulib)
 
 # cybozulib
 
