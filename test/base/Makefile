@@ -14,6 +14,9 @@ endif
 ifeq ($(TRAVIS_TEST),1)
 	SRC:=$(filter-out env_test.cpp,$(SRC))
 	SRC:=$(filter-out fmindex_test.cpp,$(SRC))
+	SRC:=$(filter-out mmap_test.cpp,$(SRC))
+	SRC:=$(filter-out minixml_test.cpp,$(SRC))
+	SRC:=$(filter-out zlib_test.cpp,$(SRC))
 endif
 
 all: $(TARGET)
