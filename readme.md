@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.com/herumi/cybozulib.svg?branch=master)](https://travis-ci.com/github/herumi/cybozulib)
+[![Build Status](https://github.com/herumi/cybozulib/actions/workflows/main.yml/badge.svg)](https://github.com/herumi/cybozulib/actions/workflows/main.yml)
 
 # cybozulib
 
