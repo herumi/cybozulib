@@ -73,7 +73,7 @@ public:
 		, hMap_(0)
 		, size_(0)
 	{
-		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		subOpen(fileName);
 	}
@@ -83,7 +83,7 @@ public:
 		, hMap_(0)
 		, size_(0)
 	{
-		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		subOpen(fileName);
 	}
