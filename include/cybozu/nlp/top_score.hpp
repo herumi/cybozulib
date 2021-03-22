@@ -20,7 +20,7 @@ public:
 	};
 	typedef std::vector<Pair> Table;
 private:
-	const size_t maxSize_;
+	size_t maxSize_;
 	size_t size_;
 	mutable Table tbl_;
 	TopScore(const TopScore&);
