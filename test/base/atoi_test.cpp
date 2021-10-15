@@ -281,7 +281,7 @@ CYBOZU_TEST_AUTO(test_short)
     }
     const char ngTbl[][40] = {
         "", "a", "000-", "-", "00s",
-        "32768", "32769"
+        "32768", "32769",
         "-32769", "-32770", "-32771",
     };
     for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(ngTbl); i++) {
