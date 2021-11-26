@@ -197,6 +197,10 @@ public:
 		cybozu::save(os, numTbl_[0]);
 		cybozu::save(os, numTbl_[1]);
 		cybozu::savePodVec(os, blk_);
+		if (withSelect) {
+			cybozu::savePodVec(os, selTbl_[0]);
+			cybozu::savePodVec(os, selTbl_[1]);
+		}
 	}
 	template<class InputStream>
 	void load(InputStream& is)
@@ -205,6 +209,12 @@ public:
 		cybozu::load(numTbl_[0], is);
 		cybozu::load(numTbl_[1], is);
 		cybozu::loadPodVec(blk_, is);
+		if (withSelect) {
+			cybozu::loadPodVec(selTbl_[0], is);
+			cybozu::loadPodVec(selTbl_[1], is);
+		} else {
+			initSelTbl();
+		}
 	}
 	SucVectorT() : bitSize_(0), freezed_(false) { numTbl_[0] = numTbl_[1] = 0; }
 	SucVectorT(const uint64_t *buf, uint64_t bitSize)
