@@ -11,7 +11,7 @@
 
 namespace cybozu { namespace select8_util {
 
-uint8_t select8(uint64_t v, size_t x)
+inline uint8_t select8(uint64_t v, size_t x)
 {
 	assert(v < 256);
 	assert(x < 8);
