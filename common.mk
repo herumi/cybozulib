@@ -65,7 +65,7 @@ EXTDIR:=$(TOPDIR)../cybozulib_ext/
 
 CFLAGS+= -I$(TOPDIR)include
 LDFLAGS += -lz -lpthread -lssl -lcrypto
-HAS_BOOST=$(shell echo "\#include <boost/version.hpp>" | ($(CXX) -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
+HAS_BOOST=0#$(shell echo "\#include <boost/version.hpp>" | ($(CXX) -E - 2>/dev/null) | grep "boost/version.hpp" >/dev/null && echo "1")
 HAS_MECAB=$(shell echo "\#include <mecab.h>" | ($(CXX) -E - 2>/dev/null) | grep "mecab.h" >/dev/null && echo "1")
 HAS_EIGEN=$(shell echo "\#include <eigen3/Eigen/Sparse>" | ($(CXX) -E - 2>/dev/null) | grep "eigen3/Eigen/Sparse" >/dev/null && echo "1")
 ifeq ($(HAS_BOOST),1)
