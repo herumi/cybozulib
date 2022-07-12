@@ -184,6 +184,7 @@ void compareMap(const Map& x, const Map& y)
 	}
 }
 
+#if 0
 CYBOZU_TEST_AUTO(serializer_with_zlib)
 {
 	typedef std::map<int, double> Map;
@@ -252,6 +253,7 @@ CYBOZU_TEST_AUTO(sparse_with_zlib)
 		CYBOZU_TEST_ASSERT(yi == y.end());
 	}
 }
+#endif
 
 CYBOZU_TEST_AUTO(random)
 {
