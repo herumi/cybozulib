@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
-#define CYBOZU_DONT_USE_OPENSSL
+//#define CYBOZU_DONT_USE_OPENSSL
 #include <cybozu/sha2.hpp>
 #include <cybozu/test.hpp>
 #include <cybozu/itoa.hpp>
