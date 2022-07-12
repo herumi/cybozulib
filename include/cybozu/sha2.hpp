@@ -67,7 +67,7 @@ struct NewHash {
 	void clear()
 	{
 		EVP_MD_CTX_reset(mdctx_);
-		EVP_DigestInit_ex2(mdctx_, md_, NULL);
+		EVP_DigestInit_ex(mdctx_, md_, NULL);
 	}
 	void update(const void *buf, size_t bufSize)
 	{

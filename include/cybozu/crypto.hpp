@@ -62,7 +62,7 @@ private:
 			throw cybozu::Exception("EVP_get_digestbyname") << name;
 		}
 		EVP_MD_CTX_reset(ctx_);
-		EVP_DigestInit_ex2(ctx_, md, NULL);
+		EVP_DigestInit_ex(ctx_, md, NULL);
 	}
 #else
 	union {
