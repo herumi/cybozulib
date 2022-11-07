@@ -117,7 +117,9 @@ uint32_t popcnt(T x);
 template<>
 inline uint32_t popcnt<uint32_t>(uint32_t x)
 {
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_M_ARM64)
+	return static_cast<uint32_t>(_CountOneBits(x));
+#elif defined(_MSC_VER) && !defined(__clang__)
 	return static_cast<uint32_t>(_mm_popcnt_u32(x));
 #else
 	return static_cast<uint32_t>(__builtin_popcount(x));
@@ -127,7 +129,9 @@ inline uint32_t popcnt<uint32_t>(uint32_t x)
 template<>
 inline uint32_t popcnt<uint64_t>(uint64_t x)
 {
-#if defined(__x86_64__)
+#if defined(_M_ARM64)
+	return static_cast<uint32_t>(_CountOneBits64(x));
+#elif defined(__x86_64__)
 	return static_cast<uint32_t>(__builtin_popcountll(x));
 #elif defined(_WIN64)
 	return static_cast<uint32_t>(_mm_popcnt_u64(x));
