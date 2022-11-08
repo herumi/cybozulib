@@ -6,14 +6,8 @@
 #include <assert.h>
 #include <cybozu/inttype.hpp>
 
-#if (CYBOZU_HOST == CYBOZU_HOST_INTEL)
-	#if defined(_MSC_VER)
-		#include <intrin.h>
-	#elif defined(__linux__) || defined(__CYGWIN__) || defined(__clang__)
-		#include <x86intrin.h>
-	#elif defined(__GNUC__)
-		#include <emmintrin.h>
-	#endif
+#if defined(_MSC_VER)
+	#include <intrin.h>
 #endif
 
 namespace cybozu {
