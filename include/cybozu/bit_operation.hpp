@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <cybozu/inttype.hpp>
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 	#include <intrin.h>
 #endif
 
