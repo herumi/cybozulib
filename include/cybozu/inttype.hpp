@@ -71,13 +71,13 @@
 		#define CYBOZU_SNPRINTF(x, len, ...) (void)snprintf(x, len, __VA_ARGS__)
 	#endif
 #endif
-#ifndef CYBOZU_ASSUME(x)
+#ifndef CYBOZU_ASSUME
 	#if defined(__clang__)
 		#define CYBOZU_ASSUME(x) __builtin_assume(x)
-	#elif defined(__GNUC__) && !defined(__ICC)
-		#define CYBOZU_ASSUME(x) if (!(x)) { __builtin_unreachable(); }
 	#elif defined(_MSC_VER) || defined(__ICC)
 		#define CYBOZU_ASSUME(x) __assume(x)
+	#else
+		#define CYBOZU_ASSUME(x) if (!(x)) { __builtin_unreachable(); }
 	#endif
 #endif
 
