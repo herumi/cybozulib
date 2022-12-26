@@ -71,6 +71,16 @@
 		#define CYBOZU_SNPRINTF(x, len, ...) (void)snprintf(x, len, __VA_ARGS__)
 	#endif
 #endif
+#ifndef CYBOZU_ASSUME(x)
+	#if defined(__clang__)
+		#define CYBOZU_ASSUME(x) __builtin_assume(x)
+	#elif defined(__GNUC__) && !defined(__ICC)
+		#define CYBOZU_ASSUME(x) if (!(x)) { __builtin_unreachable(); }
+	#elif defined(_MSC_VER) || defined(__ICC)
+		#define CYBOZU_ASSUME(x) __assume(x)
+	#endif
+#endif
+
 
 // LLONG_MIN in limits.h is not defined in some env.
 #define CYBOZU_LLONG_MIN (-9223372036854775807ll-1)
