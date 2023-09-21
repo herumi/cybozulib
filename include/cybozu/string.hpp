@@ -1708,7 +1708,9 @@ void save(OutputStream& os, const cybozu::String& str)
 namespace boost {
 
 template<>
-struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
+struct hash<cybozu::String> {
+	typedef cybozu::String argument_type;
+	typedef size_t result_type;
 	size_t operator()(const cybozu::String& str) const
 	{
 		return static_cast<size_t>(cybozu::hash64(str.c_str(), str.size()));
@@ -1726,7 +1728,9 @@ CYBOZU_NAMESPACE_TR1_BEGIN
 #endif
 
 template<>
-struct hash<cybozu::String> : public std::unary_function<cybozu::String, size_t> {
+struct hash<cybozu::String> {
+	typedef cybozu::String argument_type;
+	typedef size_t result_type;
 	size_t operator()(const cybozu::String& str) const
 	{
 		return static_cast<size_t>(cybozu::hash64(str.c_str(), str.size()));
