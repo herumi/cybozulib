@@ -11,7 +11,7 @@
 #endif
 #include <stdio.h>
 
-#define CYBOZU_BENCH_CHRONO
+//#define CYBOZU_BENCH_CHRONO
 
 #ifdef __EMSCRIPTEN__
 	#define CYBOZU_BENCH_USE_GETTIMEOFDAY
