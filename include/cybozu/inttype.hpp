@@ -58,7 +58,7 @@
 #ifndef CYBOZU_ALLOCA
 	#ifdef _MSC_VER
 		#include <malloc.h>
-		#define CYBOZU_ALLOCA(x) _malloca(x)
+		#define CYBOZU_ALLOCA(x) _alloca(x)
 	#else
 		#define CYBOZU_ALLOCA(x) __builtin_alloca(x)
 	#endif
