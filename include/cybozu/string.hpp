@@ -19,12 +19,14 @@
 #include <stdio.h> // for printf
 #include <iosfwd> // for istream, ostream
 #include <functional> // for unary_function
-#if __cplusplus >= 202002L
-#include <compare>
-#endif
 
 #include <cybozu/exception.hpp>
 #include <cybozu/hash.hpp>
+
+#if CYBOZU_CPLUSPLUS >= 202002L
+#include <compare>
+#endif
+
 
 // to deal with unicode literal(same macro defined in regex.hpp)
 #ifdef _MSC_VER
@@ -46,7 +48,7 @@ namespace cybozu {
 	typedef unsigned short Char16; /* unsigned is necessary for gcc */
 #endif
 #else
-	typedef int Char; //!< Char for Windows
+	typedef unsigned int Char; //!< Char for Windows
 	typedef wchar_t Char16;
 #endif
 
@@ -1520,7 +1522,7 @@ public:
 		get internal str(don't use this function)
 	*/
 	BasicString& get() { return str_; }
-#if __cplusplus >= 202002L
+#if CYBOZU_CPLUSPLUS >= 202002L
 	template<class T>bool operator==(const T& rhs) const { return compare(rhs) == 0; }
 	template<class T>std::strong_ordering operator<=>(const T& rhs) const {
 		int r = compare(rhs);
@@ -1581,7 +1583,7 @@ inline std::ostream& operator<<(std::ostream& os, const String& str)
 	return os << str.toUtf8();
 }
 
-#if __cplusplus < 202002L
+#if CYBOZU_CPLUSPLUS < 202002L
 inline bool operator==(const cybozu::Char* lhs, const String& rhs) { return rhs == lhs; }
 inline bool operator!=(const cybozu::Char* lhs, const String& rhs) { return rhs != lhs; }
 inline bool operator<=(const cybozu::Char* lhs, const String& rhs) { return rhs >= lhs; }
