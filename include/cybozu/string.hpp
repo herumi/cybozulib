@@ -19,6 +19,9 @@
 #include <stdio.h> // for printf
 #include <iosfwd> // for istream, ostream
 #include <functional> // for unary_function
+#if __cplusplus >= 202002L
+#include <compare>
+#endif
 
 #include <cybozu/exception.hpp>
 #include <cybozu/hash.hpp>
@@ -1517,12 +1520,20 @@ public:
 		get internal str(don't use this function)
 	*/
 	BasicString& get() { return str_; }
+#if __cplusplus >= 202002L
+	template<class T>bool operator==(const T& rhs) const { return compare(rhs) == 0; }
+	template<class T>std::strong_ordering operator<=>(const T& rhs) const {
+		int r = compare(rhs);
+		return r < 0 ? std::strong_ordering::less : r > 0 ? std::strong_ordering::greater : std::strong_ordering::equal;
+	}
+#else
 	template<class T>bool operator==(const T& rhs) const { return compare(rhs) == 0; }
 	template<class T>bool operator!=(const T& rhs) const { return compare(rhs) != 0; }
 	template<class T>bool operator<=(const T& rhs) const { return compare(rhs) <= 0; }
 	template<class T>bool operator>=(const T& rhs) const { return compare(rhs) >= 0; }
 	template<class T>bool operator<(const T& rhs) const { return compare(rhs) < 0; }
 	template<class T>bool operator>(const T& rhs) const { return compare(rhs) > 0; }
+#endif
 private:
 	template<class Iterator>
 	cybozu::Char getOneChar(Iterator& begin, const Iterator& end)
@@ -1570,6 +1581,7 @@ inline std::ostream& operator<<(std::ostream& os, const String& str)
 	return os << str.toUtf8();
 }
 
+#if __cplusplus < 202002L
 inline bool operator==(const cybozu::Char* lhs, const String& rhs) { return rhs == lhs; }
 inline bool operator!=(const cybozu::Char* lhs, const String& rhs) { return rhs != lhs; }
 inline bool operator<=(const cybozu::Char* lhs, const String& rhs) { return rhs >= lhs; }
@@ -1604,6 +1616,7 @@ inline bool operator<=(const std::wstring& lhs, const String& rhs) { return rhs 
 inline bool operator>=(const std::wstring& lhs, const String& rhs) { return rhs <= lhs; }
 inline bool operator<(const std::wstring& lhs, const String& rhs) { return rhs > lhs; }
 inline bool operator>(const std::wstring& lhs, const String& rhs) { return rhs < lhs; }
+#endif
 #endif
 
 inline void swap(String& lhs, String& rhs) { lhs.swap(rhs); }
