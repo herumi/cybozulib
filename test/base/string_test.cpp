@@ -14,6 +14,7 @@ using namespace cybozu;
 
 #ifdef _MSC_VER
 	#pragma warning(disable : 4309)
+	#pragma warning(disable : 4310)
 #endif
 
 ///////// iterator
@@ -221,7 +222,7 @@ CYBOZU_TEST_AUTO(string_constructor_surrogate_pair_test)
 	const Char s[] = { 0x00003069, 0x00000061, 0x00000062, 0x00000063, 0x0000308c, 0x0002000b, 0 };
 	std::stringstream ss;
 	ss << a;
-	CYBOZU_TEST_EQUAL(a, s);
+	CYBOZU_TEST_ASSERT(a == s);
 	CYBOZU_TEST_EQUAL(ss.str(), "\xe3\x81\xa9" "abc" "\xe3\x82\x8c" "\xf0\xa0\x80\x8b");
 }
 
@@ -297,7 +298,7 @@ CYBOZU_TEST_AUTO(string_index_test_at)
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	Char t = s.at(3);
 	Char c = 'U';
-	CYBOZU_TEST_EQUAL(t, c);
+	CYBOZU_TEST_ASSERT(t == c);
 }
 
 CYBOZU_TEST_AUTO(string_index_test_at_exception)
@@ -320,7 +321,7 @@ CYBOZU_TEST_AUTO(string_index_test_index)
 	String s("\xe3\x81\x93\xe3\x82\x8c\xe3\x81\xaf" "UTF-8 1");
 	Char t = s[6];
 	Char c = '-';
-	CYBOZU_TEST_EQUAL(t, c);
+	CYBOZU_TEST_ASSERT(t == c);
 }
 
 //cybozu::String
@@ -614,7 +615,7 @@ CYBOZU_TEST_AUTO(string_utility_test_c_str)
 	String s("abcdefg");
 	const Char cs[] = {'a', 'b', 'c',  'd', 'e', 'f', 'g', 0};
 	for (int i = 0; i<8 ; i++) {
-		CYBOZU_TEST_EQUAL(s.c_str()[i], cs[i]);
+		CYBOZU_TEST_ASSERT(s.c_str()[i] == cs[i]);
 	}
 }
 
@@ -624,7 +625,7 @@ CYBOZU_TEST_AUTO(string_utility_test_data)
 	String s("abcdefg");
 	const Char cs[] = {'a', 'b', 'c',  'd', 'e', 'f', 'g', 0};
 	for (int i = 0; i<7 ; i++) {
-		CYBOZU_TEST_EQUAL(s.c_str()[i], cs[i]);
+		CYBOZU_TEST_ASSERT(s.c_str()[i] == cs[i]);
 	}
 }
 
@@ -1547,7 +1548,7 @@ CYBOZU_TEST_AUTO(utf16)
 	cybozu::ConvertUtf8ToUtf16(&s, utf8, utf8 + 12);
 	CYBOZU_TEST_EQUAL(s.size(), 6u);
 	for (int i = 0; i < 6; i++) {
-		CYBOZU_TEST_EQUAL(s[i], utf16[i]);
+		CYBOZU_TEST_ASSERT(s[i] == utf16[i]);
 	}
 	std::string t;
 	cybozu::ConvertUtf16ToUtf8(&t, utf16, utf16 + 6);
@@ -1565,7 +1566,7 @@ CYBOZU_TEST_AUTO(Utf8ref)
 	cybozu::Char c;
 	size_t i = 0;
 	while (ref.next(&c)) {
-		CYBOZU_TEST_EQUAL(c, s[i]);
+		CYBOZU_TEST_ASSERT(c == s[i]);
 		i++;
 	}
 	CYBOZU_TEST_EQUAL(i, s.size());
@@ -1578,7 +1579,7 @@ CYBOZU_TEST_AUTO(Utf8ref_bad_char)
 	cybozu::Utf8ref ref(utf8.c_str(), utf8.size());
 	cybozu::Char c;
 	CYBOZU_TEST_ASSERT(ref.next(&c));
-	CYBOZU_TEST_EQUAL(s[0], c);
+	CYBOZU_TEST_ASSERT(s[0] == c);
 	CYBOZU_TEST_EXCEPTION(ref.next(&c), std::exception);
 }
 
@@ -1590,7 +1591,7 @@ CYBOZU_TEST_AUTO(Utf8ref_ignore_bad_char)
 	cybozu::Char c;
 	size_t i = 0;
 	while (ref.next(&c)) {
-		CYBOZU_TEST_EQUAL(c, s[i]);
+		CYBOZU_TEST_ASSERT(c == s[i]);
 		i++;
 	}
 	CYBOZU_TEST_EQUAL(i, s.size());
@@ -1605,11 +1606,11 @@ CYBOZU_TEST_AUTO(equal)
 	CYBOZU_TEST_EQUAL(a, a);
 	CYBOZU_TEST_EQUAL(a, b);
 	CYBOZU_TEST_EQUAL(a, c);
-	CYBOZU_TEST_EQUAL(a, d);
+	CYBOZU_TEST_ASSERT(a == d);
 
 	CYBOZU_TEST_EQUAL(b, a);
 	CYBOZU_TEST_EQUAL(c, a);
-	CYBOZU_TEST_EQUAL(d, a);
+	CYBOZU_TEST_ASSERT(d == a);
 
 	CYBOZU_TEST_ASSERT(!(a != a));
 	CYBOZU_TEST_ASSERT(!(a != b));
@@ -1621,8 +1622,8 @@ CYBOZU_TEST_AUTO(equal)
 	CYBOZU_TEST_ASSERT(!(d != a));
 #ifdef _MSC_VER
 	const wchar_t e[] = L"abc";
-	CYBOZU_TEST_EQUAL(a, e);
-	CYBOZU_TEST_EQUAL(e, a);
+	CYBOZU_TEST_ASSERT(a == e);
+	CYBOZU_TEST_ASSERT(e == a);
 	CYBOZU_TEST_ASSERT(!(a != e));
 	CYBOZU_TEST_ASSERT(!(e != a));
 #endif
