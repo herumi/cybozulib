@@ -16,16 +16,23 @@
 #ifdef __APPLE__
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+	#ifndef CYBOZU_USE_COMMONCRYPTO
+		#define CYBOZU_USE_COMMONCRYPTO 1
+	#endif
 #endif
-#if 0 //#ifdef __APPLE__
+#if CYBOZU_USE_COMMONCRYPTO == 1
+	// for OpenSSL compatibility
 	#define COMMON_DIGEST_FOR_OPENSSL
 	#include <CommonCrypto/CommonDigest.h>
 	#include <CommonCrypto/CommonHMAC.h>
+	#include <CommonCrypto/CommonCryptor.h>
 	#define SHA1 CC_SHA1
 	#define SHA224 CC_SHA224
 	#define SHA256 CC_SHA256
 	#define SHA384 CC_SHA384
 	#define SHA512 CC_SHA512
+	#undef CYBOZU_USE_OPENSSL_NEW_HASH
+	#define CYBOZU_USE_OPENSSL_NEW_HASH 0
 #else
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
@@ -239,22 +246,55 @@ public:
 };
 
 class Hmac {
+#if CYBOZU_USE_COMMONCRYPTO == 1
+	CCHmacAlgorithm alg_;
+	size_t hashSize_;
+#else
 	const EVP_MD *evp_;
+#endif
 public:
 	explicit Hmac(Hash::Name name = Hash::N_SHA1)
 	{
 		switch (name) {
+#if CYBOZU_USE_COMMONCRYPTO == 1
+		case Hash::N_SHA1:
+			alg_ = kCCHmacAlgSHA1;
+			hashSize_ = 160 / 8;
+			break;
+		case Hash::N_SHA224:
+			alg_ = kCCHmacAlgSHA224;
+			hashSize_ = 224 / 8;
+			break;
+		case Hash::N_SHA256:
+			alg_ = kCCHmacAlgSHA256;
+			hashSize_ = 256 / 8;
+			break;
+		case Hash::N_SHA384:
+			alg_ = kCCHmacAlgSHA384;
+			hashSize_ = 384 / 8;
+			break;
+		case Hash::N_SHA512:
+			alg_ = kCCHmacAlgSHA512;
+			hashSize_ = 512 / 8;
+			break;
+#else
 		case Hash::N_SHA1: evp_ = EVP_sha1(); break;
 		case Hash::N_SHA224: evp_ = EVP_sha224(); break;
 		case Hash::N_SHA256: evp_ = EVP_sha256(); break;
 		case Hash::N_SHA384: evp_ = EVP_sha384(); break;
 		case Hash::N_SHA512: evp_ = EVP_sha512(); break;
+#endif
 		default:
 			throw cybozu::Exception("crypto:Hmac:") << name;
 		}
 	}
 	std::string eval(const std::string& key, const std::string& data)
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		std::string out(hashSize_, 0);
+		CCHmac(alg_, key.data(), key.size(), data.data(), data.size(), &out[0]);
+		return out;
+	#else
 		std::string out(EVP_MD_size(evp_) + 1, 0);
 		unsigned int outLen = 0;
 		if (HMAC(evp_, key.c_str(), static_cast<int>(key.size()),
@@ -263,27 +303,43 @@ public:
 			return out;
 		}
 		throw cybozu::Exception("crypto::Hamc::eval");
+	#endif
 	}
 };
 
 class Cipher {
-	const EVP_CIPHER *cipher_;
-	EVP_CIPHER_CTX *ctx_;
 public:
 	enum Name {
 		N_AES128_CBC,
 		N_AES192_CBC,
 		N_AES256_CBC,
+		N_AES128_CTR,
+		N_AES192_CTR,
+		N_AES256_CTR,
 		N_AES128_ECB, // be carefull to use
 		N_AES192_ECB, // be carefull to use
 		N_AES256_ECB, // be carefull to use
 	};
+
+private:
+#if CYBOZU_USE_COMMONCRYPTO == 1
+	Name name_;
+	CCCryptorRef ctx_;
+#else
+	const EVP_CIPHER *cipher_;
+	EVP_CIPHER_CTX *ctx_;
+#endif
+
+public:
 	static inline size_t getSize(Name name)
 	{
 		switch (name) {
 		case N_AES128_CBC: return 128;
 		case N_AES192_CBC: return 192;
 		case N_AES256_CBC: return 256;
+		case N_AES128_CTR: return 128;
+		case N_AES192_CTR: return 192;
+		case N_AES256_CTR: return 256;
 		case N_AES128_ECB: return 128;
 		case N_AES192_ECB: return 192;
 		case N_AES256_ECB: return 256;
@@ -296,31 +352,93 @@ public:
 		Encoding
 	};
 	explicit Cipher(Name name = N_AES128_CBC)
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		: name_(name)
+		, ctx_(0)
+	#else
 		: cipher_(0)
 		, ctx_(0)
+	#endif
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		switch (name_) {
+		case N_AES128_CBC:
+		case N_AES192_CBC:
+		case N_AES256_CBC:
+		case N_AES128_CTR:
+		case N_AES192_CTR:
+		case N_AES256_CTR:
+		case N_AES128_ECB:
+		case N_AES192_ECB:
+		case N_AES256_ECB:
+			break;
+		default:
+			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
+		}
+	#else
 		ctx_ = EVP_CIPHER_CTX_new();
 		if (ctx_ == 0) throw cybozu::Exception("crypto:Cipher:EVP_CIPHER_CTX_new");
 		switch (name) {
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
 		case N_AES192_CBC: cipher_ = EVP_aes_192_cbc(); break;
 		case N_AES256_CBC: cipher_ = EVP_aes_256_cbc(); break;
+		case N_AES128_CTR: cipher_ = EVP_aes_128_ctr(); break;
+		case N_AES192_CTR: cipher_ = EVP_aes_192_ctr(); break;
+		case N_AES256_CTR: cipher_ = EVP_aes_256_ctr(); break;
 		case N_AES128_ECB: cipher_ = EVP_aes_128_ecb(); break;
 		case N_AES192_ECB: cipher_ = EVP_aes_192_ecb(); break;
 		case N_AES256_ECB: cipher_ = EVP_aes_256_ecb(); break;
 		default:
 			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
 		}
+	#endif
 	}
 	~Cipher()
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		if (ctx_) CCCryptorRelease(ctx_);
+	#else
 		if (ctx_) EVP_CIPHER_CTX_free(ctx_);
+	#endif
 	}
 	/*
 		@note don't use padding = true
 	*/
 	void setup(Mode mode, const std::string& key, const std::string& iv, bool padding = false)
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		const int keyLen = static_cast<int>(key.size());
+		const int expectedKeyLen = static_cast<int>(getSize(name_) / 8);
+		if (keyLen != expectedKeyLen) {
+			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
+		}
+		const bool isCtr = name_ == N_AES128_CTR || name_ == N_AES192_CTR || name_ == N_AES256_CTR;
+		const bool isEcb = name_ == N_AES128_ECB || name_ == N_AES192_ECB || name_ == N_AES256_ECB;
+		if (!isEcb) {
+			if (iv.size() != kCCBlockSizeAES128) {
+				throw cybozu::Exception("crypto:Cipher:setup:ivLen") << iv.size() << kCCBlockSizeAES128;
+			}
+		}
+		if (ctx_) {
+			CCCryptorRelease(ctx_);
+			ctx_ = 0;
+		}
+		CCCryptorStatus status;
+		if (isCtr) {
+			status = CCCryptorCreateWithMode(mode == Encoding ? kCCEncrypt : kCCDecrypt,
+				kCCModeCTR, kCCAlgorithmAES128, ccNoPadding, iv.data(), key.data(), key.size(), 0, 0, 0,
+				kCCModeOptionCTR_BE, &ctx_);
+		} else {
+			CCOptions options = isEcb ? kCCOptionECBMode : 0;
+			if (padding) options |= kCCOptionPKCS7Padding;
+			const void *ivPtr = isEcb ? 0 : iv.data();
+			status = CCCryptorCreate(mode == Encoding ? kCCEncrypt : kCCDecrypt,
+				kCCAlgorithmAES128, options, key.data(), key.size(), ivPtr, &ctx_);
+		}
+		if (status != kCCSuccess) {
+			throw cybozu::Exception("crypto:Cipher:setup:CCCryptorCreate") << (int)status;
+		}
+	#else
 		const int keyLen = static_cast<int>(key.size());
 		const int expectedKeyLen = EVP_CIPHER_key_length(cipher_);
 		if (keyLen != expectedKeyLen) {
@@ -342,6 +460,7 @@ public:
 			throw cybozu::Exception("crypto:Cipher:setup:ivLen") << ivLen << expectedIvLen;
 		}
 */
+	#endif
 	}
 	/*
 		the size of outBuf must be larger than inBufSize + blockSize
@@ -350,10 +469,19 @@ public:
 	*/
 	int update(char *outBuf, const char *inBuf, int inBufSize)
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		if (ctx_ == 0) return -1;
+		size_t outLen = 0;
+		const CCCryptorStatus status = CCCryptorUpdate(ctx_, inBuf, static_cast<size_t>(inBufSize), outBuf,
+			static_cast<size_t>(inBufSize + kCCBlockSizeAES128), &outLen);
+		if (status != kCCSuccess) return -1;
+		return static_cast<int>(outLen);
+	#else
 		int outLen = 0;
 		int ret = EVP_CipherUpdate(ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen, cybozu::cast<const uint8_t*>(inBuf), inBufSize);
 		if (ret != 1) return -1;
 		return outLen;
+	#endif
 	}
 	/*
 		return -1 if padding
@@ -361,10 +489,18 @@ public:
 	*/
 	int finalize(char *outBuf)
 	{
+	#if CYBOZU_USE_COMMONCRYPTO == 1
+		if (ctx_ == 0) return -1;
+		size_t outLen = 0;
+		const CCCryptorStatus status = CCCryptorFinal(ctx_, outBuf, kCCBlockSizeAES128, &outLen);
+		if (status != kCCSuccess) return -1;
+		return static_cast<int>(outLen);
+	#else
 		int outLen = 0;
 		int ret = EVP_CipherFinal_ex(ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen);
 		if (ret != 1) return -1;
 		return outLen;
+	#endif
 	}
 };
 
