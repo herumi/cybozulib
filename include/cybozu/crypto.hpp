@@ -415,8 +415,8 @@ public:
 		const bool isCtr = name_ == N_AES128_CTR || name_ == N_AES192_CTR || name_ == N_AES256_CTR;
 		const bool isEcb = name_ == N_AES128_ECB || name_ == N_AES192_ECB || name_ == N_AES256_ECB;
 		if (!isEcb) {
-			if (iv.size() != kCCBlockSizeAES128) {
-				throw cybozu::Exception("crypto:Cipher:setup:ivLen") << iv.size() << kCCBlockSizeAES128;
+			if (iv.size() < kCCBlockSizeAES128) {
+				throw cybozu::Exception("crypto:Cipher:setup:ivLen") << iv.size() << ">=" << kCCBlockSizeAES128;
 			}
 		}
 		if (ctx_) {
