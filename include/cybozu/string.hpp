@@ -38,14 +38,18 @@
 	#define CYBOZU_STR_W(x) x // assume UTF-8 string
 #endif
 
-#if !(defined(__GNUC__) && (__SIZEOF_WCHAR_T__ == 4))
+#if defined(_LIBCPP_VERSION) && !(defined(__GNUC__) && (__SIZEOF_WCHAR_T__ == 4))
 // cybozu::Char is `unsigned int` on this platform (wchar_t is only 16 bits,
 // see below), so std::basic_string<unsigned int> needs an explicit
-// std::char_traits<unsigned int>. libstdc++ happens to provide a
+// std::char_traits<unsigned int>. libstdc++ and MSVC STL happen to provide a
 // non-standard generic fallback body for the primary char_traits template
 // that silently covers this, but libc++ (used by llvm-mingw) leaves
 // the primary template undefined for any CharT it hasn't specialized
 // itself, which is a hard compile error the moment it's instantiated.
+// Define it only for libc++: MSVC STL's basic_string calls internal members
+// of char_traits (_Copy_s, _Move_s, ...) that a standard-conforming
+// specialization does not have, so replacing its primary template breaks
+// the build.
 namespace std {
 
 template<>
