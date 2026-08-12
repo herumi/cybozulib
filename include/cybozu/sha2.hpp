@@ -574,35 +574,59 @@ public:
 
 namespace cybozu {
 
+namespace sha2_local {
+
 /*
-	HMAC-SHA-256
-	hmac must have 32 bytes buffer
+	HMAC (RFC 2104)
+	@param out [out] must have hashSize bytes
+	@param T [in] Sha256 or Sha512
 */
-inline void hmac256(void *hmac, const void *key, size_t keySize, const void *msg, size_t msgSize)
+template<class T, size_t hashSize, size_t blockSize>
+void hmac(void *out, const void *key, size_t keySize, const void *msg, size_t msgSize)
 {
 	const uint8_t ipad = 0x36;
 	const uint8_t opad = 0x5c;
-	uint8_t k[64];
-	Sha256 hash;
-	if (keySize > 64) {
-		hash.digest(k, 32, key, keySize);
+	uint8_t k[blockSize];
+	T hash;
+	if (keySize > blockSize) {
+		hash.digest(k, hashSize, key, keySize);
 		hash.clear();
-		keySize = 32;
+		keySize = hashSize;
 	} else {
 		memcpy(k, key, keySize);
 	}
 	for (size_t i = 0; i < keySize; i++) {
 		k[i] = k[i] ^ ipad;
 	}
-	memset(k + keySize, ipad, 64 - keySize);
-	hash.update(k, 64);
-	hash.digest(hmac, 32, msg, msgSize);
+	memset(k + keySize, ipad, blockSize - keySize);
+	hash.update(k, blockSize);
+	hash.digest(out, hashSize, msg, msgSize);
 	hash.clear();
-	for (size_t i = 0; i < 64; i++) {
+	for (size_t i = 0; i < blockSize; i++) {
 		k[i] = k[i] ^ (ipad ^ opad);
 	}
-	hash.update(k, 64);
-	hash.digest(hmac, 32, hmac, 32);
+	hash.update(k, blockSize);
+	hash.digest(out, hashSize, out, hashSize);
+}
+
+} // cybozu::sha2_local
+
+/*
+	HMAC-SHA-256
+	hmac must have 32 bytes buffer
+*/
+inline void hmac256(void *hmac, const void *key, size_t keySize, const void *msg, size_t msgSize)
+{
+	sha2_local::hmac<Sha256, 32, 64>(hmac, key, keySize, msg, msgSize);
+}
+
+/*
+	HMAC-SHA-512
+	hmac must have 64 bytes buffer
+*/
+inline void hmac512(void *hmac, const void *key, size_t keySize, const void *msg, size_t msgSize)
+{
+	sha2_local::hmac<Sha512, 64, 128>(hmac, key, keySize, msg, msgSize);
 }
 
 } // cybozu

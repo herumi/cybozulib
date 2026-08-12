@@ -145,3 +145,54 @@ CYBOZU_TEST_AUTO(sha512)
 		CYBOZU_TEST_EQUAL(toHexStr(md), sha512Tbl[i].out);
 	}
 }
+
+CYBOZU_TEST_AUTO(hmac)
+{
+	const struct {
+		cybozu::crypto::Hash::Name name;
+		const char *key;
+		const char *msg;
+		const char *mac;
+	} tbl[] = {
+		{
+			cybozu::crypto::Hash::N_SHA256,
+			"Jefe",
+			"what do ya want for nothing?",
+			"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843",
+		},
+		{
+			cybozu::crypto::Hash::N_SHA512,
+			"Jefe",
+			"what do ya want for nothing?",
+			"164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737",
+		},
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		cybozu::crypto::Hmac hmac(tbl[i].name);
+		CYBOZU_TEST_EQUAL(hmac.getSize(), strlen(tbl[i].mac) / 2);
+		CYBOZU_TEST_EQUAL(toHexStr(hmac.eval(tbl[i].key, tbl[i].msg)), tbl[i].mac);
+	}
+}
+
+void makeHash(cybozu::crypto::Hash::Name name)
+{
+	cybozu::crypto::Hash hash(name);
+}
+
+void makeHmac(cybozu::crypto::Hash::Name name)
+{
+	cybozu::crypto::Hmac hmac(name);
+}
+
+CYBOZU_TEST_AUTO(deprecated)
+{
+	const cybozu::crypto::Hash::Name tbl[] = {
+		cybozu::crypto::Hash::N_SHA1,
+		cybozu::crypto::Hash::N_SHA224,
+		cybozu::crypto::Hash::N_SHA384,
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		CYBOZU_TEST_EXCEPTION(makeHash(tbl[i]), cybozu::Exception);
+		CYBOZU_TEST_EXCEPTION(makeHmac(tbl[i]), cybozu::Exception);
+	}
+}

@@ -1,84 +1,38 @@
 #pragma once
 /**
 	@file
-	@brief wrap openssl
+	@brief wrapper of cybozu/sha2.hpp and cybozu/aes.hpp
 	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <cybozu/exception.hpp>
 #include <cybozu/inttype.hpp>
 #include <cybozu/aes.hpp>
-
-#ifndef CYBOZU_USE_OPENSSL_NEW_HASH
-#ifndef _MSC_VER
-#define CYBOZU_USE_OPENSSL_NEW_HASH 1
-#endif
-#endif
-
-#ifdef __APPLE__
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-	#ifndef CYBOZU_USE_APPLE_COMMONCRYPTO
-		#define CYBOZU_USE_APPLE_COMMONCRYPTO 1
-	#endif
-#endif
-#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
-	// for OpenSSL compatibility
-	#define COMMON_DIGEST_FOR_OPENSSL
-	#include <CommonCrypto/CommonDigest.h>
-	#include <CommonCrypto/CommonHMAC.h>
-	#define SHA1 CC_SHA1
-	#define SHA224 CC_SHA224
-	#define SHA256 CC_SHA256
-	#define SHA384 CC_SHA384
-	#define SHA512 CC_SHA512
-	#undef CYBOZU_USE_OPENSSL_NEW_HASH
-	#define CYBOZU_USE_OPENSSL_NEW_HASH 0
-#else
-#include <openssl/hmac.h>
-#include <openssl/evp.h>
-#if CYBOZU_USE_OPENSSL_NEW_HASH != 1
-#include <openssl/sha.h>
-#endif
-#endif
-#ifdef _MSC_VER
-	#include <cybozu/link_libeay32.hpp>
-#endif
+#include <cybozu/sha2.hpp>
 
 namespace cybozu {
 
 namespace crypto {
 
+/*
+	SHA-256 and SHA-512 are supported.
+	SHA-1, SHA-224 and SHA-384 are deprecated ; getSize() and getName() still
+	accept them for compatibility, but constructing Hash/Hmac with them throws.
+*/
 class Hash {
 public:
 	enum Name {
-		N_SHA1,
-		N_SHA224,
+		N_SHA1, // deprecated
+		N_SHA224, // deprecated
 		N_SHA256,
-		N_SHA384,
+		N_SHA384, // deprecated
 		N_SHA512
 	};
 private:
 	Name name_;
 	size_t hashSize_;
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-	EVP_MD_CTX *ctx_;
-	void setCTX(const char *name)
-	{
-		const EVP_MD *md = EVP_get_digestbyname(name);
-		if (md == 0) {
-			throw cybozu::Exception("EVP_get_digestbyname") << name;
-		}
-		EVP_MD_CTX_reset(ctx_);
-		EVP_DigestInit_ex(ctx_, md, NULL);
-	}
-#else
-	union {
-		SHA_CTX sha1;
-		SHA256_CTX sha256;
-		SHA512_CTX sha512;
-	} ctx_;
-#endif
+	Sha256 sha256_;
+	Sha512 sha512_;
 public:
 	static inline size_t getSize(Name name)
 	{
@@ -121,34 +75,30 @@ public:
 		}
 		throw cybozu::Exception("crypto:Hash:getName") << nameStr;
 	}
-	explicit Hash(Name name = N_SHA1)
+	/*
+		throw if name is not N_SHA256 nor N_SHA512
+	*/
+	static inline void verifyName(Name name)
+	{
+		if (name != N_SHA256 && name != N_SHA512) {
+			throw cybozu::Exception("crypto:Hash:not supported") << name;
+		}
+	}
+	explicit Hash(Name name)
 		: name_(name)
 		, hashSize_(getSize(name))
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		, ctx_(EVP_MD_CTX_new())
-#endif
 	{
+		verifyName(name_);
 		reset();
 	}
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-	~Hash()
-	{
-		EVP_MD_CTX_free(ctx_);
-	}
-#endif
 	void update(const void *buf, size_t bufSize)
 	{
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		EVP_DigestUpdate(ctx_, buf, bufSize);
-#else
 		switch (name_) {
-		case N_SHA1:   SHA1_Update(&ctx_.sha1, buf, bufSize);     break;
-		case N_SHA224: SHA224_Update(&ctx_.sha256, buf, bufSize); break;
-		case N_SHA256: SHA256_Update(&ctx_.sha256, buf, bufSize); break;
-		case N_SHA384: SHA384_Update(&ctx_.sha512, buf, bufSize); break;
-		case N_SHA512: SHA512_Update(&ctx_.sha512, buf, bufSize); break;
+		case N_SHA256: sha256_.update(buf, bufSize); break;
+		case N_SHA512: sha512_.update(buf, bufSize); break;
+		default:
+			throw cybozu::Exception("crypto:Hash:update") << name_;
 		}
-#endif
 	}
 	void update(const std::string& buf)
 	{
@@ -157,21 +107,10 @@ public:
 	void reset()
 	{
 		switch (name_) {
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		case N_SHA1:   setCTX("sha1"); break;
-		case N_SHA224: setCTX("sha224"); break;
-		case N_SHA256: setCTX("sha256"); break;
-		case N_SHA384: setCTX("sha384"); break;
-		case N_SHA512: setCTX("sha512"); break;
-#else
-		case N_SHA1:   SHA1_Init(&ctx_.sha1);     break;
-		case N_SHA224: SHA224_Init(&ctx_.sha256); break;
-		case N_SHA256: SHA256_Init(&ctx_.sha256); break;
-		case N_SHA384: SHA384_Init(&ctx_.sha512); break;
-		case N_SHA512: SHA512_Init(&ctx_.sha512); break;
-#endif
+		case N_SHA256: sha256_.clear(); break;
+		case N_SHA512: sha512_.clear(); break;
 		default:
-			throw cybozu::Exception("crypto:Hash:rset") << name_;
+			throw cybozu::Exception("crypto:Hash:reset") << name_;
 		}
 	}
 	/*
@@ -180,22 +119,12 @@ public:
 	*/
 	void digest(void *out, const void *buf, size_t bufSize)
 	{
-		update(buf, bufSize);
-		unsigned char *md = reinterpret_cast<unsigned char*>(out);
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		unsigned int len;
-		EVP_DigestFinal_ex(ctx_, md, &len);
-#else
 		switch (name_) {
-		case N_SHA1:   SHA1_Final(md, &ctx_.sha1);     break;
-		case N_SHA224: SHA224_Final(md, &ctx_.sha256); break;
-		case N_SHA256: SHA256_Final(md, &ctx_.sha256); break;
-		case N_SHA384: SHA384_Final(md, &ctx_.sha512); break;
-		case N_SHA512: SHA512_Final(md, &ctx_.sha512); break;
+		case N_SHA256: sha256_.digest(out, hashSize_, buf, bufSize); break;
+		case N_SHA512: sha512_.digest(out, hashSize_, buf, bufSize); break;
 		default:
 			throw cybozu::Exception("crypto:Hash:digest") << name_;
 		}
-#endif
 		reset();
 	}
 	std::string digest(const void *buf, size_t bufSize)
@@ -215,23 +144,9 @@ public:
 	*/
 	static inline size_t digest(void *out, Name name, const void *buf, size_t bufSize)
 	{
-#if 1
 		Hash h(name);
 		h.digest(out, buf, bufSize);
 		return getSize(name);
-#else
-		unsigned char *md = (unsigned char*)out;
-		const unsigned char *src = cybozu::cast<const unsigned char *>(buf);
-		switch (name) {
-		case N_SHA1:   SHA1(src, bufSize, md);   return 160 / 8;
-		case N_SHA224: SHA224(src, bufSize, md); return 224 / 8;
-		case N_SHA256: SHA256(src, bufSize, md); return 256 / 8;
-		case N_SHA384: SHA384(src, bufSize, md); return 384 / 8;
-		case N_SHA512: SHA512(src, bufSize, md); return 512 / 8;
-		default:
-			return 0;
-		}
-#endif
 	}
 	static inline std::string digest(Name name, const void *buf, size_t bufSize)
 	{
@@ -247,70 +162,34 @@ public:
 };
 
 class Hmac {
-#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
-	CCHmacAlgorithm alg_;
+	Hash::Name name_;
 	size_t hashSize_;
-#else
-	const EVP_MD *evp_;
-#endif
 public:
-	explicit Hmac(Hash::Name name = Hash::N_SHA1)
+	explicit Hmac(Hash::Name name)
+		: name_(name)
+		, hashSize_(Hash::getSize(name))
 	{
-		switch (name) {
-#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
-		case Hash::N_SHA1:
-			alg_ = kCCHmacAlgSHA1;
-			hashSize_ = 160 / 8;
-			break;
-		case Hash::N_SHA224:
-			alg_ = kCCHmacAlgSHA224;
-			hashSize_ = 224 / 8;
-			break;
-		case Hash::N_SHA256:
-			alg_ = kCCHmacAlgSHA256;
-			hashSize_ = 256 / 8;
-			break;
-		case Hash::N_SHA384:
-			alg_ = kCCHmacAlgSHA384;
-			hashSize_ = 384 / 8;
-			break;
-		case Hash::N_SHA512:
-			alg_ = kCCHmacAlgSHA512;
-			hashSize_ = 512 / 8;
-			break;
-#else
-		case Hash::N_SHA1: evp_ = EVP_sha1(); break;
-		case Hash::N_SHA224: evp_ = EVP_sha224(); break;
-		case Hash::N_SHA256: evp_ = EVP_sha256(); break;
-		case Hash::N_SHA384: evp_ = EVP_sha384(); break;
-		case Hash::N_SHA512: evp_ = EVP_sha512(); break;
-#endif
+		Hash::verifyName(name_);
+	}
+	size_t getSize() const { return hashSize_; }
+	/*
+		out must have getSize() byte
+	*/
+	void eval(void *out, const void *key, size_t keySize, const void *msg, size_t msgSize) const
+	{
+		switch (name_) {
+		case Hash::N_SHA256: cybozu::hmac256(out, key, keySize, msg, msgSize); break;
+		case Hash::N_SHA512: cybozu::hmac512(out, key, keySize, msg, msgSize); break;
 		default:
-			throw cybozu::Exception("crypto:Hmac:") << name;
+			throw cybozu::Exception("crypto:Hmac:eval") << name_;
 		}
 	}
-	std::string eval(const std::string& key, const std::string& data)
+	std::string eval(const std::string& key, const std::string& data) const
 	{
-	#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
 		std::string out(hashSize_, 0);
-		CCHmac(alg_, key.data(), key.size(), data.data(), data.size(), &out[0]);
+		eval(&out[0], key.c_str(), key.size(), data.c_str(), data.size());
 		return out;
-	#else
-		std::string out(EVP_MD_size(evp_) + 1, 0);
-		unsigned int outLen = 0;
-		if (HMAC(evp_, key.c_str(), static_cast<int>(key.size()),
-			cybozu::cast<const uint8_t *>(data.c_str()), data.size(), cybozu::cast<uint8_t *>(&out[0]), &outLen)) {
-			out.resize(outLen);
-			return out;
-		}
-		throw cybozu::Exception("crypto::Hamc::eval");
-	#endif
 	}
 };
 
 } }	// cybozu::crypto
-
-#ifdef __APPLE__
-	#pragma GCC diagnostic pop
-#endif
-
