@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <cybozu/sha1.hpp>
 #include <cybozu/test.hpp>
+#ifdef _MSC_VER
+	#pragma warning(disable: 4459)
+#endif
+#include <cybozu/itoa.hpp>
+
 
 struct Tbl {
 	const char *ret;
@@ -16,14 +20,24 @@ struct Tbl {
 	{ "da39a3ee5e6b4b0d3255bfef95601890afd80709", "" },
 };
 
+std::string toHex(const std::string& s)
+{
+	std::string ret(s.size() * 2, 0);
+	for (size_t i = 0; i < s.size(); i++) {
+		cybozu::itohex(&ret[i * 2], 2, uint8_t(s[i]), false);
+	}
+	return ret;
+}
+
 CYBOZU_TEST_AUTO(sha1)
 {
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
 		cybozu::Sha1 sha1;
+		std::string md;
+		md.resize(20);
 		const char *msg = tbl[i].msg;
-		sha1.digest(msg, strlen(msg));
-		const std::string h = sha1.toString();
-		CYBOZU_TEST_EQUAL(h, tbl[i].ret);
+		sha1.digest(md.data(), md.size(), msg, strlen(msg));
+		CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 	}
 }
 
@@ -35,9 +49,10 @@ CYBOZU_TEST_AUTO(update)
 		size_t len = strlen(msg);
 		if (len == 0) continue;
 		sha1.update(msg, 1);
-		sha1.digest(msg + 1, len - 1);
-		const std::string h = sha1.toString();
-		CYBOZU_TEST_EQUAL(h, tbl[i].ret);
+		std::string md;
+		md.resize(20);
+		sha1.digest(md.data(), md.size(), msg + 1, len - 1);
+		CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 	}
 }
 
@@ -53,9 +68,10 @@ CYBOZU_TEST_AUTO(update2)
 				sha1.update(msg + j, step);
 				j += step;
 			}
-			sha1.digest(msg + j, len - j);
-			const std::string h = sha1.toString();
-			CYBOZU_TEST_EQUAL(h, tbl[i].ret);
+			std::string md;
+			md.resize(20);
+			sha1.digest(md.data(), md.size(), msg + j, len - j);
+			CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 		}
 	}
 }

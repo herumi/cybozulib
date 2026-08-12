@@ -53,7 +53,7 @@ private:
 		}
 	}
 
-	void reset()
+	void clear()
 	{
 		static const uint32_t tbl[] = {
 			0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6
@@ -133,10 +133,11 @@ private:
 public:
 	Sha1()
 	{
-		reset();
+		clear();
 	}
-	void update(const char *buf, size_t bufSize)
+	void update(const void *_buf, size_t bufSize)
 	{
+		const char *buf = (const char *)_buf;
 		if (bufSize == 0) return;
 		assert(!done_);
 		if (roundBufSize_ > 0) {
@@ -164,6 +165,19 @@ public:
 		}
 		assert(roundBufSize_ < 64);
 	}
+	size_t digest(void *md, size_t mdSize, const void *_buf, size_t bufSize)
+	{
+		const char *buf = (const char *)_buf;
+		assert(!done_);
+		update(buf, bufSize);
+		term(roundBuf_, roundBufSize_);
+		const size_t outByteSize = sizeof(digest_);
+		if (mdSize < outByteSize) return 0;
+		memcpy(md, digest_, outByteSize);
+		clear();
+		return outByteSize;
+	}
+#if 0
 	void update(const std::string& buf)
 	{
 		update(buf.c_str(), buf.size());
@@ -174,7 +188,7 @@ public:
 		update(buf, bufSize);
 		term(roundBuf_, roundBufSize_);
 		std::string ret =  get();
-		reset();
+		clear();
 		return ret;
 	}
 	std::string digest(const std::string& str = "")
@@ -203,6 +217,7 @@ public:
 	{
 		return std::string(cybozu::cast<const char*>(&digest_[0]), sizeof(digest_));
 	}
+#endif
 };
 
 } // cybozu
