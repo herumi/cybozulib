@@ -6,16 +6,109 @@
 	@license modified new BSD license
 	http://opensource.org/licenses/BSD-3-Clause
 */
+/*
+	use Apple CommonCrypto on macOS so that OpenSSL is not necessary
+	define CYBOZU_USE_APPLE_COMMONCRYPTO=0 to disable it
+*/
+#ifdef __APPLE__
+	#ifndef CYBOZU_USE_APPLE_COMMONCRYPTO
+		#define CYBOZU_USE_APPLE_COMMONCRYPTO 1
+	#endif
+#endif
+
+#if CYBOZU_USE_APPLE_COMMONCRYPTO != 1
 #if !defined(CYBOZU_DONT_USE_OPENSSL) && !defined(MCL_DONT_USE_OPENSSL)
 	#define CYBOZU_USE_OPENSSL_SHA
 #endif
-
-#ifndef CYBOZU_DONT_USE_STRING
-#include <string>
 #endif
+
 #include <memory.h>
 
-#ifdef CYBOZU_USE_OPENSSL_SHA
+#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
+
+#include <cybozu/inttype.hpp> // uint8_t for sha2_local::hmac
+
+#ifdef __APPLE__
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#include <CommonCrypto/CommonDigest.h>
+
+namespace cybozu {
+
+class Sha256 {
+	CC_SHA256_CTX ctx_;
+	/*
+		CC_SHA256_Update takes CC_LONG(=uint32_t) as a size,
+		so a larger buffer is split.
+	*/
+	static const size_t maxUpdateSize_ = size_t(1) << 30;
+public:
+	Sha256()
+	{
+		clear();
+	}
+	void clear()
+	{
+		CC_SHA256_Init(&ctx_);
+	}
+	void update(const void *buf, size_t bufSize)
+	{
+		const char *p = reinterpret_cast<const char*>(buf);
+		while (bufSize > maxUpdateSize_) {
+			CC_SHA256_Update(&ctx_, p, CC_LONG(maxUpdateSize_));
+			p += maxUpdateSize_;
+			bufSize -= maxUpdateSize_;
+		}
+		CC_SHA256_Update(&ctx_, p, CC_LONG(bufSize));
+	}
+	size_t digest(void *md, size_t mdSize, const void *buf, size_t bufSize)
+	{
+		if (mdSize < CC_SHA256_DIGEST_LENGTH) return 0;
+		update(buf, bufSize);
+		CC_SHA256_Final(reinterpret_cast<unsigned char*>(md), &ctx_);
+		return CC_SHA256_DIGEST_LENGTH;
+	}
+};
+
+class Sha512 {
+	CC_SHA512_CTX ctx_;
+	static const size_t maxUpdateSize_ = size_t(1) << 30;
+public:
+	Sha512()
+	{
+		clear();
+	}
+	void clear()
+	{
+		CC_SHA512_Init(&ctx_);
+	}
+	void update(const void *buf, size_t bufSize)
+	{
+		const char *p = reinterpret_cast<const char*>(buf);
+		while (bufSize > maxUpdateSize_) {
+			CC_SHA512_Update(&ctx_, p, CC_LONG(maxUpdateSize_));
+			p += maxUpdateSize_;
+			bufSize -= maxUpdateSize_;
+		}
+		CC_SHA512_Update(&ctx_, p, CC_LONG(bufSize));
+	}
+	size_t digest(void *md, size_t mdSize, const void *buf, size_t bufSize)
+	{
+		if (mdSize < CC_SHA512_DIGEST_LENGTH) return 0;
+		update(buf, bufSize);
+		CC_SHA512_Final(reinterpret_cast<unsigned char*>(md), &ctx_);
+		return CC_SHA512_DIGEST_LENGTH;
+	}
+};
+
+} // cybozu
+
+#ifdef __APPLE__
+	#pragma GCC diagnostic pop
+#endif
+
+#elif defined(CYBOZU_USE_OPENSSL_SHA)
 
 #ifndef CYBOZU_USE_OPENSSL_NEW_HASH
 #ifndef _MSC_VER
@@ -128,26 +221,6 @@ public:
 		return SHA256_DIGEST_LENGTH;
 #endif
 	}
-#ifndef CYBOZU_DONT_USE_STRING
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
-	std::string digest(const std::string& buf)
-	{
-		return digest(buf.c_str(), buf.size());
-	}
-	std::string digest(const void *buf, size_t bufSize)
-	{
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		std::string md(ctx_.MD_SIZE, 0);
-#else
-		std::string md(SHA256_DIGEST_LENGTH, 0);
-#endif
-		digest(&md[0], md.size(), buf, bufSize);
-		return md;
-	}
-#endif
 };
 
 class Sha512 {
@@ -191,26 +264,6 @@ public:
 		return SHA512_DIGEST_LENGTH;
 #endif
 	}
-#ifndef CYBOZU_DONT_USE_STRING
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
-	std::string digest(const std::string& buf)
-	{
-		return digest(buf.c_str(), buf.size());
-	}
-	std::string digest(const void *buf, size_t bufSize)
-	{
-#if CYBOZU_USE_OPENSSL_NEW_HASH == 1
-		std::string md(ctx_.MD_SIZE, 0);
-#else
-		std::string md(SHA512_DIGEST_LENGTH, 0);
-#endif
-		digest(&md[0], md.size(), buf, bufSize);
-		return md;
-	}
-#endif
 };
 
 } // cybozu
@@ -409,22 +462,6 @@ public:
 		}
 		return outByteSize_;
 	}
-#ifndef CYBOZU_DONT_USE_STRING
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
-	std::string digest(const std::string& buf)
-	{
-		return digest(buf.c_str(), buf.size());
-	}
-	std::string digest(const void *buf, size_t bufSize)
-	{
-		std::string md(outByteSize_, 0);
-		digest(&md[0], md.size(), buf, bufSize);
-		return md;
-	}
-#endif
 };
 
 class Sha512 : public sha2_local::Common<Sha512> {
@@ -550,22 +587,6 @@ public:
 		}
 		return outByteSize_;
 	}
-#ifndef CYBOZU_DONT_USE_STRING
-	void update(const std::string& buf)
-	{
-		update(buf.c_str(), buf.size());
-	}
-	std::string digest(const std::string& buf)
-	{
-		return digest(buf.c_str(), buf.size());
-	}
-	std::string digest(const void *buf, size_t bufSize)
-	{
-		std::string md(outByteSize_, 0);
-		digest(&md[0], md.size(), buf, bufSize);
-		return md;
-	}
-#endif
 };
 
 } // cybozu
