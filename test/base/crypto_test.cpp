@@ -126,6 +126,22 @@ std::string evalCipher(cybozu::crypto::Cipher::Name name, cybozu::crypto::Cipher
 	return out;
 }
 
+CYBOZU_TEST_AUTO(sha1)
+{
+	const struct Tbl tbl[] = {
+		{"da39a3ee5e6b4b0d3255bfef95601890afd80709", ""},
+		{"86f7e437faa5a7fce15d1ddcb9eaeaea377667b8", "a"},
+		{"a9993e364706816aba3e25717850c26c9cd0d89d", "abc"},
+		{"84983e441c3bd26ebaae4aa1f95129e5e54670f1", "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"},
+	};
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(tbl); i++) {
+		const char *msg = tbl[i].in;
+		cybozu::crypto::Hash hash(cybozu::crypto::Hash::N_SHA1);
+		std::string md = hash.digest(msg, strlen(msg));
+		CYBOZU_TEST_EQUAL(toHexStr(md), tbl[i].out);
+	}
+}
+
 CYBOZU_TEST_AUTO(sha256)
 {
 	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(sha256Tbl); i++) {
@@ -154,6 +170,12 @@ CYBOZU_TEST_AUTO(hmac)
 		const char *msg;
 		const char *mac;
 	} tbl[] = {
+		{
+			cybozu::crypto::Hash::N_SHA1,
+			"Jefe",
+			"what do ya want for nothing?",
+			"effcdf6ae5eb2fa2d27416d5f184df9c259a7c79",
+		},
 		{
 			cybozu::crypto::Hash::N_SHA256,
 			"Jefe",
@@ -187,7 +209,6 @@ void makeHmac(cybozu::crypto::Hash::Name name)
 CYBOZU_TEST_AUTO(deprecated)
 {
 	const cybozu::crypto::Hash::Name tbl[] = {
-		cybozu::crypto::Hash::N_SHA1,
 		cybozu::crypto::Hash::N_SHA224,
 		cybozu::crypto::Hash::N_SHA384,
 	};
