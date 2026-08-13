@@ -1,13 +1,14 @@
 #pragma once
 /**
 	@file
-	@brief wrapper of cybozu/sha2.hpp and cybozu/aes.hpp
+	@brief wrapper of cybozu/sha1.hpp, cybozu/sha2.hpp and cybozu/aes.hpp
 	@author MITSUNARI Shigeo(@herumi)
 */
 
 #include <cybozu/exception.hpp>
 #include <cybozu/inttype.hpp>
 #include <cybozu/aes.hpp>
+#include <cybozu/sha1.hpp>
 #include <cybozu/sha2.hpp>
 
 namespace cybozu {
@@ -15,8 +16,8 @@ namespace cybozu {
 namespace crypto {
 
 /*
-	SHA-256 and SHA-512 are supported.
-	SHA-1, SHA-224 and SHA-384 are deprecated ; getSize() and getName() still
+	SHA-1, SHA-256 and SHA-512 are supported (SHA-1 is deprecated).
+	SHA-224 and SHA-384 are not supported ; getSize() and getName() still
 	accept them for compatibility, but constructing Hash/Hmac with them throws.
 */
 class Hash {
@@ -31,6 +32,7 @@ public:
 private:
 	Name name_;
 	size_t hashSize_;
+	Sha1 sha1_;
 	Sha256 sha256_;
 	Sha512 sha512_;
 public:
@@ -76,11 +78,11 @@ public:
 		throw cybozu::Exception("crypto:Hash:getName") << nameStr;
 	}
 	/*
-		throw if name is not N_SHA256 nor N_SHA512
+		throw if name is not N_SHA1, N_SHA256 nor N_SHA512
 	*/
 	static inline void verifyName(Name name)
 	{
-		if (name != N_SHA256 && name != N_SHA512) {
+		if (name != N_SHA1 && name != N_SHA256 && name != N_SHA512) {
 			throw cybozu::Exception("crypto:Hash:not supported") << name;
 		}
 	}
@@ -94,6 +96,7 @@ public:
 	void update(const void *buf, size_t bufSize)
 	{
 		switch (name_) {
+		case N_SHA1:   sha1_.update(buf, bufSize); break;
 		case N_SHA256: sha256_.update(buf, bufSize); break;
 		case N_SHA512: sha512_.update(buf, bufSize); break;
 		default:
@@ -107,6 +110,7 @@ public:
 	void reset()
 	{
 		switch (name_) {
+		case N_SHA1:   sha1_.clear(); break;
 		case N_SHA256: sha256_.clear(); break;
 		case N_SHA512: sha512_.clear(); break;
 		default:
@@ -120,6 +124,7 @@ public:
 	void digest(void *out, const void *buf, size_t bufSize)
 	{
 		switch (name_) {
+		case N_SHA1:   sha1_.digest(out, hashSize_, buf, bufSize); break;
 		case N_SHA256: sha256_.digest(out, hashSize_, buf, bufSize); break;
 		case N_SHA512: sha512_.digest(out, hashSize_, buf, bufSize); break;
 		default:
@@ -178,6 +183,7 @@ public:
 	void eval(void *out, const void *key, size_t keySize, const void *msg, size_t msgSize) const
 	{
 		switch (name_) {
+		case Hash::N_SHA1:   cybozu::hmac1(out, key, keySize, msg, msgSize); break;
 		case Hash::N_SHA256: cybozu::hmac256(out, key, keySize, msg, msgSize); break;
 		case Hash::N_SHA512: cybozu::hmac512(out, key, keySize, msg, msgSize); break;
 		default:
