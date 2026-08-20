@@ -16,6 +16,8 @@
 	#ifndef CYBOZU_USE_APPLE_COMMONCRYPTO
 		#define CYBOZU_USE_APPLE_COMMONCRYPTO 1
 	#endif
+#else
+	#define CYBOZU_USE_APPLE_COMMONCRYPTO 0
 #endif
 
 /*
