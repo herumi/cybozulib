@@ -141,7 +141,7 @@ public:
 	}
 	size_t readSome(void *buf, size_t bufSize)
 	{
-		int size = (int)std::min((size_t)0x7fffffff, bufSize);
+		int size = (int)(std::min)((size_t)0x7fffffff, bufSize);
 	RETRY:
 		int ret = SSL_read(ssl_, buf, size);
 		if (ret > 0) return ret;
@@ -164,7 +164,7 @@ public:
 	{
 		const char *p = (const char *)buf;
 		while (bufSize > 0) {
-			int size = (int)std::min((size_t)0x7fffffff, bufSize);
+			int size = (int)(std::min)((size_t)0x7fffffff, bufSize);
 			int ret = SSL_write(ssl_, p, size);
 			if (ret <= 0) {
 				ret = SSL_get_error(ssl_, ret);

@@ -265,7 +265,7 @@ public:
 		if (bufSize == 0) return;
 		assert(!done_);
 		if (roundBufSize_ > 0) {
-			size_t size = std::min(64 - roundBufSize_, bufSize);
+			size_t size = (std::min)(64 - roundBufSize_, bufSize);
 			memcpy(roundBuf_ + roundBufSize_, buf, size);
 			roundBufSize_ += size;
 			buf += size;

@@ -213,7 +213,7 @@ void Strip(StringT& str)
 template<class CharT>
 int CaseCompare(const CharT *lhs, size_t lhsSize, const CharT *rhs, size_t rhsSize)
 {
-	size_t n = std::min(lhsSize, rhsSize);
+	size_t n = (std::min)(lhsSize, rhsSize);
 	for (size_t i = 0; i < n; i++) {
 		CharT cR = cybozu::tolower(lhs[i]);
 		CharT cL = cybozu::tolower(rhs[i]);
