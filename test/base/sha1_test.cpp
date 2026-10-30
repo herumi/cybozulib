@@ -36,7 +36,7 @@ CYBOZU_TEST_AUTO(sha1)
 		std::string md;
 		md.resize(20);
 		const char *msg = tbl[i].msg;
-		sha1.digest(md.data(), md.size(), msg, strlen(msg));
+		sha1.digest(&md[0], md.size(), msg, strlen(msg));
 		CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 	}
 }
@@ -51,7 +51,7 @@ CYBOZU_TEST_AUTO(update)
 		sha1.update(msg, 1);
 		std::string md;
 		md.resize(20);
-		sha1.digest(md.data(), md.size(), msg + 1, len - 1);
+		sha1.digest(&md[0], md.size(), msg + 1, len - 1);
 		CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 	}
 }
@@ -70,7 +70,7 @@ CYBOZU_TEST_AUTO(update2)
 			}
 			std::string md;
 			md.resize(20);
-			sha1.digest(md.data(), md.size(), msg + j, len - j);
+			sha1.digest(&md[0], md.size(), msg + j, len - j);
 			CYBOZU_TEST_EQUAL(toHex(md), tbl[i].ret);
 		}
 	}

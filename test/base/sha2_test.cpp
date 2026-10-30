@@ -110,7 +110,7 @@ CYBOZU_TEST_AUTO(sha256)
 		const char *msg = sha256Tbl[i].in;
 		std::string md;
 		md.resize(32);
-		cybozu::Sha256().digest(md.data(), md.size(), msg, strlen(msg));
+		cybozu::Sha256().digest(&md[0], md.size(), msg, strlen(msg));
 		CYBOZU_TEST_EQUAL(toHex(md), sha256Tbl[i].out);
 		char buf[32];
 		CYBOZU_BENCH_C("sha256", 100000, cybozu::Sha256().digest, buf, sizeof(buf), msg, strlen(msg));
@@ -123,7 +123,7 @@ CYBOZU_TEST_AUTO(sha512)
 		const char *msg = sha512Tbl[i].in;
 		std::string md;
 		md.resize(64);
-		cybozu::Sha512().digest(md.data(), md.size(), msg, strlen(msg));
+		cybozu::Sha512().digest(&md[0], md.size(), msg, strlen(msg));
 		CYBOZU_TEST_EQUAL(toHex(md), sha512Tbl[i].out);
 	}
 }
