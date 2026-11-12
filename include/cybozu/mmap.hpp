@@ -6,7 +6,10 @@
 	@author MITSUNARI Shigeo(@herumi)
 */
 #include <string>
+#include <cybozu/inttype.hpp>
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 #include <cybozu/exception.hpp>
+#endif
 
 #ifdef _WIN32
 	#ifndef WIN32_LEAN_AND_MEAN
@@ -44,6 +47,7 @@ class Mmap {
 		}
 		if (size_ == 0) {
 			CloseHandle(hFile_); hFile_ = INVALID_HANDLE_VALUE;
+			valid_ = true;
 			return;
 		}
 
@@ -56,15 +60,25 @@ class Mmap {
 		if (map_ == 0) {
 			errMsg = "MapViewOfFile"; goto ERR_EXIT;
 		}
+		valid_ = true;
 		return;
 ERR_EXIT:
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 		std::string reason = cybozu::ErrorNo().toString();
-		if (hMap_) CloseHandle(hMap_);
-		if (hFile_ != INVALID_HANDLE_VALUE) CloseHandle(hFile_);
+#endif
+		if (hMap_) { CloseHandle(hMap_); hMap_ = 0; }
+		if (hFile_ != INVALID_HANDLE_VALUE) { CloseHandle(hFile_); hFile_ = INVALID_HANDLE_VALUE; }
+		size_ = 0;
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
+#else
+		(void)errMsg;
+		(void)fileName;
+#endif
 	}
 #endif
 	uint64_t size_;
+	bool valid_;
 public:
 #ifdef _WIN32
 	explicit Mmap(const std::string& fileName)
@@ -72,6 +86,7 @@ public:
 		, hFile_(INVALID_HANDLE_VALUE)
 		, hMap_(0)
 		, size_(0)
+		, valid_(false)
 	{
 		hFile_ = CreateFileA(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -82,6 +97,7 @@ public:
 		, hFile_(INVALID_HANDLE_VALUE)
 		, hMap_(0)
 		, size_(0)
+		, valid_(false)
 	{
 		hFile_ = CreateFileW(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -91,6 +107,7 @@ public:
 	explicit Mmap(const std::string& fileName)
 		: map_(static_cast<const char*>(MAP_FAILED))
 		, size_(0)
+		, valid_(false)
 	{
 		const char *errMsg = 0;
 		int fd = ::open(fileName.c_str(), O_RDONLY);
@@ -108,6 +125,7 @@ public:
 		}
 		if (size_ == 0) {
 			::close(fd);
+			valid_ = true;
 			return;
 		}
 
@@ -116,11 +134,19 @@ public:
 			errMsg = "mmap"; goto ERR_EXIT;
 		}
 		::close(fd);
+		valid_ = true;
 		return;
 	ERR_EXIT:
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 		std::string reason = cybozu::ErrorNo().toString();
+#endif
 		if (fd != -1) close(fd);
+		size_ = 0;
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 		throw cybozu::Exception("mmap") << errMsg << fileName << reason;
+#else
+		(void)errMsg;
+#endif
 	}
 #endif
 	~Mmap()
@@ -135,6 +161,7 @@ public:
 	}
 	uint64_t size() const { return size_; }
 	const char *get() const { return map_; }
+	bool isValid() const { return valid_; }
 private:
 	Mmap(const Mmap &);
 	void operator=(const Mmap &);
