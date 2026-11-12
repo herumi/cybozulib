@@ -238,9 +238,48 @@ private:
 		_mm_storeu_si128(cybozu::cast<__m128i*>(ks_), ks);
 		incCtr();
 	}
+	/*
+		the blocks are independent in CTR mode, so parallelN blocks are encrypted at once
+		(the rounds of AES-NI of the blocks overlap in the pipeline of the CPU)
+	*/
 	CYBOZU_AES_NI_TARGET
 	void processCtrBlocks(uint8_t *out, const uint8_t *in, size_t blockNum)
 	{
+		const size_t parallelN = 8;
+		if (blockNum >= parallelN) {
+			// the counter is a 128-bit big endian integer (hi:lo)
+			uint64_t hi = cybozu::Get64bitAsBE(ctr_);
+			uint64_t lo = cybozu::Get64bitAsBE(ctr_ + 8);
+			do {
+				__m128i m[parallelN];
+				for (size_t i = 0; i < parallelN; i++) {
+					const uint64_t l = lo + i;
+					const uint64_t h = hi + (l < lo ? 1 : 0);
+					// the first 8 bytes are hi and the last 8 bytes are lo
+					const __m128i c = _mm_set_epi64x((long long)cybozu::byteSwap(l), (long long)cybozu::byteSwap(h));
+					m[i] = _mm_xor_si128(c, key_[0]);
+				}
+				for (int r = 1; r < roundNum_; r++) {
+					const __m128i k = key_[r];
+					for (size_t i = 0; i < parallelN; i++) {
+						m[i] = _mm_aesenc_si128(m[i], k);
+					}
+				}
+				const __m128i k = key_[roundNum_];
+				for (size_t i = 0; i < parallelN; i++) {
+					const __m128i ks = _mm_aesenclast_si128(m[i], k);
+					_mm_storeu_si128(cybozu::cast<__m128i*>(out) + i, _mm_xor_si128(_mm_loadu_si128(cybozu::cast<const __m128i*>(in) + i), ks));
+				}
+				const uint64_t l = lo + parallelN;
+				if (l < lo) hi++;
+				lo = l;
+				out += parallelN * blockSize;
+				in += parallelN * blockSize;
+				blockNum -= parallelN;
+			} while (blockNum >= parallelN);
+			cybozu::Set64bitAsBE(ctr_, hi);
+			cybozu::Set64bitAsBE(ctr_ + 8, lo);
+		}
 		for (size_t i = 0; i < blockNum; i++) {
 			const __m128i ks = encryptBlock(_mm_loadu_si128(cybozu::cast<const __m128i*>(ctr_)));
 			incCtr();
