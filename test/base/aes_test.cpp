@@ -295,3 +295,217 @@ CYBOZU_TEST_AUTO(aesPartialUpdate)
 		}
 	}
 }
+
+/*
+	the reference keystream of CTR made by ECB :
+	the i-th block is the encryption of (counter + i) where the counter is a 128-bit big endian integer
+*/
+std::string makeCtrKeyStream(cybozu::crypto::Cipher::Name ecbName, const std::string& key, const std::string& iv, size_t size)
+{
+	std::string ctr = iv.substr(0, 16);
+	std::string ks;
+	cybozu::crypto::Cipher ecb(ecbName);
+	ecb.setup(cybozu::crypto::Cipher::Encoding, key, "");
+	while (ks.size() < size) {
+		char out[32];
+		const int n = ecb.update(out, ctr.data(), 16);
+		CYBOZU_TEST_EQUAL(n, 16);
+		ks.append(out, 16);
+		for (int i = 15; i >= 0; i--) {
+			unsigned char c = static_cast<unsigned char>(ctr[i]);
+			c++;
+			ctr[i] = static_cast<char>(c);
+			if (c != 0) break;
+		}
+	}
+	ks.resize(size);
+	return ks;
+}
+
+// long streams of CTR (the blocks are processed in parallel) and the carry of the counter
+CYBOZU_TEST_AUTO(aesCtrLong)
+{
+	const struct {
+		cybozu::crypto::Cipher::Name ctr;
+		cybozu::crypto::Cipher::Name ecb;
+		size_t keySize;
+	} nameTbl[] = {
+		{ cybozu::crypto::Cipher::N_AES128_CTR, cybozu::crypto::Cipher::N_AES128_ECB, 16 },
+		{ cybozu::crypto::Cipher::N_AES192_CTR, cybozu::crypto::Cipher::N_AES192_ECB, 24 },
+		{ cybozu::crypto::Cipher::N_AES256_CTR, cybozu::crypto::Cipher::N_AES256_ECB, 32 },
+	};
+	const char *ivTbl[] = {
+		"00000000000000000000000000000000",
+		"000102030405060708090a0b0c0d0e0f",
+		"000000000000000000000000fffffffe", // carry over 32 bits
+		"0000000000000000fffffffffffffffe", // carry to the upper 64 bits
+		"0000000000000000ffffffffffffffff",
+		"00000000000000fffffffffffffffff9",
+		"fffffffffffffffffffffffffffffffb", // wrap around
+		"ffffffffffffffffffffffffffffffff",
+	};
+	const size_t sizeTbl[] = { 0, 1, 15, 16, 17, 16 * 7, 16 * 8 - 1, 16 * 8, 16 * 8 + 1, 16 * 9, 16 * 16, 16 * 16 + 1, 16 * 37 + 5, 4096 + 3 };
+	const size_t chunkTbl[] = { 1, 3, 7, 16, 21, 128, 129, 1000 };
+	for (size_t ni = 0; ni < CYBOZU_NUM_OF_ARRAY(nameTbl); ni++) {
+		std::string key(nameTbl[ni].keySize, 0);
+		for (size_t i = 0; i < key.size(); i++) key[i] = static_cast<char>(i * 11 + 1);
+		for (size_t vi = 0; vi < CYBOZU_NUM_OF_ARRAY(ivTbl); vi++) {
+			const std::string iv = fromHexStr(ivTbl[vi]);
+			for (size_t si = 0; si < CYBOZU_NUM_OF_ARRAY(sizeTbl); si++) {
+				const size_t size = sizeTbl[si];
+				std::string plain(size, 0);
+				for (size_t i = 0; i < size; i++) plain[i] = static_cast<char>(i * 7 + 3);
+				const std::string ks = makeCtrKeyStream(nameTbl[ni].ecb, key, iv, size);
+				std::string expected(size, 0);
+				for (size_t i = 0; i < size; i++) expected[i] = static_cast<char>(plain[i] ^ ks[i]);
+				// one shot
+				CYBOZU_TEST_EQUAL(evalCipher(nameTbl[ni].ctr, cybozu::crypto::Cipher::Encoding, key, iv, plain), expected);
+				CYBOZU_TEST_EQUAL(evalCipher(nameTbl[ni].ctr, cybozu::crypto::Cipher::Decoding, key, iv, expected), plain);
+				// chunks
+				for (size_t j = 0; j < CYBOZU_NUM_OF_ARRAY(chunkTbl); j++) {
+					CYBOZU_TEST_EQUAL(evalCipherChunked(nameTbl[ni].ctr, cybozu::crypto::Cipher::Encoding, key, iv, plain, chunkTbl[j]), expected);
+				}
+				// a few bytes and the rest (the rest of a keystream block, then many blocks)
+				if (size > 5) {
+					cybozu::crypto::Cipher cipher(nameTbl[ni].ctr);
+					cipher.setup(cybozu::crypto::Cipher::Encoding, key, iv);
+					std::string out(size + 32, 0);
+					CYBOZU_TEST_EQUAL(cipher.update(&out[0], plain.data(), 5), 5);
+					CYBOZU_TEST_EQUAL(cipher.update(&out[5], plain.data() + 5, static_cast<int>(size - 5)), static_cast<int>(size - 5));
+					out.resize(size);
+					CYBOZU_TEST_EQUAL(out, expected);
+				}
+				// in place
+				if (size > 0) {
+					cybozu::crypto::Cipher cipher(nameTbl[ni].ctr);
+					cipher.setup(cybozu::crypto::Cipher::Encoding, key, iv);
+					std::string buf = plain;
+					CYBOZU_TEST_EQUAL(cipher.update(&buf[0], &buf[0], static_cast<int>(size)), static_cast<int>(size));
+					CYBOZU_TEST_EQUAL(buf, expected);
+					// the keystream itself : the encryption of zeros
+					cybozu::crypto::Cipher cipher2(nameTbl[ni].ctr);
+					cipher2.setup(cybozu::crypto::Cipher::Encoding, key, iv);
+					std::string zero(size, 0);
+					CYBOZU_TEST_EQUAL(cipher2.update(&zero[0], &zero[0], static_cast<int>(size)), static_cast<int>(size));
+					CYBOZU_TEST_EQUAL(zero, ks);
+				}
+			}
+		}
+	}
+}
+
+// setup(bool *pb, ...) does not throw
+CYBOZU_TEST_AUTO(aesSetupNoThrow)
+{
+	using cybozu::crypto::Cipher;
+	// the same results as the std::string version
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(aesCtrTbl); i++) {
+		const std::string key = fromHexStr(aesCtrTbl[i].keyHex);
+		const std::string iv = fromHexStr(aesCtrTbl[i].counterHex);
+		const std::string plain = aesCtrTbl[i].isAscii ? std::string(aesCtrTbl[i].plain) : fromHexStr(aesCtrTbl[i].plain);
+		const std::string cipher = fromHexStr(aesCtrTbl[i].cipherHex);
+		Cipher c(aesCtrTbl[i].name);
+		CYBOZU_TEST_ASSERT(c.isValid());
+		bool b = false;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), iv.data(), iv.size());
+		CYBOZU_TEST_ASSERT(b);
+		std::string out(plain.size() + 32, 0);
+		CYBOZU_TEST_EQUAL(c.update(&out[0], plain.data(), static_cast<int>(plain.size())), static_cast<int>(plain.size()));
+		out.resize(plain.size());
+		CYBOZU_TEST_EQUAL(out, cipher);
+	}
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(aesCbcTbl); i++) {
+		const std::string key = fromHexStr(aesCbcTbl[i].keyHex);
+		const std::string iv = fromHexStr(aesCbcTbl[i].ivHex);
+		const std::string plain = aesCbcTbl[i].isAscii ? std::string(aesCbcTbl[i].plain) : fromHexStr(aesCbcTbl[i].plain);
+		const std::string cipher = fromHexStr(aesCbcTbl[i].cipherHex);
+		for (int dec = 0; dec < 2; dec++) {
+			const std::string& in = dec ? cipher : plain;
+			const std::string& expected = dec ? plain : cipher;
+			Cipher c(aesCbcTbl[i].name);
+			bool b = false;
+			c.setup(&b, dec ? Cipher::Decoding : Cipher::Encoding, key.data(), key.size(), iv.data(), iv.size());
+			CYBOZU_TEST_ASSERT(b);
+			std::string out(in.size() + 32, 0);
+			const int n = c.update(&out[0], in.data(), static_cast<int>(in.size()));
+			CYBOZU_TEST_ASSERT(n >= 0);
+			const int last = c.finalize(&out[n]);
+			CYBOZU_TEST_ASSERT(last >= 0);
+			out.resize(n + last);
+			CYBOZU_TEST_EQUAL(out, expected);
+		}
+	}
+	// ECB does not use iv
+	for (size_t i = 0; i < CYBOZU_NUM_OF_ARRAY(aesEcbTbl); i++) {
+		const std::string key = fromHexStr(aesEcbTbl[i].keyHex);
+		const std::string plain = fromHexStr(aesEcbTbl[i].plainHex);
+		const std::string cipher = fromHexStr(aesEcbTbl[i].cipherHex);
+		Cipher c(aesEcbTbl[i].name);
+		bool b = false;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), 0, 0);
+		CYBOZU_TEST_ASSERT(b);
+		std::string out(plain.size() + 32, 0);
+		const int n = c.update(&out[0], plain.data(), static_cast<int>(plain.size()));
+		CYBOZU_TEST_EQUAL(n, static_cast<int>(plain.size()));
+		out.resize(n);
+		CYBOZU_TEST_EQUAL(out, cipher);
+	}
+	// errors
+	{
+		const std::string key = fromHexStr(aesCtrTbl[0].keyHex);
+		const std::string iv = fromHexStr(aesCtrTbl[0].counterHex);
+		const std::string plain = aesCtrTbl[0].isAscii ? std::string(aesCtrTbl[0].plain) : fromHexStr(aesCtrTbl[0].plain);
+		const std::string cipher = fromHexStr(aesCtrTbl[0].cipherHex);
+		char in[64] = {};
+		char out[96];
+		Cipher c(aesCtrTbl[0].name);
+		CYBOZU_TEST_ASSERT(c.isValid());
+		// setup is not called
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+		CYBOZU_TEST_EQUAL(c.finalize(out), -1);
+		bool b = true;
+		// the length of the key
+		c.setup(&b, Cipher::Encoding, key.data(), key.size() - 1, iv.data(), iv.size());
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+		b = true;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size() + 8, iv.data(), iv.size());
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1 || CYBOZU_USE_APPLE_COMMONCRYPTO == 1
+		// the length of iv (OpenSSL does not check it)
+		b = true;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), iv.data(), 15);
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+		// iv is necessary except for ECB
+		b = true;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), 0, 16);
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+#endif
+#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1
+		// padding is not supported
+		b = true;
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), iv.data(), iv.size(), true);
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+#endif
+		// a successful setup makes it usable again
+		c.setup(&b, Cipher::Encoding, key.data(), key.size(), iv.data(), iv.size());
+		CYBOZU_TEST_ASSERT(b);
+		std::string o(plain.size() + 32, 0);
+		CYBOZU_TEST_EQUAL(c.update(&o[0], plain.data(), static_cast<int>(plain.size())), static_cast<int>(plain.size()));
+		o.resize(plain.size());
+		CYBOZU_TEST_EQUAL(o, cipher);
+		// a failed setup after a successful one : not usable
+		c.setup(&b, Cipher::Encoding, key.data(), key.size() - 1, iv.data(), iv.size());
+		CYBOZU_TEST_ASSERT(!b);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+		// the std::string version throws for the same errors and the object is not usable
+		CYBOZU_TEST_EXCEPTION(c.setup(Cipher::Encoding, key.substr(1), iv), cybozu::Exception);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), -1);
+		c.setup(Cipher::Encoding, key, iv);
+		CYBOZU_TEST_EQUAL(c.update(out, in, 16), 16);
+	}
+}

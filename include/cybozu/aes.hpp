@@ -3,10 +3,17 @@
 	@file
 	@brief AES-CBC/CTR/ECB cipher
 	@author MITSUNARI Shigeo(@herumi)
+
+	If CYBOZU_DONT_USE_EXCEPTION is defined then no exception is thrown :
+	use Cipher::isValid() after the constructor and Cipher::setup(bool *pb, ...).
 */
 
+#include <string>
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 #include <cybozu/exception.hpp>
+#endif
 #include <cybozu/inttype.hpp>
+#include <cybozu/endian.hpp>
 
 // define CYBOZU_USE_WIN_BCRYPT=1 to use Windows bcrypt even on x86/x64
 #if CYBOZU_HOST == CYBOZU_HOST_INTEL && CYBOZU_USE_WIN_BCRYPT != 1
@@ -75,6 +82,13 @@ public:
 		M_CBC,
 		M_CTR,
 		M_ECB
+	};
+	// the reason of the failure of setupNoThrow
+	enum Err {
+		E_OK,
+		E_KEY_LEN,
+		E_IV_LEN,
+		E_KEY_SIZE
 	};
 private:
 	static const int maxRoundNum = 14;
@@ -326,42 +340,58 @@ public:
 		keySize_ = keySize;
 		mode_ = mode;
 	}
+	/*
+		setup without exceptions
+		iv is not used for ECB
+		if it fails then the object is not usable (update returns -1) until the next successful setup
+	*/
 	CYBOZU_AES_NI_TARGET
-	void setup(bool encMode, const std::string& key, const std::string& iv)
+	Err setupNoThrow(bool encMode, const uint8_t *key, size_t keySize, const uint8_t *iv, size_t ivSize)
 	{
-		if (key.size() != keySize_) {
-			throw cybozu::Exception("crypto:AesNi:setup:keyLen") << key.size() << keySize_;
-		}
-		if (mode_ != M_ECB && iv.size() < blockSize) {
-			throw cybozu::Exception("crypto:AesNi:setup:ivLen") << iv.size() << ">=" << (int)blockSize;
-		}
-		encMode_ = encMode;
+		roundNum_ = 0;
 		bufSize_ = 0;
 		ksPos_ = blockSize;
-		const uint8_t *keyPtr = cybozu::cast<const uint8_t*>(key.data());
+		const Mode mode = mode_;
+		if (keySize != keySize_) return E_KEY_LEN;
+		if (mode != M_ECB) {
+			// iv may be null only for ECB
+			if (iv == 0 || ivSize < blockSize) return E_IV_LEN;
+			if (mode == M_CBC) {
+				iv_ = _mm_loadu_si128(cybozu::cast<const __m128i*>(iv));
+			} else {
+				memcpy(ctr_, iv, blockSize);
+			}
+		}
+		encMode_ = encMode;
 		switch (keySize_) {
-		case 16: roundNum_ = 10; expandKey128(keyPtr); break;
-		case 24: roundNum_ = 12; expandKey192(keyPtr); break;
-		case 32: roundNum_ = 14; expandKey256(keyPtr); break;
+		case 16: expandKey128(key); roundNum_ = 10; break;
+		case 24: expandKey192(key); roundNum_ = 12; break;
+		case 32: expandKey256(key); roundNum_ = 14; break;
+		default:
+			return E_KEY_SIZE;
+		}
+		// CTR uses only the encryption
+		if (mode != M_CTR && !encMode_) convertDecKey();
+		return E_OK;
+	}
+#ifndef CYBOZU_DONT_USE_EXCEPTION
+	void setup(bool encMode, const std::string& key, const std::string& iv)
+	{
+		switch (setupNoThrow(encMode, cybozu::cast<const uint8_t*>(key.data()), key.size(), cybozu::cast<const uint8_t*>(iv.data()), iv.size())) {
+		case E_OK:
+			return;
+		case E_KEY_LEN:
+			throw cybozu::Exception("crypto:AesNi:setup:keyLen") << key.size() << keySize_;
+		case E_IV_LEN:
+			throw cybozu::Exception("crypto:AesNi:setup:ivLen") << iv.size() << ">=" << (int)blockSize;
 		default:
 			throw cybozu::Exception("crypto:AesNi:setup:keySize") << keySize_;
 		}
-		switch (mode_) {
-		case M_CBC:
-			iv_ = _mm_loadu_si128(cybozu::cast<const __m128i*>(iv.data()));
-			if (!encMode_) convertDecKey();
-			break;
-		case M_CTR:
-			memcpy(ctr_, iv.data(), blockSize);
-			break;
-		case M_ECB:
-			if (!encMode_) convertDecKey();
-			break;
-		}
 	}
+#endif
 	int update(uint8_t *out, const uint8_t *in, int inSize)
 	{
-		if (inSize < 0) return -1;
+		if (inSize < 0 || roundNum_ == 0) return -1;
 		if (mode_ == M_CTR) return updateCtr(out, in, (size_t)inSize);
 		int outSize = 0;
 		size_t remain = (size_t)inSize;
@@ -393,6 +423,7 @@ public:
 	}
 	int finalize() const
 	{
+		if (roundNum_ == 0) return -1;
 		if (mode_ == M_CTR) return 0;
 		return bufSize_ == 0 ? 0 : -1;
 	}
@@ -415,6 +446,17 @@ public:
 		M_CBC,
 		M_CTR,
 		M_ECB
+	};
+	// the reason of the failure of setupNoThrow
+	enum Err {
+		E_OK,
+		E_KEY_LEN,
+		E_IV_LEN,
+		E_KEY_SIZE,
+		E_OPEN_ALG,
+		E_CHAINING_MODE,
+		E_OBJECT_LENGTH,
+		E_GENERATE_KEY
 	};
 private:
 	static const size_t blockSize = 16;
@@ -440,12 +482,22 @@ private:
 			hKey_ = 0;
 		}
 	}
-	void openAlg()
+	void closeAlg()
 	{
-		if (hAlg_) return;
+		if (hAlg_) {
+			BCryptCloseAlgorithmProvider(hAlg_, 0);
+			hAlg_ = 0;
+		}
+	}
+	// *pStatus is the status of the failed function
+	Err openAlg(NTSTATUS *pStatus)
+	{
+		if (hAlg_) return E_OK;
 		NTSTATUS status = BCryptOpenAlgorithmProvider(&hAlg_, BCRYPT_AES_ALGORITHM, NULL, 0);
 		if (!BCRYPT_SUCCESS(status)) {
-			throw cybozu::Exception("crypto:BCryptAes:BCryptOpenAlgorithmProvider") << (int)status;
+			hAlg_ = 0;
+			*pStatus = status;
+			return E_OPEN_ALG;
 		}
 		if (mode_ == M_CBC) {
 			status = BCryptSetProperty(hAlg_, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
@@ -454,15 +506,20 @@ private:
 			status = BCryptSetProperty(hAlg_, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
 		}
 		if (!BCRYPT_SUCCESS(status)) {
-			throw cybozu::Exception("crypto:BCryptAes:BCryptSetProperty:chainingMode") << (int)status;
+			closeAlg(); // not to reuse the half-initialized provider
+			*pStatus = status;
+			return E_CHAINING_MODE;
 		}
 		DWORD objSize = 0;
 		DWORD writeSize = 0;
 		status = BCryptGetProperty(hAlg_, BCRYPT_OBJECT_LENGTH, (PUCHAR)&objSize, sizeof(objSize), &writeSize, 0);
 		if (!BCRYPT_SUCCESS(status)) {
-			throw cybozu::Exception("crypto:BCryptAes:BCryptGetProperty:objectLength") << (int)status;
+			closeAlg();
+			*pStatus = status;
+			return E_OBJECT_LENGTH;
 		}
 		keyObj_.resize(objSize);
+		return E_OK;
 	}
 	/*
 		encrypt/decrypt size bytes ; size must be a multiple of blockSize
@@ -558,20 +615,31 @@ public:
 	~BCryptAes()
 	{
 		destroyKey();
-		if (hAlg_) BCryptCloseAlgorithmProvider(hAlg_, 0);
+		closeAlg();
 	}
 	void init(size_t keySize, Mode mode)
 	{
 		keySize_ = keySize;
 		mode_ = mode;
 	}
-	void setup(bool encMode, const std::string& key, const std::string& iv)
+	/*
+		setup without exceptions
+		iv is not used for ECB
+		*pStatus is the status of the failed function of CNG
+		if it fails then the object is not usable (update returns -1) until the next successful setup
+	*/
+	Err setupNoThrow(bool encMode, const uint8_t *key, size_t keySize, const uint8_t *iv, size_t ivSize, NTSTATUS *pStatus)
 	{
-		if (key.size() != keySize_) {
-			throw cybozu::Exception("crypto:BCryptAes:setup:keyLen") << key.size() << keySize_;
-		}
-		if (mode_ != M_ECB && iv.size() < blockSize) {
-			throw cybozu::Exception("crypto:BCryptAes:setup:ivLen") << iv.size() << ">=" << (int)blockSize;
+		*pStatus = 0;
+		destroyKey();
+		bufSize_ = 0;
+		ksPos_ = blockSize;
+		const Mode mode = mode_;
+		if (keySize != keySize_) return E_KEY_LEN;
+		if (mode != M_ECB) {
+			// iv may be null only for ECB
+			if (iv == 0 || ivSize < blockSize) return E_IV_LEN;
+			memcpy(mode == M_CBC ? iv_ : ctr_, iv, blockSize);
 		}
 		switch (keySize_) {
 		case 16:
@@ -579,32 +647,46 @@ public:
 		case 32:
 			break;
 		default:
-			throw cybozu::Exception("crypto:BCryptAes:setup:keySize") << keySize_;
+			return E_KEY_SIZE;
 		}
 		encMode_ = encMode;
-		bufSize_ = 0;
-		ksPos_ = blockSize;
-		openAlg();
-		destroyKey();
-		const NTSTATUS status = BCryptGenerateSymmetricKey(hAlg_, &hKey_, keyObj_.empty() ? 0 : &keyObj_[0], (ULONG)keyObj_.size(), (PUCHAR)key.data(), (ULONG)key.size(), 0);
+		const Err err = openAlg(pStatus);
+		if (err != E_OK) return err;
+		const NTSTATUS status = BCryptGenerateSymmetricKey(hAlg_, &hKey_, keyObj_.empty() ? 0 : &keyObj_[0], (ULONG)keyObj_.size(), (PUCHAR)key, (ULONG)keySize, 0);
 		if (!BCRYPT_SUCCESS(status)) {
 			hKey_ = 0;
+			*pStatus = status;
+			return E_GENERATE_KEY;
+		}
+		return E_OK;
+	}
+#ifndef CYBOZU_DONT_USE_EXCEPTION
+	void setup(bool encMode, const std::string& key, const std::string& iv)
+	{
+		NTSTATUS status = 0;
+		switch (setupNoThrow(encMode, cybozu::cast<const uint8_t*>(key.data()), key.size(), cybozu::cast<const uint8_t*>(iv.data()), iv.size(), &status)) {
+		case E_OK:
+			return;
+		case E_KEY_LEN:
+			throw cybozu::Exception("crypto:BCryptAes:setup:keyLen") << key.size() << keySize_;
+		case E_IV_LEN:
+			throw cybozu::Exception("crypto:BCryptAes:setup:ivLen") << iv.size() << ">=" << (int)blockSize;
+		case E_KEY_SIZE:
+			throw cybozu::Exception("crypto:BCryptAes:setup:keySize") << keySize_;
+		case E_OPEN_ALG:
+			throw cybozu::Exception("crypto:BCryptAes:BCryptOpenAlgorithmProvider") << (int)status;
+		case E_CHAINING_MODE:
+			throw cybozu::Exception("crypto:BCryptAes:BCryptSetProperty:chainingMode") << (int)status;
+		case E_OBJECT_LENGTH:
+			throw cybozu::Exception("crypto:BCryptAes:BCryptGetProperty:objectLength") << (int)status;
+		default:
 			throw cybozu::Exception("crypto:BCryptAes:setup:BCryptGenerateSymmetricKey") << (int)status;
 		}
-		switch (mode_) {
-		case M_CBC:
-			memcpy(iv_, iv.data(), blockSize);
-			break;
-		case M_CTR:
-			memcpy(ctr_, iv.data(), blockSize);
-			break;
-		case M_ECB:
-			break;
-		}
 	}
+#endif
 	int update(uint8_t *out, const uint8_t *in, int inSize)
 	{
-		if (inSize < 0) return -1;
+		if (inSize < 0 || hKey_ == 0) return -1;
 		if (mode_ == M_CTR) return updateCtr(out, in, (size_t)inSize);
 		int outSize = 0;
 		size_t remain = (size_t)inSize;
@@ -636,6 +718,7 @@ public:
 	}
 	int finalize() const
 	{
+		if (hKey_ == 0) return -1;
 		if (mode_ == M_CTR) return 0;
 		return bufSize_ == 0 ? 0 : -1;
 	}
@@ -657,8 +740,14 @@ public:
 		N_AES192_ECB, // be carefull to use
 		N_AES256_ECB, // be carefull to use
 	};
+	enum Mode {
+		Decoding,
+		Encoding
+	};
 
 private:
+	bool valid_; // false if the constructor fails
+	bool ready_; // true after a successful setup
 #ifdef CYBOZU_AES_NI
 	typedef local::AesNi AesImpl;
 	AesImpl aes_;
@@ -672,8 +761,90 @@ private:
 	const EVP_CIPHER *cipher_;
 	EVP_CIPHER_CTX *ctx_;
 #endif
+	// the reason of the failure of setupNoThrow
+	enum Err {
+		E_OK,
+		E_INVALID, // the constructor failed
+		E_PADDING,
+		E_KEY_LEN,
+		E_IV_LEN,
+		E_INIT,
+		E_SET_PADDING
+	};
+	/*
+		setup without exceptions
+		*pStatus is the status of the failed function of the library
+	*/
+	Err setupNoThrow(Mode mode, const uint8_t *key, size_t keySize, const uint8_t *iv, size_t ivSize, bool padding, int *pStatus)
+	{
+		ready_ = false;
+		*pStatus = 0;
+		if (!valid_) return E_INVALID;
+	#ifdef CYBOZU_AES_NI
+		if (padding) return E_PADDING;
+		switch (aes_.setupNoThrow(mode == Encoding, key, keySize, iv, ivSize)) {
+		case AesImpl::E_OK: break;
+		case AesImpl::E_KEY_LEN: return E_KEY_LEN;
+		case AesImpl::E_IV_LEN: return E_IV_LEN;
+		default: return E_INIT;
+		}
+	#elif CYBOZU_USE_WIN_BCRYPT == 1
+		if (padding) return E_PADDING;
+		NTSTATUS status = 0;
+		const AesImpl::Err err = aes_.setupNoThrow(mode == Encoding, key, keySize, iv, ivSize, &status);
+		*pStatus = (int)status;
+		switch (err) {
+		case AesImpl::E_OK: break;
+		case AesImpl::E_KEY_LEN: return E_KEY_LEN;
+		case AesImpl::E_IV_LEN: return E_IV_LEN;
+		default: return E_INIT;
+		}
+	#elif CYBOZU_USE_APPLE_COMMONCRYPTO == 1
+		if (keySize != getSize(name_) / 8) return E_KEY_LEN;
+		const bool isCtr = name_ == N_AES128_CTR || name_ == N_AES192_CTR || name_ == N_AES256_CTR;
+		const bool isEcb = name_ == N_AES128_ECB || name_ == N_AES192_ECB || name_ == N_AES256_ECB;
+		if (!isEcb && (iv == 0 || ivSize < kCCBlockSizeAES128)) return E_IV_LEN;
+		if (ctx_) {
+			CCCryptorRelease(ctx_);
+			ctx_ = 0;
+		}
+		CCCryptorStatus status;
+		if (isCtr) {
+			status = CCCryptorCreateWithMode(mode == Encoding ? kCCEncrypt : kCCDecrypt,
+				kCCModeCTR, kCCAlgorithmAES128, ccNoPadding, iv, key, keySize, 0, 0, 0,
+				kCCModeOptionCTR_BE, &ctx_);
+		} else {
+			CCOptions options = isEcb ? kCCOptionECBMode : 0;
+			if (padding) options |= kCCOptionPKCS7Padding;
+			const void *ivPtr = isEcb ? 0 : iv;
+			status = CCCryptorCreate(mode == Encoding ? kCCEncrypt : kCCDecrypt,
+				kCCAlgorithmAES128, options, key, keySize, ivPtr, &ctx_);
+		}
+		if (status != kCCSuccess) {
+			ctx_ = 0;
+			*pStatus = (int)status;
+			return E_INIT;
+		}
+	#else
+		(void)ivSize; // the length of iv is not checked
+		if (keySize != static_cast<size_t>(EVP_CIPHER_key_length(cipher_))) return E_KEY_LEN;
+		int ret = EVP_CipherInit_ex(ctx_, cipher_, NULL, key, iv, mode == Encoding ? 1 : 0);
+		if (ret != 1) {
+			*pStatus = ret;
+			return E_INIT;
+		}
+		ret = EVP_CIPHER_CTX_set_padding(ctx_, padding ? 1 : 0);
+		if (ret != 1) {
+			*pStatus = ret;
+			return E_SET_PADDING;
+		}
+	#endif
+		ready_ = true;
+		return E_OK;
+	}
 
 public:
+	// return 0 if name is invalid and CYBOZU_DONT_USE_EXCEPTION is defined
 	static inline size_t getSize(Name name)
 	{
 		switch (name) {
@@ -687,20 +858,25 @@ public:
 		case N_AES192_ECB: return 192;
 		case N_AES256_ECB: return 256;
 		default:
+	#ifndef CYBOZU_DONT_USE_EXCEPTION
 			throw cybozu::Exception("crypto:Cipher:getSize") << name;
+	#else
+			return 0;
+	#endif
 		}
 	}
-	enum Mode {
-		Decoding,
-		Encoding
-	};
+	/*
+		if CYBOZU_DONT_USE_EXCEPTION is defined then check isValid() after the constructor
+	*/
 	explicit Cipher(Name name = N_AES128_CBC)
+		: valid_(true)
+		, ready_(false)
 	#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1
 	#elif CYBOZU_USE_APPLE_COMMONCRYPTO == 1
-		: name_(name)
+		, name_(name)
 		, ctx_(0)
 	#else
-		: cipher_(0)
+		, cipher_(0)
 		, ctx_(0)
 	#endif
 	{
@@ -717,7 +893,8 @@ public:
 		case N_AES192_ECB:
 		case N_AES256_ECB: mode = AesImpl::M_ECB; break;
 		default:
-			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
+			invalidName(name);
+			return;
 		}
 		aes_.init(getSize(name) / 8, mode);
 	#elif CYBOZU_USE_APPLE_COMMONCRYPTO == 1
@@ -733,11 +910,19 @@ public:
 		case N_AES256_ECB:
 			break;
 		default:
-			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
+			invalidName(name);
+			return;
 		}
 	#else
 		ctx_ = EVP_CIPHER_CTX_new();
-		if (ctx_ == 0) throw cybozu::Exception("crypto:Cipher:EVP_CIPHER_CTX_new");
+		if (ctx_ == 0) {
+	#ifndef CYBOZU_DONT_USE_EXCEPTION
+			throw cybozu::Exception("crypto:Cipher:EVP_CIPHER_CTX_new");
+	#else
+			valid_ = false;
+			return;
+	#endif
+		}
 		switch (name) {
 		case N_AES128_CBC: cipher_ = EVP_aes_128_cbc(); break;
 		case N_AES192_CBC: cipher_ = EVP_aes_192_cbc(); break;
@@ -749,7 +934,8 @@ public:
 		case N_AES192_ECB: cipher_ = EVP_aes_192_ecb(); break;
 		case N_AES256_ECB: cipher_ = EVP_aes_256_ecb(); break;
 		default:
-			throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
+			invalidName(name);
+			return;
 		}
 	#endif
 	}
@@ -763,79 +949,67 @@ public:
 		if (ctx_) EVP_CIPHER_CTX_free(ctx_);
 	#endif
 	}
+	// false if the constructor failed (only if CYBOZU_DONT_USE_EXCEPTION is defined ; otherwise the constructor throws)
+	bool isValid() const { return valid_; }
+	/*
+		setup without exceptions : *pb = true if success
+		key[keySize] : the key (16, 24 or 32 bytes according to the name)
+		iv[ivSize] : the iv of CBC or the initial counter block (big endian) of CTR (at least 16 bytes ; not used for ECB)
+		@note don't use padding = true
+	*/
+	void setup(bool *pb, Mode mode, const void *key, size_t keySize, const void *iv, size_t ivSize, bool padding = false)
+	{
+		int status;
+		*pb = setupNoThrow(mode, cybozu::cast<const uint8_t*>(key), keySize, cybozu::cast<const uint8_t*>(iv), ivSize, padding, &status) == E_OK;
+	}
+#ifndef CYBOZU_DONT_USE_EXCEPTION
 	/*
 		@note don't use padding = true
 	*/
 	void setup(Mode mode, const std::string& key, const std::string& iv, bool padding = false)
 	{
 	#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1
+		ready_ = false;
 		if (padding) {
 			throw cybozu::Exception("crypto:Cipher:setup:padding is not supported");
 		}
 		aes_.setup(mode == Encoding, key, iv);
-	#elif CYBOZU_USE_APPLE_COMMONCRYPTO == 1
-		const int keyLen = static_cast<int>(key.size());
-		const int expectedKeyLen = static_cast<int>(getSize(name_) / 8);
-		if (keyLen != expectedKeyLen) {
-			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
-		}
-		const bool isCtr = name_ == N_AES128_CTR || name_ == N_AES192_CTR || name_ == N_AES256_CTR;
-		const bool isEcb = name_ == N_AES128_ECB || name_ == N_AES192_ECB || name_ == N_AES256_ECB;
-		if (!isEcb) {
-			if (iv.size() < kCCBlockSizeAES128) {
-				throw cybozu::Exception("crypto:Cipher:setup:ivLen") << iv.size() << ">=" << kCCBlockSizeAES128;
-			}
-		}
-		if (ctx_) {
-			CCCryptorRelease(ctx_);
-			ctx_ = 0;
-		}
-		CCCryptorStatus status;
-		if (isCtr) {
-			status = CCCryptorCreateWithMode(mode == Encoding ? kCCEncrypt : kCCDecrypt,
-				kCCModeCTR, kCCAlgorithmAES128, ccNoPadding, iv.data(), key.data(), key.size(), 0, 0, 0,
-				kCCModeOptionCTR_BE, &ctx_);
-		} else {
-			CCOptions options = isEcb ? kCCOptionECBMode : 0;
-			if (padding) options |= kCCOptionPKCS7Padding;
-			const void *ivPtr = isEcb ? 0 : iv.data();
-			status = CCCryptorCreate(mode == Encoding ? kCCEncrypt : kCCDecrypt,
-				kCCAlgorithmAES128, options, key.data(), key.size(), ivPtr, &ctx_);
-		}
-		if (status != kCCSuccess) {
-			throw cybozu::Exception("crypto:Cipher:setup:CCCryptorCreate") << (int)status;
-		}
+		ready_ = true;
 	#else
-		const int keyLen = static_cast<int>(key.size());
-		const int expectedKeyLen = EVP_CIPHER_key_length(cipher_);
-		if (keyLen != expectedKeyLen) {
-			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << keyLen << expectedKeyLen;
+		int status = 0;
+		const Err err = setupNoThrow(mode, cybozu::cast<const uint8_t*>(key.c_str()), key.size(), cybozu::cast<const uint8_t*>(iv.c_str()), iv.size(), padding, &status);
+		switch (err) {
+		case E_OK:
+			return;
+		case E_KEY_LEN:
+	#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
+			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << key.size() << getSize(name_) / 8;
+	#else
+			throw cybozu::Exception("crypto:Cipher:setup:keyLen") << key.size() << EVP_CIPHER_key_length(cipher_);
+	#endif
+		case E_IV_LEN:
+			throw cybozu::Exception("crypto:Cipher:setup:ivLen") << iv.size() << ">=" << 16;
+	#if CYBOZU_USE_APPLE_COMMONCRYPTO == 1
+		default:
+			throw cybozu::Exception("crypto:Cipher:setup:CCCryptorCreate") << status;
+	#else
+		case E_SET_PADDING:
+			throw cybozu::Exception("crypto:Cipher:setup:EVP_CIPHER_CTX_set_padding") << status;
+		default:
+			throw cybozu::Exception("crypto:Cipher:setup:EVP_CipherInit_ex") << status;
+	#endif
 		}
-
-		int ret = EVP_CipherInit_ex(ctx_, cipher_, NULL, cybozu::cast<const uint8_t*>(key.c_str()), cybozu::cast<const uint8_t*>(iv.c_str()), mode == Encoding ? 1 : 0);
-		if (ret != 1) {
-			throw cybozu::Exception("crypto:Cipher:setup:EVP_CipherInit_ex") << ret;
-		}
-		ret = EVP_CIPHER_CTX_set_padding(ctx_, padding ? 1 : 0);
-		if (ret != 1) {
-			throw cybozu::Exception("crypto:Cipher:setup:EVP_CIPHER_CTX_set_padding") << ret;
-		}
-/*
-		const int ivLen = static_cast<int>(iv.size());
-		const int expectedIvLen = EVP_CIPHER_CTX_iv_length(&ctx_);
-		if (ivLen != expectedIvLen) {
-			throw cybozu::Exception("crypto:Cipher:setup:ivLen") << ivLen << expectedIvLen;
-		}
-*/
 	#endif
 	}
+#endif
 	/*
 		the size of outBuf must be larger than inBufSize + blockSize
 		@retval positive or 0 : writeSize(+blockSize)
-		@retval -1 : error
+		@retval -1 : error (including the case that setup is not called or failed)
 	*/
 	int update(char *outBuf, const char *inBuf, int inBufSize)
 	{
+		if (!ready_) return -1;
 	#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1
 		return aes_.update(cybozu::cast<uint8_t*>(outBuf), cybozu::cast<const uint8_t*>(inBuf), inBufSize);
 	#elif CYBOZU_USE_APPLE_COMMONCRYPTO == 1
@@ -858,6 +1032,7 @@ public:
 	*/
 	int finalize(char *outBuf)
 	{
+		if (!ready_) return -1;
 	#if defined(CYBOZU_AES_NI) || CYBOZU_USE_WIN_BCRYPT == 1
 		(void)outBuf; // no output because padding is not supported
 		return aes_.finalize();
@@ -872,6 +1047,17 @@ public:
 		int ret = EVP_CipherFinal_ex(ctx_, cybozu::cast<uint8_t*>(outBuf), &outLen);
 		if (ret != 1) return -1;
 		return outLen;
+	#endif
+	}
+private:
+	// called by the constructor for an invalid name
+	void invalidName(Name name)
+	{
+	#ifndef CYBOZU_DONT_USE_EXCEPTION
+		throw cybozu::Exception("crypto:Cipher:Cipher:name") << (int)name;
+	#else
+		(void)name;
+		valid_ = false;
 	#endif
 	}
 };
